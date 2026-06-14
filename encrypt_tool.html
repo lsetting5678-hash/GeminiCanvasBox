@@ -317,16 +317,16 @@
             // 返回目錄首頁 (入口網頁位於上一層)
             window.location.href = '../index.html';
         }
-    </script>
+    <\/script>
 </body>
-</html>\`;
+</html>`;
 
                 // 下載產生的 HTML
                 const blob = new Blob([outputHtml], { type: 'text/html;charset=utf-8' });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = \`\${title}_已加密保護.html\`;
+                a.download = title + "_已加密保護.html";
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
