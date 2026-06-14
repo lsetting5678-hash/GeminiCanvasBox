@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>特教注音符號學習卡</title>
+    <!-- Gemini 元數據 (用於自動提取) -->
+    <meta name="category" content="國語文">
+    <meta name="description" content="專為特教學生設計的注音符號與對應生字互動學習卡，具有點擊發音與大字體高對比度。">
+    <meta name="icon" content="🎈">
+    <meta name="tags" content="注音,特教,語音,國語文">
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600&family=Noto+Sans+TC:wght@700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Fredoka', 'Noto Sans TC', sans-serif;
+            background: #fff0f5;
+            color: #4a4a4a;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+        }
+        h1 {
+            color: #d81b60;
+            font-size: 2.2rem;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px white;
+        }
+        .card {
+            background: white;
+            border: 5px solid #ffb7b2;
+            border-radius: 35px;
+            padding: 40px;
+            box-shadow: 0 15px 30px rgba(218, 168, 168, 0.3);
+            cursor: pointer;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s;
+            margin-bottom: 30px;
+        }
+        .card:hover {
+            transform: scale(1.05) rotate(-1deg);
+            box-shadow: 0 20px 40px rgba(218, 168, 168, 0.4);
+        }
+        .zhuyin {
+            font-size: 8rem;
+            color: #ff7b72;
+            line-height: 1;
+            margin-bottom: 10px;
+        }
+        .word {
+            font-size: 3rem;
+            color: #457b9d;
+            font-weight: bold;
+        }
+        .btn {
+            background: #ffb7b2;
+            color: #5d4037;
+            font-size: 1.3rem;
+            font-weight: bold;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 8px 15px rgba(255, 183, 178, 0.4);
+            transition: all 0.2s;
+            margin: 10px;
+        }
+        .btn:hover {
+            background: #ff9e97;
+            transform: translateY(-3px);
+        }
+        .back-link {
+            display: inline-block;
+            margin-top: 20px;
+            color: #7f8c8d;
+            text-decoration: none;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎈 注音符號學習卡</h1>
+        <div class="card" onclick="speakCard()">
+            <div id="zhuyin" class="zhuyin">ㄅ</div>
+            <div id="word" class="word">爸爸 (ㄅà ㄅa)</div>
+            <div style="margin-top: 20px; color: #aaa; font-size: 0.9rem;">👈 點擊卡片發音</div>
+        </div>
+        <div>
+            <button class="btn" onclick="prevCard()">上一張</button>
+            <button class="btn" onclick="nextCard()">下一張</button>
+        </div>
+        <a href="../index.html" class="back-link">🔙 返回工具箱目錄</a>
+    </div>
+
+    <script>
+        const cards = [
+            { z: "ㄅ", w: "爸爸 (ㄅà ㄅa)" },
+            { z: "ㄆ", w: "蘋果 (ㄆíㄥ ㄍㄨㄛˇ)" },
+            { z: "ㄇ", w: "貓咪 (ㄇāㄛ ㄇī)" },
+            { z: "ㄈ", w: "飛機 (ㄈēㄧ ㄐī)" },
+            { z: "ㄉ", w: "大象 (ㄉà ㄒㄧàｎｇ)" }
+        ];
+        let currentIndex = 0;
+
+        function updateCard() {
+            document.getElementById('zhuyin').textContent = cards[currentIndex].z;
+            document.getElementById('word').textContent = cards[currentIndex].w;
+        }
+
+        function nextCard() {
+            currentIndex = (currentIndex + 1) % cards.length;
+            updateCard();
+            speakCard();
+        }
+
+        function prevCard() {
+            currentIndex = (currentIndex - 1 + cards.length) % cards.length;
+            updateCard();
+            speakCard();
+        }
+
+        function speakCard() {
+            const z = cards[currentIndex].z;
+            const w = cards[currentIndex].w.split(' ')[0]; // 只要中文詞
+            const text = `${z}，${w}`;
+            
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'zh-TW';
+            window.speechSynthesis.cancel();
+            window.speechSynthesis.speak(utterance);
+        }
+    </script>
+</body>
+</html>

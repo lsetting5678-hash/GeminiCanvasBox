@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的 Gemini 特教與互動工具箱</title>
+    <!-- 載入優雅字體 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300..700&family=Noto+Sans+TC:wght@300..900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #f7f9fc;
+            --primary-pink: #ffb7b2;
+            --primary-blue: #a8dadc;
+            --primary-yellow: #ffe5b4;
+            --primary-mint: #b5e2b9;
+            --text-color: #4a4a4a;
+            --card-bg: rgba(255, 255, 255, 0.85);
+            --card-shadow: 0 10px 25px rgba(168, 218, 220, 0.25);
+            --card-hover-shadow: 0 15px 35px rgba(255, 183, 178, 0.45);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Fredoka', 'Noto Sans TC', sans-serif;
+            background: linear-gradient(135deg, #fff3f3 0%, #f0f8ff 50%, #f2fff9 100%);
+            background-attachment: fixed;
+            color: var(--text-color);
+            min-height: 100vh;
+            padding: 2rem 1rem;
+            line-height: 1.6;
+        }
+
+        /* 療癒圓滑包裝器 */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+            position: relative;
+        }
+
+        /* 標題與裝飾 */
+        h1 {
+            font-size: 2.8rem;
+            font-weight: 700;
+            color: #5d6d7e;
+            text-shadow: 2px 2px 0px #fff, 4px 4px 0px rgba(168, 218, 220, 0.3);
+            margin-bottom: 1rem;
+            display: inline-block;
+            position: relative;
+        }
+
+        h1::after {
+            content: '';
+            position: absolute;
+            width: 60px;
+            height: 8px;
+            background: var(--primary-pink);
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-radius: 10px;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: #7f8c8d;
+            margin-top: 1.2rem;
+            font-weight: 500;
+        }
+
+        /* 搜尋與過濾區 */
+        .controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+            background: rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 2rem;
+            border-radius: 24px;
+            border: 2px solid rgba(255, 255, 255, 0.7);
+            box-shadow: 0 8px 32px rgba(168, 218, 220, 0.15);
+        }
+
+        .search-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 1rem 1.5rem 1rem 3.5rem;
+            font-size: 1.1rem;
+            border: 3px solid var(--primary-blue);
+            border-radius: 50px;
+            outline: none;
+            background: white;
+            color: var(--text-color);
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.05);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            font-family: inherit;
+        }
+
+        .search-input:focus {
+            border-color: var(--primary-pink);
+            box-shadow: 0 0 15px rgba(255, 183, 178, 0.5), inset 0 2px 5px rgba(0,0,0,0.02);
+            transform: scale(1.02);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 1.2rem;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.3rem;
+            pointer-events: none;
+        }
+
+        /* 分類按鈕 */
+        .categories-filter {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 0.8rem;
+        }
+
+        .filter-btn {
+            padding: 0.6rem 1.4rem;
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 50px;
+            background: white;
+            color: #6c7a89;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            font-family: inherit;
+        }
+
+        .filter-btn:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.08);
+            background: var(--primary-yellow);
+            color: #5d4037;
+        }
+
+        .filter-btn.active {
+            background: var(--primary-pink);
+            color: white;
+            box-shadow: 0 8px 20px rgba(255, 183, 178, 0.4);
+        }
+
+        /* 卡片網格 */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 2rem;
+        }
+
+        /* 單個卡片 (角落生物般圓潤 Q 彈) */
+        .card {
+            background: var(--card-bg);
+            border-radius: 28px;
+            border: 3px solid rgba(255, 255, 255, 0.9);
+            box-shadow: var(--card-shadow);
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        /* 微光裝飾背景 */
+        .card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 70%);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+
+        .card:hover {
+            transform: translateY(-12px) scale(1.03);
+            box-shadow: var(--card-hover-shadow);
+            border-color: var(--primary-pink);
+        }
+
+        .card:hover::before {
+            opacity: 1;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 1.2rem;
+            margin-bottom: 1.2rem;
+        }
+
+        .card-icon {
+            font-size: 2.8rem;
+            width: 65px;
+            height: 65px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--primary-blue);
+            border-radius: 20px;
+            box-shadow: 0 6px 12px rgba(168, 218, 220, 0.3);
+            transition: transform 0.3s;
+        }
+
+        .card:hover .card-icon {
+            transform: rotate(-10deg) scale(1.1);
+        }
+
+        /* 不同分類卡片的 icon 配色 */
+        .card[data-category="國語文"] .card-icon { background: var(--primary-pink); }
+        .card[data-category="數學"] .card-icon { background: var(--primary-blue); }
+        .card[data-category="行政工具"] .card-icon { background: var(--primary-yellow); }
+        .card[data-category="特需領域"] .card-icon { background: var(--primary-mint); }
+        .card[data-category="輔助科技"] .card-icon { background: #dcd6f7; }
+        .card[data-category="學生專區"] .card-icon { background: #ffe4e1; }
+
+        .card-title-wrapper {
+            flex: 1;
+        }
+
+        .card-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #4f5b66;
+            margin-bottom: 0.2rem;
+        }
+
+        .card-category {
+            display: inline-block;
+            font-size: 0.8rem;
+            font-weight: 700;
+            padding: 0.2rem 0.6rem;
+            border-radius: 20px;
+            background: rgba(0, 0, 0, 0.05);
+            color: #7f8c8d;
+        }
+
+        .card-desc {
+            font-size: 0.95rem;
+            color: #7f8c8d;
+            margin-bottom: 1.5rem;
+            flex-grow: 1;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .card-footer {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            border-top: 1.5px dashed rgba(0, 0, 0, 0.05);
+            padding-top: 1rem;
+        }
+
+        .tag {
+            font-size: 0.75rem;
+            font-weight: 600;
+            background: rgba(168, 218, 220, 0.2);
+            color: #457b9d;
+            padding: 0.15rem 0.5rem;
+            border-radius: 12px;
+        }
+
+        /* 自動跳轉橫幅 */
+        .redirect-banner {
+            display: none;
+            width: 100%;
+            background: linear-gradient(90deg, var(--primary-pink) 0%, var(--primary-yellow) 100%);
+            color: #5d4037;
+            padding: 1rem;
+            border-radius: 20px;
+            margin-bottom: 2rem;
+            font-weight: 700;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 8px 20px rgba(255, 183, 178, 0.3);
+            border: 3px solid white;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.01); }
+            100% { transform: scale(1); }
+        }
+
+        .redirect-btn {
+            background: white;
+            color: #e74c3c;
+            border: none;
+            padding: 0.4rem 1rem;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 700;
+            font-family: inherit;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+
+        .redirect-btn:hover {
+            transform: scale(1.05);
+        }
+
+        /* 找不到結果 */
+        .no-results {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 4rem;
+            font-size: 1.2rem;
+            color: #95a5a6;
+            background: var(--card-bg);
+            border-radius: 28px;
+            border: 3px dashed var(--primary-blue);
+        }
+
+        /* 甜美對話框 (Cute Custom Popup) */
+        .cute-alert {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(150%);
+            background: white;
+            border: 3px solid var(--primary-pink);
+            border-radius: 24px;
+            padding: 1rem 2rem;
+            box-shadow: 0 10px 30px rgba(255,183,178,0.4);
+            z-index: 1000;
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: #5d4037;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .cute-alert.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* QR Code 彈出視窗 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-content {
+            background: white;
+            border: 4px solid var(--primary-pink);
+            border-radius: 32px;
+            padding: 2.5rem;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 15px 35px rgba(255, 183, 178, 0.4);
+            transform: scale(0.8);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .modal-overlay.show .modal-content {
+            transform: scale(1);
+        }
+
+        .modal-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #5d6d7e;
+            margin-bottom: 1rem;
+        }
+
+        .qr-image-wrapper {
+            background: #fdf6f6;
+            border: 3px dashed var(--primary-blue);
+            border-radius: 20px;
+            padding: 1.5rem;
+            display: inline-block;
+            margin-bottom: 1rem;
+        }
+
+        .qr-image {
+            width: 200px;
+            height: 200px;
+            display: block;
+        }
+
+        .modal-url {
+            font-size: 0.85rem;
+            color: #7f8c8d;
+            word-break: break-all;
+            background: #f7f9fc;
+            padding: 0.5rem 1rem;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .modal-close-btn {
+            background: var(--primary-pink);
+            color: white;
+            border: none;
+            padding: 0.6rem 2rem;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(255,183,178,0.4);
+            transition: transform 0.2s;
+            font-family: inherit;
+        }
+
+        .modal-close-btn:hover {
+            transform: scale(1.05);
+            background: #ff9e97;
+        }
+
+        /* 卡片上的 QR 按鈕 */
+        .qr-btn {
+            margin-left: auto;
+            background: var(--primary-blue);
+            color: #1d3557;
+            border: none;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .qr-btn:hover {
+            background: var(--primary-pink);
+            color: white;
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 自動跳轉橫幅 -->
+        <div id="redirectBanner" class="redirect-banner" style="display: none;">
+            <span>🚀 偵測到預設首頁！將於 <span id="countdown">3</span> 秒後自動前往 <strong id="redirectTarget"></strong>...</span>
+            <button class="redirect-btn" onclick="cancelRedirect()">取消自動前往</button>
+        </div>
+
+        <header>
+            <h1>我的 Gemini 特教與互動工具箱</h1>
+            <p class="subtitle">🎈 讓教學與行政更簡單、更有趣的智慧小工具</p>
+        </header>
+
+        <section class="controls">
+            <!-- 搜尋框 -->
+            <div class="search-wrapper">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="searchInput" class="search-input" placeholder="搜尋工具名稱或關鍵字...">
+            </div>
+
+            <!-- 分類標籤 -->
+            <div class="categories-filter">
+                <button class="filter-btn active" onclick="filterCategory('All', this)">全部工具</button>
+                <button class="filter-btn" onclick="filterCategory('國語文', this)">國語文</button>
+<button class="filter-btn" onclick="filterCategory('數學', this)">數學</button>
+<button class="filter-btn" onclick="filterCategory('行政工具', this)">行政工具</button>
+<button class="filter-btn" onclick="filterCategory('特需領域', this)">特需領域</button>
+<button class="filter-btn" onclick="filterCategory('輔助科技', this)">輔助科技</button>
+<button class="filter-btn" onclick="filterCategory('學生專區', this)">學生專區</button>
+
+            </div>
+        </section>
+
+        <!-- 工具網格 -->
+        <main id="appGrid" class="grid">
+            
+        <a class="card" href="apps/classroom-math-quiz.html" data-category="數學">
+            <div>
+                <div class="card-header">
+                    <div class="card-icon">🧮</div>
+                    <div class="card-title-wrapper">
+                        <h2 class="card-title">九九乘法挑戰賽</h2>
+                        <span class="card-category">數學</span>
+                    </div>
+                </div>
+                <p class="card-desc">趣味的九九乘法限時速算挑戰，支援計分、計時與Q彈答題介面！</p>
+            </div>
+            <div class="card-footer">
+                <span class="tag">#數學</span><span class="tag">#乘法</span><span class="tag">#小測驗</span><span class="tag">#互動教學</span>
+                <button class="qr-btn" onclick="showQR(event, 'apps/classroom-math-quiz.html', '九九乘法挑戰賽')">📱 QR Code</button>
+            </div>
+        </a>
+        
+        <a class="card" href="apps/special-education-words.html" data-category="國語文">
+            <div>
+                <div class="card-header">
+                    <div class="card-icon">🎈</div>
+                    <div class="card-title-wrapper">
+                        <h2 class="card-title">特教注音符號學習卡</h2>
+                        <span class="card-category">國語文</span>
+                    </div>
+                </div>
+                <p class="card-desc">專為特教學生設計的注音符號與對應生字互動學習卡，具有點擊發音與大字體高對比度。</p>
+            </div>
+            <div class="card-footer">
+                <span class="tag">#注音</span><span class="tag">#特教</span><span class="tag">#語音</span><span class="tag">#國語文</span>
+                <button class="qr-btn" onclick="showQR(event, 'apps/special-education-words.html', '特教注音符號學習卡')">📱 QR Code</button>
+            </div>
+        </a>
+        
+        <a class="card" href="apps/teacher-comment-generator.html" data-category="行政工具">
+            <div>
+                <div class="card-header">
+                    <div class="card-icon">📝</div>
+                    <div class="card-title-wrapper">
+                        <h2 class="card-title">班級評語產生器</h2>
+                        <span class="card-category">行政工具</span>
+                    </div>
+                </div>
+                <p class="card-desc">幫助國小老師快速生成學生期末評語與建議的行政小幫手。</p>
+            </div>
+            <div class="card-footer">
+                <span class="tag">#行政</span><span class="tag">#評語</span><span class="tag">#老師幫手</span><span class="tag">#自動化</span>
+                <button class="qr-btn" onclick="showQR(event, 'apps/teacher-comment-generator.html', '班級評語產生器')">📱 QR Code</button>
+            </div>
+        </a>
+        
+        </main>
+    </div>
+
+    <!-- 甜美提示框 -->
+    <div id="cuteAlert" class="cute-alert">
+        <span>🥳</span>
+        <span id="cuteAlertText"></span>
+    </div>
+
+    <!-- QR Code 彈出視窗 -->
+    <div id="qrModal" class="modal-overlay" onclick="closeQR()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <h3 id="qrModalTitle" class="modal-title">QR Code</h3>
+            <div class="qr-image-wrapper">
+                <img id="qrModalImg" class="qr-image" src="" alt="QR Code">
+            </div>
+            <div id="qrModalUrl" class="modal-url"></div>
+            <button class="modal-close-btn" onclick="closeQR()">關閉</button>
+        </div>
+    </div>
+
+    <script>
+        // QR Code 顯示函數
+        function showQR(e, path, title) {
+            e.stopPropagation();
+            e.preventDefault();
+            
+            const fullUrl = new URL(path, window.location.href).href;
+            const qrImgUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(fullUrl)}`;
+            
+            document.getElementById('qrModalTitle').textContent = `📱 ${title}`;
+            document.getElementById('qrModalImg').src = qrImgUrl;
+            document.getElementById('qrModalUrl').textContent = fullUrl;
+            
+            document.getElementById('qrModal').classList.add('show');
+        }
+
+        // QR Code 關閉函數
+        function closeQR() {
+            document.getElementById('qrModal').classList.remove('show');
+        }
+        // 資料載入
+        const apps = [
+  {
+    "filename": "classroom-math-quiz.html",
+    "title": "九九乘法挑戰賽",
+    "description": "趣味的九九乘法限時速算挑戰，支援計分、計時與Q彈答題介面！",
+    "category": "數學",
+    "icon": "🧮",
+    "tags": [
+      "數學",
+      "乘法",
+      "小測驗",
+      "互動教學"
+    ],
+    "path": "apps/classroom-math-quiz.html"
+  },
+  {
+    "filename": "special-education-words.html",
+    "title": "特教注音符號學習卡",
+    "description": "專為特教學生設計的注音符號與對應生字互動學習卡，具有點擊發音與大字體高對比度。",
+    "category": "國語文",
+    "icon": "🎈",
+    "tags": [
+      "注音",
+      "特教",
+      "語音",
+      "國語文"
+    ],
+    "path": "apps/special-education-words.html"
+  },
+  {
+    "filename": "teacher-comment-generator.html",
+    "title": "班級評語產生器",
+    "description": "幫助國小老師快速生成學生期末評語與建議的行政小幫手。",
+    "category": "行政工具",
+    "icon": "📝",
+    "tags": [
+      "行政",
+      "評語",
+      "老師幫手",
+      "自動化"
+    ],
+    "path": "apps/teacher-comment-generator.html"
+  }
+];
+        const defaultRedirect = "";
+        let redirectTimeout = null;
+        let countdownInterval = null;
+
+        // 初始化
+        window.addEventListener('DOMContentLoaded', () => {
+            renderApps(apps);
+            checkDefaultRedirect();
+        });
+
+        // 搜尋監聽
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            filterApps();
+        });
+
+        // 渲染卡片
+        function renderApps(list) {
+            const grid = document.getElementById('appGrid');
+            grid.innerHTML = '';
+
+            if (list.length === 0) {
+                grid.innerHTML = `<div class="no-results">🌸 找不到符合的工具，要不要換個關鍵字試試看？</div>`;
+                return;
+            }
+
+            list.forEach(app => {
+                const card = document.createElement('a');
+                card.className = 'card';
+                card.href = app.path;
+                card.setAttribute('data-category', app.category);
+                
+                // 點擊事件：跳出可愛氣泡提示，延遲跳轉
+                card.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    showCuteAlert(`即將前往「${app.category}」工具區！準備出發～`);
+                    setTimeout(() => {
+                        window.location.href = app.path;
+                    }, 900);
+                });
+
+                const tagsHtml = app.tags.map(tag => `<span class="tag">#${tag}</span>`).join('');
+
+                card.innerHTML = `
+                    <div>
+                        <div class="card-header">
+                            <div class="card-icon">${app.icon}</div>
+                            <div class="card-title-wrapper">
+                                <h2 class="card-title">${app.title}</h2>
+                                <span class="card-category">${app.category}</span>
+                            </div>
+                        </div>
+                        <p class="card-desc">${app.description}</p>
+                    </div>
+                    <div class="card-footer">
+                        ${tagsHtml || '<span class="tag">#小工具</span>'}
+                        <button class="qr-btn" onclick="showQR(event, '${app.path}', '${app.title}')">📱 QR Code</button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // 分類與搜尋過濾
+        let currentCategory = 'All';
+        function filterCategory(cat, btn) {
+            currentCategory = cat;
+            
+            // 切換按鈕狀態
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            
+            filterApps();
+        }
+
+        function filterApps() {
+            const searchVal = document.getElementById('searchInput').value.toLowerCase().trim();
+            const filtered = apps.filter(app => {
+                const matchCat = (currentCategory === 'All' || app.category === currentCategory);
+                const matchSearch = app.title.toLowerCase().includes(searchVal) || 
+                                    app.description.toLowerCase().includes(searchVal) ||
+                                    app.tags.some(tag => tag.toLowerCase().includes(searchVal));
+                return matchCat && matchSearch;
+            });
+            renderApps(filtered);
+        }
+
+        // 甜美提示框控制
+        function showCuteAlert(msg) {
+            const alertBox = document.getElementById('cuteAlert');
+            const alertText = document.getElementById('cuteAlertText');
+            alertText.textContent = msg;
+            alertBox.classList.add('show');
+            setTimeout(() => {
+                alertBox.classList.remove('show');
+            }, 2000);
+        }
+
+        // 自動跳轉機制
+        function checkDefaultRedirect() {
+            if (!defaultRedirect) return;
+
+            const targetApp = apps.find(app => app.filename === defaultRedirect);
+            if (!targetApp) return;
+
+            const banner = document.getElementById('redirectBanner');
+            const targetSpan = document.getElementById('redirectTarget');
+            const countdownSpan = document.getElementById('countdown');
+
+            banner.style.display = 'flex';
+            targetSpan.textContent = targetApp.title;
+            
+            let secondsLeft = 3;
+            countdownSpan.textContent = secondsLeft;
+
+            countdownInterval = setInterval(() => {
+                secondsLeft--;
+                countdownSpan.textContent = secondsLeft;
+                if (secondsLeft <= 0) {
+                    clearInterval(countdownInterval);
+                    window.location.href = targetApp.path;
+                }
+            }, 1000);
+        }
+
+        function cancelRedirect() {
+            if (countdownInterval) clearInterval(countdownInterval);
+            document.getElementById('redirectBanner').style.display = 'none';
+            showCuteAlert("已取消自動前往，快來探索所有工具吧！✨");
+        }
+    </script>
+</body>
+</html>
