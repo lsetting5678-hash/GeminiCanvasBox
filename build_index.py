@@ -335,6 +335,8 @@ html_template = """<!DOCTYPE html>
         .card[data-category="特需領域"] .card-icon {{ background: var(--primary-mint); }}
         .card[data-category="輔助科技"] .card-icon {{ background: #dcd6f7; }}
         .card[data-category="學生專區"] .card-icon {{ background: #ffe4e1; }}
+        .card[data-category="班經小工具"] .card-icon {{ background: #ffdab9; }}
+        .card[data-category="特教行政工具"] .card-icon {{ background: #e6e6fa; }}
 
         .card-title-wrapper {{
             flex: 1;
