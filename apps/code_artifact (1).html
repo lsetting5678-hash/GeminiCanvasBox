@@ -1,0 +1,1410 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>特教課程計畫產生器 - 桃園市格式</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Chiron+GoRound+TC:wght@200..900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-blue: #4A90E2;
+            --pastel-pink: #FFD1DC;
+            --pastel-pink-hover: #FFB6C1;
+            --pastel-yellow: #FFF9C4;
+            --border-color: #E4E7ED;
+            --fusion-blue: #0055CC;
+        }
+
+        body {
+            font-family: 'Chiron GoRound TC', 'Segoe UI', 'Microsoft JhengHei', sans-serif;
+            background-color: #F8FAFC;
+            color: #4A5568;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .app-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: #FFFFFF;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.06);
+            overflow: hidden;
+            border-top: 10px solid var(--pastel-pink);
+        }
+
+        /* 頂部 Top Tab 導覽 */
+        .step-header {
+            display: flex;
+            background-color: #FFFFFF;
+            border-bottom: 1px solid var(--border-color);
+            padding: 10px 0;
+        }
+        .step-item {
+            flex: 1;
+            padding: 15px 10px;
+            text-align: center;
+            font-weight: 700;
+            color: #CBD5E0;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .step-item.active { color: var(--primary-blue); }
+        .step-item.active::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 15%;
+            width: 70%;
+            height: 4px;
+            background-color: var(--primary-blue);
+            border-radius: 10px;
+        }
+        .step-dot {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: #EDF2F7;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: #A0AEC0;
+            transition: 0.3s;
+        }
+        .step-item.active .step-dot { background-color: var(--primary-blue); color: white; box-shadow: 0 0 12px rgba(74, 144, 226, 0.4); }
+        .step-item.completed .step-dot { background-color: #48BB78; color: white; }
+
+        /* 內容容器 */
+        .step-content {
+            padding: 40px;
+            display: none;
+            animation: fadeIn 0.4s ease-out;
+        }
+        .step-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* 表單樣式 */
+        .form-label { font-weight: 700; color: #4A5568; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; font-size: 14px; }
+        .form-input {
+            width: 100%; padding: 12px 16px; border: 2px solid #E2E8F0; border-radius: 12px;
+            background-color: #FFFFFF; transition: 0.3s; font-size: 15px;
+        }
+        .form-input:focus { outline: none; border-color: var(--primary-blue); background-color: #F0F7FF; }
+        
+        /* 課綱清單卡片 */
+        .curriculum-card {
+            background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 14px;
+            padding: 16px; margin-bottom: 12px; display: flex; gap: 16px; align-items: flex-start;
+            transition: 0.2s; cursor: pointer;
+        }
+        .curriculum-card:hover { border-color: var(--primary-blue); box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
+        .curriculum-card input[type="checkbox"] { width: 20px; height: 20px; margin-top: 4px; cursor: pointer; accent-color: var(--primary-blue); }
+
+        /* 按鈕系統 */
+        .btn { padding: 12px 32px; border-radius: 30px; font-weight: 700; transition: 0.3s; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: none; }
+        .btn-primary { background-color: var(--primary-blue); color: white; box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3); }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(74, 144, 226, 0.4); }
+        .btn-outline { background-color: white; border: 2px solid #E2E8F0; color: #718096; }
+        .btn-outline:hover { background-color: #F7FAFC; border-color: #CBD5E0; }
+        .btn-next { background-color: var(--pastel-pink); color: #5C5C5C; }
+        .btn-next:hover { background-color: var(--pastel-pink-hover); }
+
+        /* 狀態列與特殊區塊 */
+        .status-cart { background-color: var(--pastel-yellow); color: #856404; font-weight: 800; padding: 8px 20px; border-radius: 20px; font-size: 14px; }
+        .tool-link { background-color: #4DB6AC; color: white; padding: 6px 16px; border-radius: 20px; font-size: 12px; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; transition: 0.2s; }
+        .tool-link:hover { background-color: #00897B; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid var(--primary-blue); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .hidden { display: none !important; }
+        .output-table { width: 100%; border-collapse: collapse; text-align: center; font-size: 0.875rem; background: white; }
+        .output-table th, .output-table td { border: 1px solid #E2E8F0; padding: 6px; }
+        .output-table th { background-color: #F7FAFC; color: #4A5568; }
+
+        /* 檔案上傳按鈕樣式 */
+        .file-upload-wrapper { position: relative; overflow: hidden; display: inline-block; cursor: pointer; }
+        .file-upload-wrapper input[type=file] { font-size: 100px; position: absolute; left: 0; top: 0; opacity: 0; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <!-- 頂部 Tab 導覽列 -->
+    <div class="step-header">
+        <div class="step-item active" id="tab1" onclick="goToStep(1)">
+            <div class="step-dot">1</div>
+            <span>表頭基本資料</span>
+        </div>
+        <div class="step-item" id="tab2" onclick="goToStep(2)">
+            <div class="step-dot">2</div>
+            <span>領域課綱檢索</span>
+        </div>
+        <div class="step-item" id="tab3" onclick="goToStep(3)">
+            <div class="step-dot">3</div>
+            <span>預覽與匯出</span>
+        </div>
+    </div>
+
+    <!-- 步驟 1：表頭基本資料 -->
+    <div class="step-content active" id="step1">
+        <div class="flex items-center gap-4 mb-6">
+            <span class="text-4xl">📝</span>
+            <div>
+                <h2 class="text-2xl font-black text-[#4A90E2]">特教課程計畫產生器</h2>
+                <p class="text-gray-500 font-medium">依照十二年國教特殊需求領域格式設計，支援一鍵生成學習重點。</p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="form-group">
+                <label class="form-label">班級類型</label>
+                <select id="classType" class="form-input font-bold text-gray-700" onchange="toggleClassType()">
+                    <option value="資源班">資源班</option>
+                    <option value="身障巡迴班">身障巡迴班</option>
+                    <option value="集中式特教班">集中式特教班</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">行政區</label>
+                <select id="district" class="form-input">
+                    <option value="桃園市中壢區">桃園市中壢區</option>
+                    <option value="桃園市桃園區">桃園市桃園區</option>
+                    <option value="桃園市平鎮區">桃園市平鎮區</option>
+                    <option value="桃園市八德區">桃園市八德區</option>
+                    <option value="桃園市楊梅區">桃園市楊梅區</option>
+                    <option value="桃園市蘆竹區">桃園市蘆竹區</option>
+                    <option value="桃園市大溪區">桃園市大溪區</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">學校名稱</label>
+                <div class="flex gap-2">
+                    <input type="text" id="schoolName" placeholder="例如：自強" class="form-input flex-grow">
+                    <select id="schoolType" class="form-input w-36">
+                        <option value="國民小學">國民小學</option>
+                        <option value="國民中學">國民中學</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="form-group">
+                <label class="form-label">學年度</label>
+                <input type="text" id="schoolYear" value="114" class="form-input text-center font-bold" oninput="updateZodiacDisplay()">
+            </div>
+            <div class="form-group">
+                <label class="form-label">每週節數</label>
+                <input type="text" id="weeklyPeriods" value="1" class="form-input text-center font-bold">
+            </div>
+            <div class="form-group">
+                <label class="form-label">設計者 (請僅填寫姓氏)</label>
+                <input type="text" id="teacherName" placeholder="例如：特教團隊、王老師" class="form-input">
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="form-group p-5 bg-blue-50 rounded-2xl border border-blue-100 shadow-sm md:col-span-1">
+                <label class="form-label text-blue-800">實施方式</label>
+                <div class="flex flex-wrap gap-4 mt-2">
+                    <label class="flex items-center gap-1 cursor-pointer font-bold text-gray-700"><input type="radio" name="scheduleType" value="外加" checked class="w-4 h-4 text-blue-600">外加</label>
+                    <label class="flex items-center gap-1 cursor-pointer font-bold text-gray-700"><input type="radio" name="scheduleType" value="抽離" class="w-4 h-4 text-blue-600">抽離</label>
+                    <label class="flex items-center gap-1 cursor-pointer font-bold text-gray-700 hidden" id="originalClassOption"><input type="radio" name="scheduleType" value="原班" class="w-4 h-4 text-blue-600">原班</label>
+                </div>
+            </div>
+            <div class="form-group p-5 bg-indigo-50 rounded-2xl border border-indigo-100 shadow-sm md:col-span-2">
+                <label class="form-label text-indigo-800">年級 (可複選)</label>
+                <div class="flex flex-wrap gap-4 mt-2" id="gradeCheckboxes">
+                    <label class="flex items-center gap-1 cursor-pointer font-bold text-gray-700"><input type="checkbox" value="1" class="w-4 h-4 text-indigo-600"> 1年級</label>
+                    <label class="flex items-center gap-1 cursor-pointer font-bold text-gray-700"><input type="checkbox" value="2" class="w-4 h-4 text-indigo-600"> 2年級</label>
+                    <label class="flex items-center gap-1 cursor-pointer font-bold text-gray-700"><input type="checkbox" value="3" checked class="w-4 h-4 text-indigo-600"> 3年級</label>
+                    <label class="flex items-center gap-1 cursor-pointer font-bold text-gray-700"><input type="checkbox" value="4" class="w-4 h-4 text-indigo-600"> 4年級</label>
+                    <label class="flex items-center gap-1 cursor-pointer font-bold text-gray-700"><input type="checkbox" value="5" class="w-4 h-4 text-indigo-600"> 5年級</label>
+                    <label class="flex items-center gap-1 cursor-pointer font-bold text-gray-700"><input type="checkbox" value="6" class="w-4 h-4 text-indigo-600"> 6年級</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group mb-10">
+            <label class="form-label">領域及科目</label>
+            <select id="courseDomainSelect" class="form-input font-black text-blue-700 text-lg py-3">
+                <option value="特殊需求領域-(生活管理)">特殊需求領域-(生活管理)</option>
+                <option value="特殊需求領域-(社會技巧)">特殊需求領域-(社會技巧)</option>
+                <option value="特殊需求領域-(學習策略)">特殊需求領域-(學習策略)</option>
+                <option value="特殊需求領域-(職業教育)">特殊需求領域-(職業教育)</option>
+                <option value="特殊需求領域-(溝通訓練)">特殊需求領域-(溝通訓練)</option>
+                <option value="特殊需求領域-(點字)">特殊需求領域-(點字)</option>
+                <option value="特殊需求領域-(定向行動)">特殊需求領域-(定向行動)</option>
+                <option value="特殊需求領域-(功能性動作訓練)">特殊需求領域-(功能性動作訓練)</option>
+                <option value="特殊需求領域-(輔助科技應用)">特殊需求領域-(輔助科技應用)</option>
+            </select>
+        </div>
+
+        <div class="form-group mb-6">
+            <label class="form-label">教學對象 / 年級 / 障礙類別</label>
+            <textarea id="targetStudents" rows="2" placeholder="例如：許ＯＯ/三年級/自閉症" class="form-input"></textarea>
+        </div>
+
+        <div class="form-group mb-6 p-5 bg-purple-50 rounded-2xl border border-purple-100 shadow-sm">
+            <label class="form-label text-purple-800 text-lg">
+                參照校訂課程名稱
+                <span class="text-sm font-bold text-red-500">(選填)</span>
+            </label>
+            <input type="text" id="referenceCourseName" placeholder="例如：悅讀繪本、我是社交小達人" class="form-input mb-4 font-bold text-purple-900 border-purple-200">
+            
+            <div class="border-t border-purple-200 pt-4 mt-2">
+                <p class="text-sm text-purple-700 font-bold mb-3 flex items-center gap-2">🤖 讓 AI 辨識校訂計畫，自動填入課程名稱 <span class="text-red-500">(選填，可不填)</span></p>
+                <textarea id="curriculumFeatureText" rows="2" class="form-input text-sm mb-3 border-purple-200" placeholder="可貼上學校校訂課程的特色內容文字..."></textarea>
+                <div class="flex flex-wrap items-center gap-3">
+                    <div class="file-upload-wrapper">
+                        <button class="btn btn-outline text-sm py-2 px-4 shadow-sm font-bold bg-white text-purple-700 border-purple-200 hover:bg-purple-100">📁 上傳校訂計畫圖片</button>
+                        <input type="file" id="curriculumUpload" accept="image/*">
+                    </div>
+                    <span id="curriculumUploadStatus" class="text-sm text-green-600 font-bold hidden">✅ 圖片已成功載入！</span>
+                    <button id="aiCurriculumBtn" class="btn bg-purple-600 hover:bg-purple-700 text-white text-sm py-2 px-5 ml-auto shadow-md">✨ 辨識並自動填入</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group mb-6 p-5 bg-gray-50 rounded-2xl border border-gray-200 shadow-sm">
+            <label class="form-label text-gray-800 text-lg">核心素養</label>
+            <div class="flex flex-col gap-4 mt-3" id="coreCompetence">
+                <div>
+                    <div class="font-black text-blue-700 mb-2">A自主行動</div>
+                    <div class="flex flex-wrap gap-5 pl-2">
+                        <label class="flex items-center gap-2 text-sm font-bold text-gray-700 cursor-pointer"><input type="checkbox" id="ccA1" value="A1.身心素質與自我精進" checked class="w-4 h-4 text-blue-600">A1.身心素質與自我精進</label>
+                        <label class="flex items-center gap-2 text-sm font-bold text-gray-700 cursor-pointer"><input type="checkbox" id="ccA2" value="A2.系統思考與問題解決" class="w-4 h-4 text-blue-600">A2.系統思考與問題解決</label>
+                        <label class="flex items-center gap-2 text-sm font-bold text-gray-700 cursor-pointer"><input type="checkbox" id="ccA3" value="A3.規劃執行與創新應變" class="w-4 h-4 text-blue-600">A3.規劃執行與創新應變</label>
+                    </div>
+                </div>
+                <div>
+                    <div class="font-black text-green-700 mb-2">B溝通互動</div>
+                    <div class="flex flex-wrap gap-5 pl-2">
+                        <label class="flex items-center gap-2 text-sm font-bold text-gray-700 cursor-pointer"><input type="checkbox" id="ccB1" value="B1.符號運用與溝通表達" checked class="w-4 h-4 text-green-600">B1.符號運用與溝通表達</label>
+                        <label class="flex items-center gap-2 text-sm font-bold text-gray-700 cursor-pointer"><input type="checkbox" id="ccB2" value="B2.科技資訊與媒體素養" class="w-4 h-4 text-green-600">B2.科技資訊與媒體素養</label>
+                        <label class="flex items-center gap-2 text-sm font-bold text-gray-700 cursor-pointer"><input type="checkbox" id="ccB3" value="B3.藝術涵養與美感素養" class="w-4 h-4 text-green-600">B3.藝術涵養與美感素養</label>
+                    </div>
+                </div>
+                <div>
+                    <div class="font-black text-orange-600 mb-2">C社會參與</div>
+                    <div class="flex flex-wrap gap-5 pl-2">
+                        <label class="flex items-center gap-2 text-sm font-bold text-gray-700 cursor-pointer"><input type="checkbox" id="ccC1" value="C1.道德實踐與公民意識" class="w-4 h-4 text-orange-500">C1.道德實踐與公民意識</label>
+                        <label class="flex items-center gap-2 text-sm font-bold text-gray-700 cursor-pointer"><input type="checkbox" id="ccC2" value="C2.人際關係與團隊合作" checked class="w-4 h-4 text-orange-500">C2.人際關係與團隊合作</label>
+                        <label class="flex items-center gap-2 text-sm font-bold text-gray-700 cursor-pointer"><input type="checkbox" id="ccC3" value="C3.多元文化與國際理解" class="w-4 h-4 text-orange-500">C3.多元文化與國際理解</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group mb-8 p-5 bg-green-50 rounded-2xl border border-green-100 shadow-sm">
+            <label class="form-label text-green-800">評量方式 (可複選)</label>
+            <div class="flex flex-wrap gap-3 mt-2" id="assessmentCheckboxes">
+                <label class="flex items-center gap-1 font-bold text-gray-700"><input type="checkbox" value="觀察評量" checked class="w-4 h-4 text-green-600">觀察評量</label>
+                <label class="flex items-center gap-1 font-bold text-gray-700"><input type="checkbox" value="實作評量" checked class="w-4 h-4 text-green-600">實作評量</label>
+                <label class="flex items-center gap-1 font-bold text-gray-700"><input type="checkbox" value="口語評量" class="w-4 h-4 text-green-600">口語評量</label>
+                <label class="flex items-center gap-1 font-bold text-gray-700"><input type="checkbox" value="動態評量" class="w-4 h-4 text-green-600">動態評量</label>
+                <label class="flex items-center gap-1 font-bold text-gray-700"><input type="checkbox" value="檔案評量" class="w-4 h-4 text-green-600">檔案評量</label>
+                <label class="flex items-center gap-1 font-bold text-gray-700"><input type="checkbox" value="指認" class="w-4 h-4 text-green-600">指認</label>
+                <label class="flex items-center gap-1 font-bold text-gray-700"><input type="checkbox" value="多元評量" class="w-4 h-4 text-green-600">多元評量</label>
+            </div>
+        </div>
+
+        <div class="flex justify-between items-center pt-6 border-t border-gray-100">
+            <button class="btn btn-outline" id="fillExampleBtn">💡 一鍵填寫範例</button>
+            <button class="btn btn-primary px-10" onclick="goToStep(2)">下一步：挑選課綱 →</button>
+        </div>
+    </div>
+
+    <!-- 步驟 2：課綱檢索 -->
+    <div class="step-content" id="step2">
+        <div class="flex justify-between items-start mb-8">
+            <div>
+                <h2 class="text-2xl font-black text-[#4A90E2] flex items-center gap-3"><span class="text-3xl">🔍</span> 特殊需求領域課綱檢索</h2>
+                <p class="text-red-500 font-bold mt-2 ml-1">※ 提醒：AI仍容易有遺漏或錯誤，請還是要檢查。</p>
+            </div>
+            <div class="status-cart flex items-center gap-2 shadow-sm mt-2">
+                🛒 購物車已選取：<span id="cartCount" class="text-lg">0</span> 項
+            </div>
+        </div>
+
+        <div class="bg-blue-50 p-6 rounded-2xl border-2 border-blue-100 flex flex-wrap items-center gap-4 mb-10">
+            <span class="font-black text-gray-700">課綱檢索：</span>
+            <select id="filterDomain" class="form-input w-48 shadow-sm font-bold text-blue-800" onchange="updateStageOptions()">
+                <option value="社會技巧">社會技巧</option>
+                <option value="生活管理">生活管理</option>
+                <option value="學習策略">學習策略</option>
+                <option value="職業教育">職業教育</option>
+                <option value="溝通訓練">溝通訓練</option>
+                <option value="點字">點字</option>
+                <option value="定向行動">定向行動</option>
+                <option value="功能性動作訓練">功能性動作訓練</option>
+                <option value="輔助科技應用">輔助科技應用</option>
+            </select>
+            <span class="text-blue-400 font-bold">➔</span>
+            <select id="filterStage" class="form-input w-64 shadow-sm font-bold text-blue-800" onchange="renderIndicators()">
+                <!-- 內容會由 JS 動態生成 -->
+            </select>
+            <a href="https://gemini.google.com/share/95383eb77df9" target="_blank" class="tool-link ml-auto">🤖 AI 特需領域課綱索引工具</a>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
+            <!-- 學習表現區塊 -->
+            <div class="flex flex-col h-full">
+                <div class="bg-[#0088CC] text-white px-6 py-4 rounded-t-2xl font-black flex items-center gap-2 shadow-sm">
+                    ◎ 學習表現 (Performance)
+                </div>
+                <div id="performanceList" class="bg-white p-6 border-x border-b border-gray-200 rounded-b-2xl shadow-inner flex-grow max-h-[500px] overflow-y-auto">
+                    <!-- 指標動態載入 -->
+                </div>
+            </div>
+
+            <!-- 學習內容區塊 -->
+            <div class="flex flex-col h-full">
+                <div class="bg-[#009966] text-white px-6 py-4 rounded-t-2xl font-black flex items-center gap-2 shadow-sm">
+                    📖 學習內容 (Content)
+                </div>
+                <div id="contentList" class="bg-white p-6 border-x border-b border-gray-200 rounded-b-2xl shadow-inner flex-grow max-h-[500px] overflow-y-auto">
+                    <!-- 指標動態載入 -->
+                </div>
+            </div>
+        </div>
+
+        <div class="flex justify-between mt-12 pt-6 border-t border-gray-100">
+            <button class="btn btn-outline" onclick="goToStep(1)">← 上一步</button>
+            <button class="btn btn-primary px-10" onclick="processSelectionsAndMoveToStep3()">下一步：預覽與匯出 →</button>
+        </div>
+    </div>
+
+    <!-- 步驟 3：預覽與匯出 -->
+    <div class="step-content" id="step3">
+        <h2 class="text-2xl font-black text-[#4A90E2] mb-8 flex items-center gap-3"><span class="text-3xl">🦖</span> 步驟 3/3：AI 生成與預覽匯出</h2>
+
+        <!-- 圖例佈局：雙欄輸入區域 -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <!-- 左欄：融滲分類 (選填) -->
+            <div class="bg-indigo-50 p-6 rounded-2xl border-2 border-indigo-100 shadow-sm flex flex-col relative">
+                <div class="flex justify-between items-center mb-4">
+                    <label class="form-label text-indigo-800 text-lg mb-0">
+                        融滲特需領域學習表現與內容
+                        <span class="text-sm font-bold text-red-500">(選填)</span>
+                    </label>
+                </div>
+                <p class="text-xs text-indigo-600 mb-4 font-bold">💡 跨領域指標已自動歸類於此。若無融滲需求則保留空白即可。</p>
+                <a href="https://gemini.google.com/share/95383eb77df9" target="_blank" class="tool-link bg-indigo-600 mb-4 self-start">🤖 AI 特需領域課綱索引工具</a>
+                <textarea id="infusedIndicators" rows="8" class="form-input bg-white border-indigo-200 flex-grow" placeholder="如有跨領域指標，系統已自動歸類於此。若無融滲需求則保留空白。"></textarea>
+            </div>
+
+            <!-- 右欄：同領域主內容 -->
+            <div class="bg-yellow-50 p-6 rounded-2xl border-2 border-yellow-200 shadow-md flex flex-col">
+                <div class="flex justify-between items-center mb-4">
+                    <label class="form-label text-yellow-800 text-lg mb-0">主領域之特需領域學習表現與內容</label>
+                </div>
+                <p class="text-xs text-yellow-700 mb-4 font-medium">主領域指標已自動填入，您可在此補充其他教學構想。</p>
+                <textarea id="curriculumPrompt" rows="8" class="form-input bg-white border-yellow-300 flex-grow" placeholder="請在此輸入主領域教學構想..."></textarea>
+            </div>
+        </div>
+
+        <!-- 新增：學校行事曆與學期設定區塊 -->
+        <div class="bg-white p-6 rounded-2xl border-2 border-gray-100 shadow-sm mb-10">
+            <h3 class="text-lg font-black text-gray-700 mb-4 flex items-center gap-2">
+                📅 學校行事曆與主題設定
+                <span class="text-red-500 text-sm font-bold ml-2">(此區塊皆為選填，可不填直接產生計畫)</span>
+            </h3>
+            <p class="text-sm text-gray-500 mb-4 font-bold">可上傳或貼上學校行事曆，若有提供，AI 將自動對照週次與節日安排教學主題；若無則按常規產出。</p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
+                <div class="p-4 bg-blue-50 rounded-xl border border-blue-100">
+                    <div class="font-black text-blue-800 mb-3 border-b border-blue-200 pb-2">第一學期 <span class="text-red-500 text-xs">(選填)</span></div>
+                    <div class="flex items-center gap-2 mb-3">
+                        <span class="text-sm font-bold text-gray-700">起迄：</span>
+                        <input type="date" id="sem1Start" class="form-input text-sm py-1 px-2 w-auto"> 
+                        <span class="text-gray-500">~</span> 
+                        <input type="date" id="sem1End" class="form-input text-sm py-1 px-2 w-auto">
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-sm font-bold text-gray-700">週數：</span>
+                        <input type="number" id="weeksSem1" value="21" class="form-input w-20 text-center text-sm py-1 px-2">
+                    </div>
+                </div>
+                <div class="p-4 bg-green-50 rounded-xl border border-green-100">
+                    <div class="font-black text-green-800 mb-3 border-b border-green-200 pb-2">第二學期 <span class="text-red-500 text-xs">(選填)</span></div>
+                    <div class="flex items-center gap-2 mb-3">
+                        <span class="text-sm font-bold text-gray-700">起迄：</span>
+                        <input type="date" id="sem2Start" class="form-input text-sm py-1 px-2 w-auto"> 
+                        <span class="text-gray-500">~</span> 
+                        <input type="date" id="sem2End" class="form-input text-sm py-1 px-2 w-auto">
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-sm font-bold text-gray-700">週數：</span>
+                        <input type="number" id="weeksSem2" value="21" class="form-input w-20 text-center text-sm py-1 px-2">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 行事曆圖片上傳與文字輸入 -->
+            <div class="mb-4 flex flex-col gap-3">
+                <div class="flex items-center gap-4">
+                    <div class="file-upload-wrapper">
+                        <button class="btn btn-outline text-sm py-2 px-4 shadow-sm font-bold bg-white hover:bg-gray-50">📁 上傳行事曆圖片 (選填)</button>
+                        <input type="file" id="calendarUpload" accept="image/*">
+                    </div>
+                    <span id="uploadStatus" class="text-sm text-green-600 font-bold hidden">✅ 圖片已成功載入！</span>
+                </div>
+                <textarea id="schoolCalendar" rows="3" class="form-input text-sm" placeholder="直接貼上重點節日（如：9/28教師節、11/1校慶...） (選填，若無則按常規產出)"></textarea>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2 mb-4">
+                <!-- 自動帶入生肖選項 -->
+                <div class="flex items-center gap-2 px-3 py-3 bg-red-50 border border-red-200 rounded-lg w-full">
+                    <input type="checkbox" id="includeZodiac" checked class="w-5 h-5 text-red-600 cursor-pointer accent-red-600">
+                    <label for="includeZodiac" class="text-sm font-bold text-red-800 cursor-pointer">
+                        🧧 自動將生肖（上學期:<span id="zodiacDisplay1" class="font-black text-red-600 text-lg mx-1"></span>/ 下學期:<span id="zodiacDisplay2" class="font-black text-red-600 text-lg mx-1"></span>）融入課程 <span class="text-red-600">(選填)</span>
+                    </label>
+                </div>
+                
+                <!-- 教學週次分配選擇 -->
+                <div class="flex items-center gap-2 px-3 py-3 bg-purple-50 border border-purple-200 rounded-lg w-full">
+                    <label class="text-sm font-bold text-purple-800 flex-shrink-0">⚙️ 教學週次分配：</label>
+                    <select id="weekAllocation" class="form-input text-sm font-bold text-purple-900 flex-grow py-1">
+                        <option value="彈性分配(由AI自行決定)">彈性分配 (由AI決定)</option>
+                        <option value="1-2週一個主題">短單元 (1-2週一個主題)</option>
+                        <option value="3週以上一個主題">長單元 (3週以上一個主題)</option>
+                        <option value="每週一個主題">極短單元 (每週一個主題)</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="text-center mt-6 border-t border-gray-100 pt-6">
+                <button id="generateBtn" class="btn btn-primary text-lg py-4 px-12 shadow-xl hover:shadow-2xl">✨ 一鍵產生雙學期完整進度</button>
+            </div>
+        </div>
+
+        <!-- 生成狀態 -->
+        <div id="loaderArea" class="hidden text-center py-12">
+            <div class="loader mb-4"></div>
+            <p class="text-blue-600 font-black text-lg">AI 正在為您計算邏輯並調配進度表...</p>
+        </div>
+
+        <div id="previewArea" class="hidden">
+            <div class="flex justify-between items-center mb-6 bg-green-50 p-5 rounded-2xl border border-green-200 shadow-sm">
+                <div>
+                    <h3 class="text-xl font-black text-green-700">📋 計畫摘要預覽</h3>
+                    <p class="text-xs text-green-600 font-bold mt-1">手動修改週數會自動平移其他週次；也可以點擊 🗑️ 刪除特定單元。</p>
+                </div>
+                <button id="exportWordBtn" class="btn btn-next px-8 py-3 text-lg font-black shadow-lg">📥 匯出精美 Word 檔</button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div class="p-6 bg-white border-2 border-blue-50 rounded-2xl shadow-sm">
+                    <h4 class="font-black border-b-2 border-blue-100 pb-3 mb-4 text-blue-700 flex justify-between">學 習 表 現 <span class="text-xs font-medium text-gray-400">自動分色</span></h4>
+                    <div id="previewPerformance" contenteditable="true" class="text-sm leading-relaxed whitespace-pre-wrap outline-none min-h-[120px]"></div>
+                </div>
+                <div class="p-6 bg-white border-2 border-green-50 rounded-2xl shadow-sm">
+                    <h4 class="font-black border-b-2 border-green-100 pb-3 mb-4 text-green-700 flex justify-between">學 習 內 容 <span class="text-xs font-medium text-gray-400">自動分色</span></h4>
+                    <div id="previewContent" contenteditable="true" class="text-sm leading-relaxed whitespace-pre-wrap outline-none min-h-[120px]"></div>
+                </div>
+            </div>
+
+            <div class="mb-6 p-6 bg-white border-2 border-yellow-50 rounded-2xl shadow-sm">
+                <h4 class="font-black border-b-2 border-yellow-100 pb-3 mb-4 text-yellow-700">🎯 本學年學習重點</h4>
+                <div id="previewFocus" contenteditable="true" class="text-sm leading-relaxed whitespace-pre-wrap outline-none min-h-[80px]"></div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
+                <div class="border-2 border-gray-100 rounded-2xl overflow-hidden shadow-md bg-white flex flex-col">
+                    <div class="bg-gray-100 p-3 text-center font-black text-gray-600">第一學期進度表</div>
+                    <div id="tableRender1" class="p-2 flex-grow"></div>
+                </div>
+                <div class="border-2 border-gray-100 rounded-2xl overflow-hidden shadow-md bg-white flex flex-col">
+                    <div class="bg-gray-100 p-3 text-center font-black text-gray-600">第二學期進度表</div>
+                    <div id="tableRender2" class="p-2 flex-grow"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex justify-start mt-10">
+            <button class="btn btn-outline" onclick="goToStep(2)">← 上一步</button>
+        </div>
+    </div>
+</div>
+
+<footer class="mt-10 mb-20 text-center text-gray-400 font-bold text-sm leading-loose">
+    原版工具：米克師 ｜ 原版連結：<a href="https://spedmix.pages.dev/lesson-plan" target="_blank" class="text-blue-400 hover:underline">https://spedmix.pages.dev/lesson-plan</a><br>
+    延伸開發：桃市特 ｜ 參考來源：<a href="https://eval.gooffice.com.tw/plan.aspx" target="_blank" class="text-blue-400 hover:underline">教育行政資源網</a><br>
+    本作品基於改編，採用 CC BY-NC-SA 4.0 授權。
+</footer>
+
+<div id="toast" class="hidden fixed bottom-10 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-8 py-4 rounded-full shadow-2xl z-50 font-bold"></div>
+
+<script>
+    // ==========================================
+    // 鉅細靡遺的特需領域課綱資料庫 (擷取自 108 課綱與使用者上傳截圖)
+    // ==========================================
+    
+    // 主題向度對應表
+    const themeMapping = {
+        "特學1": "提升認知學習", "特學2": "提升動機與態度", "特學3": "運用環境與學習工具", "特學4": "發展後設認知策略",
+        "特學A": "認知策略", "特學B": "態度與動機策略", "特學C": "環境調整和學習工具運用策略", "特學D": "後設認知策略",
+        "特社1": "處己", "特社2": "處人", "特社3": "處環境",
+        "特社A": "自我的行為與效能", "特社B": "溝通與人際的互動", "特社C": "家庭與社會的參與",
+        "特生1": "自我照顧", "特生2": "家庭生活", "特生3": "社區參與", "特生4": "自我決策",
+        "特生A": "飲食", "特生B": "衣著", "特生C": "個人衛生", "特生D": "健康管理", "特生E": "財物管理", "特生F": "環境衛生", "特生G": "居家安全", "特生H": "休閒活動", "特生I": "家庭關係與自我保護", "特生J": "行動與交通安全", "特生K": "社區生活", "特生L": "獨立自主與自我管理", "特生M": "心理賦權與自我實現",
+        "特職1": "工作資訊", "特職2": "求職準備", "特職3": "工作表現", "特職4": "工作安全", "特職5": "工作習慣", "特職6": "工作調適", "特職7": "團隊合作",
+        "特職A": "工作知識", "特職B": "工作技能", "特職C": "工作態度",
+        "特溝1": "訊息理解", "特溝2": "訊息表達", "特溝3": "互動交流", "特溝4": "合作參與",
+        "特溝A": "非口語訊息", "特溝B": "口語", "特溝C": "手語", "特溝D": "輔助性溝通符號",
+        "特定1": "具備定向能力", "特定2": "獨立行動", "特定3": "倡議宣導",
+        "特定A": "感覺訓練", "特定B": "概念發展與統整", "特定C": "定向系統與應用", "特定D": "行動技能與運用", "特定E": "求助禮儀與自我倡議",
+        "特功1": "肢體活動", "特功2": "功能性動作技能", "特功3": "日常生活參與",
+        "特功A": "四肢與軀幹的關節活動", "特功B": "身體姿勢的維持", "特功C": "身體姿勢的改變", "特功D": "移位", "特功E": "移動", "特功F": "舉起與移動物品", "特功G": "手與手臂使用", "特功H": "手部精細操作", "特功I": "雙側協調與眼手協調", "特功J": "動作計畫", "特功K": "交通工具的乘坐與駕駛",
+        "特點1": "點寫系統", "特點2": "摸讀系統",
+        "特點A": "點字前準備技能", "特點B": "觸覺點字前技能", "特點C": "點字系統",
+        "特輔1": "認識輔具", "特輔2": "選用適宜輔具", "特輔3": "正確操作輔具", "特輔4": "維護輔具及簡易故障排除",
+        "特輔A": "視覺輔具", "特輔B": "聽覺輔具", "特輔C": "行動移位與擺位輔具", "特輔D": "閱讀與書寫輔具", "特輔E": "溝通輔具", "特輔F": "電腦輔具", "特輔G": "其他輔具"
+    };
+
+    const p = (text) => {
+        if(!text) return [];
+        let cleanText = text.replace(/\n/g, ' ').replace(/(特[生社學職溝定功點輔])\s+([A-Za-z0-9])/g, '$1$2');
+        return cleanText.split(/[。.]/).filter(s => s.trim()).map(s => {
+            const str = s.trim();
+            const firstSpace = str.indexOf(' ');
+            if (firstSpace !== -1) {
+                let id = str.substring(0, firstSpace).trim()
+                            .replace(/Ⅰ/g, 'I').replace(/Ⅱ/g, 'II')
+                            .replace(/Ⅲ/g, 'III').replace(/Ⅳ/g, 'IV').replace(/Ⅴ/g, 'V');
+                
+                // 動態附加主題
+                let theme = "";
+                const match = id.match(/^(特[生社學職溝定功點輔][A-Za-z0-9]+)/);
+                if (match && themeMapping[match[1]]) {
+                    theme = `[${themeMapping[match[1]]}]`;
+                }
+
+                return { id: id, theme: theme, text: str.substring(firstSpace).trim() + '。' };
+            }
+            return null;
+        }).filter(item => item !== null);
+    };
+
+    const curriculumData = {
+        "學習策略": {
+            "I": {
+                performance: p(`特學1-I-1 注意環境中的訊息。 特學1-I-2 區辨環境中訊息的來源管道。 特學1-I-3 忽略干擾訊息。 特學1-I-4 透過提示系統集中注意力。 特學1-I-5 提示下維持專注。 特學1-I-6 依據提示適當轉移注意力。 特學1-I-7 透過練習增加學習印象。 特學1-I-8 透過提示將新訊息和舊經驗連結。 特學1-I-9 依據指示標記學習重點。 特學1-I-10 指出對話內容的重點。 特學1-I-11 依據上下文了解學習內容的意涵。 特學1-I-12 簡要說出常見字詞的意思。 特學1-I-13 註記自己不了解的內容。 特學1-I-14 利用各種輔助訊息了解文意。 特學1-I-15 表達出文章內容的大意。 特學2-I-1 遵守學習規範。 特學2-I-2 願意接受指正，改善不適當的學習行為。 特學2-I-3 保持對學習的興趣。 特學2-I-4 願意追求更佳的學習表現。 特學3-I-1 覺察環境對自己學習的影響。 特學3-I-2 運用多感官學習。 特學3-I-3 在指導下進行學習活動或運用學習工具。 特學3-I-4 認識學習資源。 特學4-I-1 在提醒下依時限完成作業或考試。 特學4-I-2 在協助下檢核學習項目或學習活動完成狀況。`),
+                content: p(`特學A-I-1 環境中的訊息。 特學A-I-2 提示系統。 特學A-I-3 提示或指導語。 特學A-I-4 增加學習印象的方法。 特學A-I-5 聆聽與對話。 特學A-I-6 常見字詞。 特學A-I-7 語句、短文或文章的理解方法。 特學B-I-1 學習規範和行為。 特學B-I-2 學習興趣和意願。 特學C-I-1 自然的學習環境。 特學C-I-2 學習活動或工具的示範。 特學C-I-3 多感官的學習訊息。 特學C-I-4 多元的學習資源。 特學D-I-1 考試或作業的指導語。 特學D-I-2 可檢核的學習項目或學習活動。`)
+            },
+            "II": {
+                performance: p(`特學1-II-1 察覺訊息中的重要項目。 特學1-II-2 指出不同訊息的重點。 特學1-II-3 延長專注時間。 特學1-II-4 找出並練習標記學習內容的重點。 特學1-II-5 將學習內容做成心智圖、組織圖或流程圖。 特學1-II-6 運用反覆練習策略，複習學習過的內容。 特學1-II-7 將學習材料化繁為簡，加深記憶。 特學1-II-8 將學習內容和自己的經歷產生連結。 特學1-II-9 指出文章內容相關處或前後關係。 特學1-II-10 簡單歸納學習的內容。 特學1-II-11 說出文章內容的重點與重要概念。 特學1-II-12 表達不清楚或不明白的學習內容。 特學1-II-13 透過討論或對話理解學習內容。 特學2-II-1 在提醒下完成課前和課後的學習工作。 特學2-II-2 對學習具備正向思考。 特學2-II-3 發現增進自我學習動機的方式。 特學3-II-1 選擇適合自己的學習空間。 特學3-II-2 運用各種學習資源。 特學4-II-1 主動依時限完成作業或考試。 特學4-II-2 發現並留意自己學習時常犯的錯誤。`),
+                content: p(`特學A-II-1 訊息中的重要項目或重點。 特學A-II-2 適當的專注時間。 特學A-II-3 學習內容的重點。 特學A-II-4 心智圖、組織圖或流程圖。 特學A-II-5 反覆練習策略。 特學A-II-6 個人或生活經驗。 特學A-II-7 學習或文章內容脈絡。 特學A-II-8 學習內容的疑問和討論。 特學B-II-1 課前和課後的學習工作。 特學B-II-2 正向的思考或想法。 特學B-II-3 適合鼓勵或增強學習的方式。 特學C-II-1 適合的學習空間。 特學C-II-2 可選擇的學習工具。 特學D-II-1 有時限的作業或考試。 特學D-II-2 自我檢查錯誤的方法。`)
+            },
+            "III": {
+                performance: p(`特學1-III-1 分辨訊息中的細節差異。 特學1-III-2 調整不同學習項目的專注時間。 特學1-III-3 提示下轉移注意力。 特學1-III-4 運用不同圖示重組學習內容。 特學1-III-5 將需記憶的學習內容與既有的知識產生連結。 特學1-III-6 自行找出並標記學習內容的重點。 特學1-III-7 條列學習內容的重點。 特學1-III-8 簡單說明文章段落間的關係。 特學1-III-9 表達文章內容的核心與重要概念。 特學1-III-10 運用資訊軟體整理學習內容綱要。 特學1-III-11 透過自問自答確認理解的程度。 特學2-III-1 在不同學習情境下調整自己的學習行為。 特學2-III-2 主動完成課前和課後的學習工作。 特學2-III-3 設定符合自己能力水準的學習目標。 特學2-III-4 正向分析自己的學習表現。 特學3-III-1 依需求調整自我學習環境。 特學3-III-2 依需求選用學習工具。 特學4-III-1 分配考試作答的時間和順序。 特學4-III-2 整理自己常犯的錯誤並列出可能解決方法。 特學4-III-3 評估並調整學習活動所需的時間。 特學4-III-4 自我檢核和記錄學習過程及結果。 特學4-III-5 安排自己的作息時間。`),
+                content: p(`特學A-III-1 訊息中的細節差異。 特學A-III-2 轉移注意力的提示重點。 特學A-III-3 學習內容的記憶方法。 特學A-III-4 重點標記或圖示。 特學A-III-5 文章段落關係和核心概念。 特學A-III-6 資訊軟體。 特學A-III-7 自問自答的技巧與練習。 特學B-III-1 學習行為的調整。 特學B-III-2 預習和複習的工作。 特學B-III-3 適合自己的學習目標和增強策略。 特學B-III-4 學習表現的分析方式。 特學C-III-1 調整學習空間的方法。 特學C-III-2 選用學習工具的方法。 特學D-III-1 考試作答時間和順序的分配方法。 特學D-III-2 考試前後的學習活動。 特學D-III-3 解決或修正錯誤的方法。 特學D-III-4 記錄學習過程和結果的方法。 特學D-III-5 適合的作息時間表。`)
+            },
+            "IV": {
+                performance: p(`特學1-IV-1 根據環境或學習訊息轉換注意力及調整專注時間。 特學1-IV-2 運用多元的記憶方法增進對學習內容的精熟度。 特學1-IV-3 重新組織及歸納學習內容。 特學1-IV-4 分析不同類型文章的架構。 特學1-IV-5 依據學習內容聯想並延伸相關知識。 特學1-IV-6 利用文本中的解釋說明，了解文意。 特學2-IV-1 表現積極的學習態度。 特學2-IV-2 自我肯定成功的學習經驗。 特學2-IV-3 檢視並建立合宜的學習信念。 特學3-IV-1 規劃自我的學習環境。 特學3-IV-2 運用多元工具解決學習問題。 特學4-IV-1 透過應試的結果分析學習成效。 特學4-IV-2 分析學習內容並調整學習方法。 特學4-IV-3 接納他人建議修正學習計畫。 特學4-IV-4 監控並記錄學習計畫執行過程。 特學4-IV-5 依據需求調整學習或作息時間。`),
+                content: p(`特學A-IV-1 多元的學習環境或訊息。 特學A-IV-2 多元的記憶和組織方法。 特學A-IV-3 文章架構。 特學A-IV-4 學習內容的延伸聯想。 特學A-IV-5 教材中的輔助解釋、脈絡或關鍵字句。 特學B-IV-1 積極的學習態度。 特學B-IV-2 成功的學習經驗。 特學B-IV-3 學習信念的檢視和調整方法。 特學C-IV-1 學習環境的規劃內容。 特學C-IV-2 解決學習問題的多元工具。 特學D-IV-1 應試結果分析。 特學D-IV-2 學習計畫的分析和調整方式。 特學D-IV-3 學習計畫的執行紀錄。 特學D-IV-4 依需求規劃的作息時間表。`)
+            },
+            "V": {
+                performance: p(`特學1-V-1 發展出適合自己的注意力策略。 特學1-V-2 發展出適合自己的記憶策略。 特學1-V-3 發展出適合自己的組織策略。 特學1-V-4 發展出適合自己的理解策略。 特學1-V-5 發展出適合自己的推理策略。 特學2-V-1 展現個人的優勢能力。 特學2-V-2 透過良好的學習行為追求自我實現。 特學3-V-1 營造自我的學習環境。 特學3-V-2 善用多元工具增進學習效能。 特學4-V-1 預測應試可能的命題內容，進行事前準備。 特學4-V-2 根據應試的結果，分析評估個人學習的優弱勢能力。 特學4-V-3 檢視學習過程及結果，主動修正學習計畫或策略。 特學4-V-4 安排自己的行事曆。 特學4-V-5 根據需要調整時間行程。`),
+                content: p(`特學A-V-1 自我的注意力策略。 特學A-V-2 自我的記憶策略。 特學A-V-3 自我的組織策略。 特學A-V-4 自我的理解策略。 特學A-V-5 自我的推理策略。 特學B-V-1 展現優勢能力的方式。 特學B-V-2 達成自我實現的方法。 特學C-V-1 適切的學習環境調整方案。 特學C-V-2 增進學習效能的多元工具。 特學D-V-1 應試前的預測與分析。 特學D-V-2 學習優弱勢能力的分析。 特學D-V-3 修正學習計畫的參考依據。 特學D-V-4 自主規劃的行事曆。`)
+            }
+        },
+        "社會技巧": {
+            "I": {
+                performance: p(`特社1-I-1 分辨與表達基本的正向或負向情緒。 特社1-I-2 藉由生理反應察覺及辨識壓力與情緒的反應。 特社1-I-3 學習面對可能遭遇的失敗。 特社1-I-4 察覺自己與他人對自己的看法或態度。 特社1-I-5 在遭逢不如意事件時，接受他人安慰並適當發洩情緒。 特社2-I-1 了解別人發出的訊息，是要我注意或是有事情要溝通。 特社2-I-2 了解人與人之間喜歡、親密與不喜歡、排斥的表現及差異。 特社2-I-3 適當使用口語、非口語或輔具與人溝通。 特社2-I-4 以身體動作適度表現出傾聽的態度。 特社2-I-5 依情境適當回答問題。 特社2-I-6 主動打招呼和自我介紹。 特社2-I-7 了解與人相處的情境、簡單規則，建立友善的關係。 特社2-I-8 分辨與表達衝突的原因、情境與後果。 特社2-I-9 避免爭鬥或危險的場合以保護自己。 特社2-I-10 在面對抱怨或拒絕情境時，維持心情的平穩。 特社2-I-11 在被他人誤解或誣賴時，主動尋求大人或同儕的協助。 特社2-I-12 與他人相處時，遵守基本的禮儀。 特社2-I-13 分辨與因應不適當的觸摸或語言，必要時主動尋求協助。 特社2-I-14 尊重他人的身體界限與自主權。 特社3-I-1 在課堂中持續傾聽他人說話。 特社3-I-2 依指示完成簡單的工作。 特社3-I-3 遇到困難時，等待時機求助。 特社3-I-4 以適當的身體動作或口語表達需求。 特社3-I-5 遵守教室規則。 特社3-I-6 在學校、家庭、社區或部落活動時，有禮貌地詢問或回應他人。 特社3-I-7 在節慶或傳統祭儀時說出簡單的應景的話。 特社3-I-8 在親人或他人遭逢不如意或喪事的場合，保持安靜不吵鬧。 特社3-I-9 在社區或部落活動時，有禮貌地詢問或回應他人的問話。`),
+                content: p(`特社A-I-1 基本情緒的認識與分辨。 特社A-I-2 壓力的察覺與面對。 特社A-I-3 自我優弱勢的察覺。 特社B-I-1 溝通訊息的意義。 特社B-I-2 溝通的媒介。 特社B-I-3 人際關係的建立。 特社B-I-4 衝突的原因及情境分析。 特社B-I-5 性別互動的基本禮儀。 特社C-I-1 學校規則的認識與遵守。 特社C-I-2 家庭成員互動的技巧。 特社C-I-3 社區成員互動的技巧。`)
+            },
+            "II": {
+                performance: p(`特社1-II-1 嘗試因應與處理基本的情緒及壓力。 特社1-II-2 以實質的增強物自我激勵。 特社1-II-3 在成人的引導下擬訂解決問題的計畫。 特社1-II-4 嘗試使用策略解決問題並接納後果。 特社2-II-1 解讀他人口語與非口語溝通的情緒及目的，並反思自己是否有應留意或改善之處。 特社2-II-2 主動引起話題，並禮貌地表達和傾聽他人的意見。 特社2-II-3 遵守團體規範，並依情境回應他人的邀請或主動加入團體。 特社2-II-4 分辨與採用適當的方式解決衝突，並能理性評估和接受衝突的後果。 特社2-II-5 無法執行他人的期待，以適當的方式回應困境。 特社2-II-6 了解性器官的隱私性及轉移觸摸的注意力。 特社2-II-7 與他人相處時，分辨安全或危險的情境與人物。 特社3-II-1 在課堂或小組討論中適當表達與回應意見。 特社3-II-2 在小組中分工合作完成自己的工作。 特社3-II-3 在監督或協助下完成複雜的工作。 特社3-II-4 遇到困難時，具體說明需要的協助。 特社3-II-5 在知悉他人生病或受傷時，主動報告師長並表達安慰之意。 特社3-II-6 認識學校或家中不同國籍或文化的師長、同學與親友。 特社3-II-7 在家庭、社區或部落情境時，主動向人問候或表達感謝。 特社3-II-8 與不同國籍或文化的人進行簡單互動。`),
+                content: p(`特社A-II-1 基本情緒的表達。 特社A-II-2 壓力源的評估與處理。 特社A-II-3 自我接納與激勵。 特社B-II-1 訊息解讀的技巧。 特社B-II-2 表達與傾聽的時機。 特社B-II-3 團體的基本規範。 特社B-II-4 衝突情境的因應。 特社B-II-5 危險情境的判別。 特社C-II-1 學習成員之間的關懷與表達。 特社C-II-2 家庭成員之間的關懷與表達。 特社C-II-3 社區成員之間的關懷與表達。`)
+            },
+            "III": {
+                performance: p(`特社1-III-1 聽從建議選擇較佳的情緒處理技巧。 特社1-III-2 嘗試使用抒解壓力的方法。 特社1-III-3 接納自己與接受不可能每個人都喜歡自己的事實。 特社1-III-4 以各種形式自我安慰與獎勵。 特社1-III-5 使用策略解決問題，但不過度重視結果或成敗。 特社2-III-1 以善意正向的觀點，看待與人相處的各種互動行為。 特社2-III-2 區辨別人非善意行為是提醒，還是威脅到了自己的適應與生存。 特社2-III-3 使用適當的技巧與人談話，並禮貌的結束話題。 特社2-III-4 依據情境，用適當的方式與他人分享自己喜歡的物品或生活經驗。 特社2-III-5 明瞭每個人都有獨特的地方，交友時不以單一標準或條件選擇。 特社2-III-6 展現合宜行為以維持長時間的友誼。 特社2-III-7 在無法接受個人或團體的要求時，禮貌地表示拒絕。 特社2-III-8 理性評估與接受被拒絕的原因。 特社2-III-9 理性評估被誤解的原因，並清楚表達自己的立場以及說明事實。 特社2-III-10 檢視發生衝突的原因並設法自我修正。 特社2-III-11 面對兩難的情境時，說明情境的利弊得失。 特社2-III-12 評估與遵守虛擬世界的規則，並清楚表達自己的需求和感受。 特社2-III-13 覺察與因應身體碰觸或情感互動時不對等的權力關係。 特社2-III-14 勇敢表達對他人不當觸摸或語言的反感。 特社2-III-15 保持與他人相處時的身體界限。 特社2-III-16 以平等、尊重的態度與方式欣賞與對待各種性別的人。 特社2-III-17 在虛擬世界進行人際互動時，能維持平等、尊重的態度。 特社3-III-1 遵守不同課堂的規則。 特社3-III-2 主動參與課堂或小組討論，並在小組中主動對他人提供協助。 特社3-III-3 服從小組決議並完成指派的工作。 特社3-III-4 在節慶或傳統祭儀遇到熟悉的人時，使用有簡單主題的方式說出應景的話。 特社3-III-5 在親友或他人遭逢不如意或喪事的場合，表現出適當合宜的行為。 特社3-III-6 與不同文化的鄰居進行簡單的溝通。 特社3-III-7 願意陪同傷病的同學或家人到健康中心或就醫。 特社3-III-8 與學校不同國籍或文化的師長、同學進行簡單的聯繫與溝通。`),
+                content: p(`特社A-III-1 複雜情緒的處理。 特社A-III-2 壓力的替代與紓解方法。 特社A-III-3 行為與後果之間的關係與評估。 特社B-III-1 正負向訊息的判斷。 特社B-III-2 話題的開啟與延續。 特社B-III-3 自我經驗的分享。 特社B-III-4 自我需求與困難的表達。 特社B-III-5 多元性別互動與自主。 特社C-III-1 不同學習情境變化的適應與調整。 特社C-III-2 不同家庭情境變化的適應與調整。 特社C-III-3 不同社區或部落情境變化的適應與調整。`)
+            },
+            "IV": {
+                performance: p(`特社1-IV-1 分辨與表達矛盾的情緒。 特社1-IV-2 分析不同處理方式引發的行為後果。 特社1-IV-3 在面對壓力時，適當的調整情緒。 特社1-IV-4 聽從他人的建議，嘗試解決被拒絕的困境。 特社1-IV-5 從可行策略中，選擇適當的抒解壓力方式。 特社1-IV-6 分析失敗的原因，並從成功的經驗自我肯定。 特社1-IV-7 根據優弱勢能力，設定努力或學習的目標。 特社1-IV-8 遭遇不如意時，主動轉移注意力，並以內在語言自我鼓勵。 特社1-IV-9 主動擬定與分析問題解決方式的優缺點及其後果。 特社2-IV-1 運用科技媒體接收他人的訊息，以及解讀科技媒體訊息上的意義。 特社2-IV-2 區辨各種溝通訊息的情緒和意圖，並能保留正向內容激勵自己，察覺負向內容保護自己。 特社2-IV-3 正確解讀性別間傳遞的訊息，是正向合理，或是歧視，還是具有高度的性暗示。 特社2-IV-4 具備正確使用網路的基本法律常識。 特社2-IV-5 運用科技媒體表達和接受不同的意見或感受。 特社2-IV-6 適當介紹自己獨特的地方，主動尋求志同道合的朋友。 特社2-IV-7 欣賞不同朋友的獨特性，建立不同層次的友誼。 特社2-IV-8 根據喜好主動加入團體，並替團體爭取榮譽。 特社2-IV-9 與他人共同從事活動，分享彼此的感受或想法。 特社2-IV-10 在同儕友誼關係出現狀況時有修補的策略。 特社2-IV-11 在面對衝突情境時，控制自己情緒並選擇可被接受的方式回應。 特社2-IV-12 面對他人的抱怨，安撫對方情緒緩和衝突，並有效分析自己的困難。 特社2-IV-13 在面對兩難的情境時，主動選擇對自己較為有利的情境。 特社2-IV-14 在無法接受個人或團體的要求時，禮貌的說明拒絕的原因。 特社2-IV-15 與他人相處，分辨危險情境或危險人物，採取正當的防衛措施。 特社2-IV-16 使用技巧拒絕他人不當的觸摸或語言。 特社2-IV-17 以平等、尊重的態度與他人共同參與團體或活動。 特社2-IV-18 使用適當方式表達對人的欣賞，以及接受各種結果。 特社2-IV-19 懂得保護自己，正確判斷及因應禮物或金錢的誘惑。 特社2-IV-20 分辨他人愛慕的言語及行為。 特社2-IV-21 能以適當方式抒解自己的性衝動。 特社2-IV-22 尊重他人的性傾向或性別認同。 特社2-IV-23 在面對爭吵或分手的情境，冷靜面對結果，並尋求適當協助保護自己。 特社2-IV-24 遵守法律對於性關係的規範。 特社2-IV-25 在法律與師長的協助下，處理與他人發生性關係的後果。 特社3-IV-1 能在課堂或小組討論尊重他人不同的意見。 特社3-IV-2 服從指令規劃步驟完成複雜的工作。 特社3-IV-3 配合老師的指令，遵守不同學習情境和器材的使用規則與安全。 特社3-IV-4 在遇到困難時，依問題性質尋求特定對象或資源的協助。 特社3-IV-5 願意參與學校、家庭、社區或部落的活動與聚會。 特社3-IV-6 在節慶或傳統祭儀的情境時，適切地回應應景的話。 特社3-IV-7 在親友遭逢不如意或喪事的場合時，主動安慰對方。 特社3-IV-8 在節慶、傳統祭儀或喪事時，察覺不同文化背景，有不同的儀式或因應方式。`),
+                content: p(`特社A-IV-1 兩難情緒的處理。 特社A-IV-2 壓力的控制與調整。 特社A-IV-3 問題解決的技巧。 特社B-IV-1 科技媒體的運用。 特社B-IV-2 同理心的培養。 特社B-IV-3 優勢的呈現與表達。 特社B-IV-4 拒絕的技巧。 特社B-IV-5 愛慕與追求的方式。 特社C-IV-1 尊重與接納學校的多元意見。 特社C-IV-2 尊重與接納家庭的多元文化。 特社C-IV-3 尊重與接納社區的多元文化。`)
+            },
+            "V": {
+                performance: p(`特社1-V-1 根據情緒的情境或程度，適當的運用各種情緒，促進成長。 特社1-V-2 在面對壓力時有效處理自己的情緒。 特社1-V-3 主動尋求資源或策略以處理被拒絕的困境。 特社1-V-4 持續嘗試與使用有效的方式抒解壓力。 特社1-V-5 發揮自己的優勢去解決問題。 特社1-V-6 遭遇不如意時，以正向思考方式調整心態。 特社1-V-7 從失敗經驗中自我鼓勵，並調整解決問題的方式或策略。 特社1-V-8 事先評估結果，並選擇對自己及他人皆有利的解決方法。 特社1-V-9 勇於面對自己的選擇和承擔後果。 特社2-V-1 理解各種有趣及善意的訊息，讓自己快樂生活。 特社2-V-2 區辨與查證科技媒體訊息的真實性，不被誤導。 特社2-V-3 了解惡意欺騙或具有性侵害意圖的各種訊息。 特社2-V-4 用適當方式表達和接受不同的意見或評論。 特社2-V-5 根據對話中隱含的情緒和目的，選擇適當的因應方法。 特社2-V-6 依情境變化適當展現自己的優勢能力，以降低弱勢能力帶來的負面影響。 特社2-V-7 與不同特質的朋友互動，選擇適當的回饋，調整自己的行為以維持友誼。 特社2-V-8 積極參與團體，爭取團體的接納。 特社2-V-9 在團體中適當分享自己的感受或想法。 特社2-V-10 在面對衝突情境，有效處理自己的情緒。 特社2-V-11 主動與他人協商，提出雙方都可接受的方法解決衝突。 特社2-V-12 反省衝突原因，以便事前避免正面衝突。 特社2-V-13 在被他人誤解或誣賴時主動澄清。 特社2-V-14 在無法執行他人的要求時，尋求可能的替代方案和有效的資源。 特社2-V-15 了解與人相处時的安全情境條件。 特社2-V-16 面對他人不當的觸摸或語言時，能有效使用自我保護及求助技巧。 特社2-V-17 尋求適當途徑告發他人不當的觸摸或語言。 特社2-V-18 了解與他人單獨約會時的安全。 特社2-V-19 禮貌地拒絕他人愛慕的言語及行為。 特社2-V-20 負責任地處理與他人發生性關係的後果。 特社2-V-21 培養與人建立健康親密關係的方法。 特社3-V-1 服從指令規劃執行工作的步驟。 特社3-V-2 在執行工作過程中自我檢查、自我回饋以解決問題。 特社3-V-3 在遭遇困難時，根據分析結果掌握有效資源尋求解決困難。 特社3-V-4 在課堂或小組討論時，給予適當的回饋或評論。 特社3-V-5 小組中能協調不同意見，盡力與他人合作爭取團隊榮譽。 特社3-V-6 願意協助策劃及辦理學校活動。 特社3-V-7 在親友遭逢不如意或喪事的場合時，協助處理事情，並同理不同的人有不同的自我療癒方式。 特社3-V-8 在節慶或傳統祭儀時，主動愉悅地說出應景的話。 特社3-V-9 與家人參與社區或部落的聚會或活動時，主動表達及協助處理事務。`),
+                content: p(`特社A-V-1 強烈情緒的表達。 特社A-V-2 問題解決的外在資源。 特社A-V-3 正向思考的技巧。 特社B-V-1 訊息真偽與詐騙的防範。 特社B-V-2 同理他人的技巧。 特社B-V-3 友誼維持的技巧。 特社B-V-4 協商技巧與求助資源。 特社B-V-5 危險預防與責任的處理。 特社C-V-1 學校的參與及合作。 特社C-V-2 家庭的參與及合作。 特社C-V-3 社區或部落的參與及合作。`)
+            }
+        },
+        "職業教育": {
+            "I": {
+                performance: p(`特職1-I-1 描述家人的工作資訊。 特職1-I-2 認識社區中常見的職業。 特職2-I-1 簡要自我介紹。 特職2-I-2 表達喜歡的職業名稱。 特職3-I-1 依照物品特性完成指定工作。 特職3-I-2 表現完成指定工作所需的基本能力。 特職4-I-1 遵守基本工作安全規範。 特職5-I-1 在活動開始前確認工作指令。 特職5-I-2 遵守指定活動的規範。 特職6-I-1 接受不同人員的工作指令。 特職7-I-1 維持職場基本禮節。 特職7-I-2 與工作夥伴互動。`),
+                content: p(`特職A-I-1 工作資訊的認識與描述。 特職A-I-2 自我介紹。 特職B-I-1 基本工作安全規範的認識。 特職B-I-2 簡易工具操作方式的認識。 特職C-I-1 工作指令的確認與活動規範的遵守。 特職C-I-2 與工作夥伴互動的禮節。`)
+            },
+            "II": {
+                performance: p(`特職1-II-1 辨識常見的職業。 特職1-II-2 連結生活經驗與職業的關係。 特職1-II-3 辨識工作環境的差異。 特職2-II-1 填寫個人基本資料。 特職2-II-2 列舉與自己喜愛的職業同類型之其他職業。 特職3-II-1 依照指令持續工作。 特職3-II-2 使用常用工具製作成品。 特職3-II-3 熟練簡單的工作技能。 特職4-II-1 辨識安全警語。 特職4-II-2 依據指令完成防災演練。 特職5-II-1 回應師長的工作指示。 特職5-II-2 預先準備工作所需用品。 特職5-II-3 妥善保管個人用品。 特職6-II-1 接受指正重新完成工作。 特職6-II-2 接受工作項目的變動。 特職7-II-1 與工作夥伴分工合作。 特職7-II-2 協助工作夥伴完成工作。`),
+                content: p(`特職A-II-1 工作環境差異的辨識。 特職A-II-2 工作與生活經驗的關係。 特職A-II-3 個人基本資料表的填寫。 特職B-II-1 常用工具的使用方式。 特職B-II-2 職場環境清潔整理。 特職B-II-3 安全警語的認識與防災演練。 特職C-II-1 工作指示與項目變動的回應。 特職C-II-2 工作所需用品的預先準備與妥善保管。 特職C-II-3 分工合作與協助工作夥伴。`)
+            },
+            "III": {
+                performance: p(`特職1-III-1 列舉常見職業名稱。 特職1-III-2 連結工作目的與個人生活的關係。 特職1-III-3 列舉不同工作所需設備條件。 特職2-III-1 列舉求職準備工作。 特職2-III-2 擬定簡要自我介紹的內容。 特職3-III-1 表現移動與負重能力完成指定工作。 特職3-III-2 依據不同分類架構進行排列整理。 特職3-III-3 依據指令完成塑形工作。 特職3-III-4 依據工作項目維持適當專注時間。 特職4-III-1 避免工作場域中的危險狀況。 特職4-III-2 依據指令處理常見的職場災害。 特職5-III-1 妥善使用公共之用品。 特職5-III-2 在工作結束後將工作用品歸位。 特職5-III-3 遵循請假規定完成請假手續。 特職6-III-1 接受工作內容的增加。 特職6-III-2 接受工作難度的增加。 特職7-III-1 關懷工作夥伴的需求。 特職7-III-2 表達自己工作上的需求。 特職7-III-3 與工作夥伴交換意見完成工作。`),
+                content: p(`特職A-III-1 工作所需設備條件的認識。 特職A-III-2 工作目的與個人生活的關係。 特職B-III-1 物品的分類整理、裁剪裝訂或塑形。 特職B-III-2 工作場域專注力的提升。 特職B-III-3 職業意外災害的認識與處理。 特職B-III-4 工作場域危險狀況的認識與避免方式。 特職B-III-5 職場環境的清理整頓。 特職C-III-1 公用物品的使用。 特職C-III-2 請假手續與相關規定的認識。 特職C-III-3 工作內容與難度變動的回應方式。 特職C-III-4 關懷工作夥伴、表達需求、與工作夥伴交換意見。`)
+            },
+            "IV": {
+                performance: p(`特職1-IV-1 列舉查詢工作資訊的管道。 特職1-IV-2 列舉常見職業所應具備的工作條件。 特職1-IV-3 描述自己有意願從事的工作的基本條件。 特職1-IV-4 查詢適合自己培養工作能力的進修管道。 特職1-IV-5 認識所欲就讀科系內容資訊。 特職2-IV-1 查詢不同類型工作的基本條件，擬定適合的自我介紹內容。 特職2-IV-2 運用不同交通方式準時到達指定地。 特職3-IV-1 閱讀手冊進行操作工作。 特職3-IV-2 依據步驟組合完成成品。 特職3-IV-3 依據工作要求維持作業速度，在時限內完成工作。 特職3-IV-4 自我檢視工作正確性。 特職4-IV-1 依據指令防範職場潛在危險。 特職4-IV-2 演練常見職場災害的應變方法。 特職4-IV-3 使用安全防護配備。 特職4-IV-4 遵守不同工作場域之安全規範。 特職5-IV-1 妥善保管工作器具。 特職5-IV-2 主動表達需求以增進工作效能。 特職5-IV-3 接受臨時工作指令完成工作。 特職5-IV-4 遵守工作時間規範。 特職6-IV-1 因應工作場域的變動保持工作效率。 特職6-IV-2 接受他人指令修正工作程序。 特職6-IV-3 正向回饋他人的工作指導。 特職6-IV-4 區辨不同的工作價值觀。 特職7-IV-1 修正影響職場人際關係的習慣。 特職7-IV-2 表現良好的職場禮儀。 特職7-IV-3 因應不同對象主動調整職場溝通方式。 特職7-IV-4 處理與工作夥伴相處的衝突。`),
+                content: p(`特職A-IV-1 工作資訊與條件、進修管道的查詢方式。 特職A-IV-2 自我介紹的擬定與相關表件填寫方式。 特職A-IV-3 交通工具的運用方式。 特職A-IV-4 認識雇主徵才的方式與條件等相關資訊。 特職A-IV-5 求職的準備工作。 特職B-IV-1 工作手冊的閱讀。 特職B-IV-2 物品的組合與拼裝。 特職B-IV-3 工作效率的維持。 特職B-IV-4 工作參照標準的認識與檢視。 特職B-IV-5 職場環境潛在危險的認識與防範。 特職C-IV-1 工作場域中工作器具的正確使用。 特職C-IV-2 工作效能的增進與維持。 特職C-IV-3 工作時間規範的遵守。 特職C-IV-4 工作壓力的調適。 特職C-IV-5 工作指導與工作程序修正的回應。 特職C-IV-6 工作價值觀的區辨。 特職C-IV-7 職場禮儀與衝突的處理。`)
+            },
+            "V": {
+                performance: p(`特職1-V-1 篩選適合自己的工作資訊。 特職1-V-2 查詢就業市場資訊。 特職1-V-3 認識與查詢相關法規內容。 特職1-V-4 列舉個人薪資管理重點。 特職1-V-5 辨識求職陷阱。 特職1-V-6 列舉特定工作場所的危險因子與潛在職業疾病風險。 特職2-V-1 撰寫個人履歷，演練面試技巧。 特職2-V-2 尋找求職登記平台，參加工作資訊相關活動。 特職2-V-3 申請身心障礙就業服務，詢問工作相關福利資訊。 特職2-V-4 回覆求職通知。 特職2-V-5 分析資訊決定提升個人職業能力的管道，規劃生涯目標。 特職2-V-6 認識勞動基本法及相關法規。 特職3-V-1 正確完成複雜的工作。 特職3-V-2 自我檢視工作流程並作修正。 特職3-V-3 應用並熟練職場所需科技。 特職3-V-4 獨立完成職場工作。 特職3-V-5 檢視個人工作表現與工作成效。 特職3-V-6 維持固定工時的工作表現。 特職4-V-1 依據職場緊急災害處理流程處理緊急狀況。 特職4-V-2 了解協助處理職災受傷後續事宜的相關資訊。 特職4-V-3 進行職場自主健康管理。 特職4-V-4 了解如何控制職業工作場所的危險因子。 特職4-V-5 了解職場霸凌、性騷擾與性侵害之求助及處理。 特職5-V-1 依規定程序積極參與及完成工作。 特職5-V-2 回報工作情形或進度。 特職5-V-3 離開時清楚告知未完成工作項目。 特職5-V-4 遵守人事規定。 特職6-V-1 依據工作環境與型態調整工作項目。 特職6-V-2 遵照工作場域之工作規範。 特職6-V-3 依據工作時段的轉換按時工作。 特職6-V-4 尋求工作失誤的補救方法。 特職6-V-5 感受工作帶來的滿足感。 特職6-V-6 建立正確的工作價值觀。 特職7-V-1 描述自己的工作與工作夥伴的關係。 特職7-V-2 與工作夥伴共同完成工作。 特職7-V-3 帶領工作夥伴完成工作。 特職7-V-4 供工作訊息給工作夥伴。 特職7-V-5 對於職場不合理的待遇或批評表達個人看法。`),
+                content: p(`特職A-V-1 工作資訊的查詢與篩選。 特職A-V-2 求職陷阱的辨識。 特職A-V-3 勞工權益、身心障礙就業服務資訊與相關法規的認識及查詢方式。 特職A-V-4 履歷表的撰寫方式與面試技巧演練。 特職A-V-5 求職登記平台的運用與身心障礙就業服務的申請方式。 特職A-V-6 個人職業能力的提升方式與職業生涯目標的規劃。 特職A-V-7 工作場所的危險因子與潛在職業疾病風險的認識。 特職A-V-8 職場個人安全。 特職B-V-1 職場禮儀與敬業精神。 特職B-V-2 職場科技的應用。 特職B-V-3 個人工作進程與效能的檢視重點。 特職B-V-4 工作安全規範的認識與安全防護配備的使用。 特職B-V-5 職場意外災害的應變方式與處理流程。 特職B-V-6 自主健康管理的認識。 特職C-V-1 工作的參與方式。 特職C-V-2 工作進度的回報。 特職C-V-3 工作項目的調整。 特職C-V-4 人事規定與工作規範。 特職C-V-5 工作成就感與價值觀。 特職C-V-6 職場訊息的傳遞、判斷與回應。 特職C-V-7 職場溝通態度。`)
+            }
+        },
+        "生活管理": {
+            "初階": {
+                performance: p(`特生1-sP-1 覺察及表達飢餓和飽足的生理反應。 特生1-sP-2 使用適當的餐具進食。 特生1-sP-3 食用前進行洗滌、剝皮或打開包裝等。 特生1-sP-4 表現合宜的用餐禮儀與協助餐後整理。 特生1-sP-5 選擇乾淨新鮮且於保存期限內的食物。 特生1-sP-6 自我檢視並控制飲食行為和習慣。 特生1-sP-7 表達穿著衣物的不適感並請求更換。 特生1-sP-8 維持衣著整潔，並每日換洗貼身衣物。 特生1-sP-9 選擇適當場所並完成衣物穿脫與更換。 特生1-sP-10 視天氣、場合、年齡、個人喜好，選擇適合的衣著。 特生1-sP-11 分類衣物並收納保管。 特生1-sP-12 覺察並表達如廁需求，能自行或由他人協助前往廁所。 特生1-sP-13 依個人需求選擇合適且乾淨的便器。 特生1-sP-14 精熟如廁技巧，如攜帶衛生紙、穿脫褲子、擦拭、沖水、洗手等。 特生1-sP-15 表現如廁時的禮儀。 特生1-sP-16 具備洗手、洗臉、刷牙及使用牙線的技能。 特生1-sP-17 完整清潔身體各部位。 特生1-sP-18 具備洗髮、梳髮、整髮的技能。 特生1-sP-19 隨時整理與保持儀容整潔。 特生1-sP-20 具備良好的口鼻衛生習慣。 特生1-sP-21 辨識及避免食用不潔或遭受汙染的食物。 特生1-sP-22 具備危險意識，並能主動或依指示遠離危險情境。 特生1-sP-23 描述不適症狀，請求協助或表達就醫需求。 特生1-sP-24 認識身體構造、器官、常見疾病及症狀。 特生1-sP-25 在協助下接受體適能測驗及身體健康檢查。 特生1-sP-26 表現規律的生活習慣與作息，從事適當的運動與休閒。 特生1-sP-27 覺察並接受青春期之身心理變化。 特生1-sP-28 使用家中常備藥品，遵守用藥安全，並配合醫囑。 特生2-sP-1 妥善保管個人財物並避免遺失。 特生2-sP-2 建立簡單的儲蓄行為。 特生2-sP-3 使用物品時表現節約與珍惜資源的態度和行為。 特生2-sP-4 尊重他人的物權。 特生2-sP-5 記錄個人日常生活收支，購物前衡量自身財力與實際需求。 特生2-sP-6 維持個人物品與環境的整齊清潔。 特生2-sP-7 正確使用環境清潔用品，並從事簡單的家務清潔工作與資源回收。 特生2-sP-8 安全使用個人及家中物品或家電。 特生2-sP-9 辨識家中潛在危險處並注意自身與門戶安全。 特生2-sP-10 處理家中損壞物品並注意自身安全。 特生2-sP-11 辨識並了解居家緊急事件與天然災害的因應措施，及其適宜的求助方式。 特生2-sP-12 培養對休閒活動的認識與興趣。 特生2-sP-13 區辨隱私的場所和行為，並維護自己和家人的隱私權。 特生2-sP-14 接受自己的性別氣質，保護自己並尊重他人的身體自主權。 特生2-sP-15 辨識家庭暴力、性騷擾、性侵害、性霸凌等行為，並能自我保護及求助。 特生3-sP-1 獨立行動的能力。 特生3-sP-2 認識社區環境與資源。 特生3-sP-3 認識及避免常見的危險情境。 特生3-sP-4 認識消費場所及完成消費行為。 特生3-sP-5 遵守公共場所及設施的使用規範。 特生3-sP-6 能描述自己所在的位置。 特生4-sP-1 認識自己並接受自己的特質。 特生4-sP-2 具備日常生活中做決定的能力。 特生4-sP-3 能自行設定目標。 特生4-sP-4 能解決日常生活的問題。 特生4-sP-5 能反省自己的行為與學習表現。 特生4-sP-6 能自我激勵。`),
+                content: p(`特生A-sP-1 飲食需求的表達。 特生A-sP-2 進食技巧。 特生A-sP-3 餐具的辨認與選擇。 特生A-sP-4 食物的認識。 特生A-sP-5 食物的處理。 特生A-sP-6 飲食的衛生習慣。 特生A-sP-7 餐前準備與餐後收拾的技巧。 特生A-sP-8 用餐禮儀。 特生A-sP-9 簡易餐食的製作。 特生B-sP-1 衣物穿脫技巧。 特生B-sP-2 衣物的認識。 特生B-sP-3 衣物的清潔與收納。 特生C-sP-1 如廁技巧。 特生C-sP-2 如廁禮儀。 特生C-sP-3 身體的清潔方式。 特生C-sP-4 個人清潔用品的認識。 特生C-sP-5 個人清潔。 特生D-sP-1 身體器官與功能的認識。 特生D-sP-2 身體構造與系統的認識。 特生D-sP-3 常見疾病的預防與處理。 特生D-sP-4 健康的生活習慣。 特生D-sP-5 安全用藥。 特生D-sP-6 簡易外傷的處理。 特生D-sP-7 社區醫療資源的認識。 特生E-sP-1 日常財物的使用與保管。 特生E-sP-2 金錢的概念。 特生E-sP-3 塑膠貨幣與行動支付的認識與使用。 特生E-sP-4 消費與儲蓄。 特生E-sP-5 記帳的技能。 特生E-sP-6 金融機構的認識。 特生F-sP-1 環境衛生的觀念。 特生F-sP-2 清潔用品的認識與使用。 特生F-sP-3 清掃工作的技能。 特生F-sP-4 垃圾分類與資源回收。 特生G-sP-1 家電用品的認識。 特生G-sP-2 家用修繕工具的認識與使用。 特生G-sP-3 用電安全。 特生G-sP-4 使用瓦斯及用火安全。 特生G-sP-5 其他居家安全。 特生G-sP-6 意外事件的認識。 特生G-sP-7 天然災害的認識。 特生H-sP-1 休閒活動的認識。 特生H-sP-2 休閒活動的選擇。 特生I-sP-1 家庭成員的互動和家庭倫理。 特生I-sP-2 家庭生活的參與技能。 特生I-sP-3 家庭成員的角色。 特生I-sP-4 身體隱私與界限的認識與保護。 特生I-sP-5 身體自主權的維護與尊重。 特生I-sP-6 性騷擾、性侵害與性霸凌的認識。 特生I-sP-7 家庭暴力的認識。 特生J-sP-1 交通工具的認識。 特生J-sP-2 道路交通規則的認識與遵守。 特生J-sP-3 各類交通工具資訊的辨識與使用。 特生K-sP-1 就讀學校的認識。 特生K-sP-2 社區環境與資源的認識。 特生K-sP-3 社區活動的參與。 特生K-sP-4 社區危險情境的辨識與防範。 特生K-sP-5 購物的流程與技巧。 特生L-sP-1 自我目標的設定。 特生L-sP-2 生活事務作決定的策略。 特生L-sP-3 簡易生活問題的解決策略。 特生L-sP-4 自我管理技巧。 特生L-sP-5 自我負責。 特生M-sP-1 自我倡導的認識。 特生M-sP-2 自我覺察。`)
+            },
+            "進階": {
+                performance: p(`特生1-sA-1 烹調用具使用前後能清洗潔淨。 特生1-sA-2 使用適當方式加熱、沖泡、烹調簡易餐食。 特生1-sA-3 選擇適宜的用餐場所與安全的飲食行為。 特生1-sA-4 遵守有益身體健康的飲食原則，並理解飲食與疾病的關係。 特生1-sA-5 選購適合自己的衣物。 特生1-sA-6 使用適當方式洗濯及晾曬衣物。 特生1-sA-7 整理及收納個人衣物。 特生1-sA-8 檢查衣物破損情形並加以處理。 特生1-sA-9 適時修剪指甲與頭髮。 特生1-sA-10 處理青春期的身體變化及性需求。 特生1-sA-11 選用適合自己的盥洗清潔及美容美髮用品。 特生1-sA-12 表現疾病預防的健康行為。 特生1-sA-13 描述受傷害的經過並尋求適當協助。 特生1-sA-14 使用急救箱處理簡易外傷。 特生1-sA-15 熟悉社區醫療資源並能自行就醫。 特生1-sA-16 養成良好的運動與休閒習慣。 特生1-sA-17 主動吸取健康知識，增進自我健康。 特生2-sA-1 具備儲蓄、使用塑膠貨幣及行動支付的技能。 特生2-sA-2 規劃日常生活的費用及收支管理事宜。 特生2-sA-3 落實資源回收與再利用。 特生2-sA-4 完成家庭常見的維護及修繕工作。 特生2-sA-5 從事安全的個人和家庭休閒活動。 特生2-sA-6 遵守網路及各類資訊平台的使用規範。 特生2-sA-7 熟練居家緊急事件及天然災害的因應措施。 特生3-sA-1 能處理自身所遇的意外事件。 特生3-sA-2 依需求善用社區資源。 特生3-sA-3 辨識各種詐騙行為及避免受騙。 特生3-sA-4 因應不同的危險情境，採取適當的措施。 特生3-sA-5 認識及使用身心障礙服務資源。 特生4-sA-1 規劃與管理自己的生活。 特生4-sA-2 能為自己做的決定負責。 特生4-sA-3 能表達對生涯規劃的想法，並與他人討論。 特生4-sA-4 執行自訂的目標並檢核結果。 特生4-sA-5 省思先前做決定的結果，必要時加以調整。 特生4-sA-6 獨立解決問題。 特生4-sA-7 參與和自身權益相關的活動，並表達意見。 特生4-sA-8 爭取自我表達、決定或行動的機會。 特生4-sA-9 肯定自己的能力與表現。 特生4-sA-10 願意持續付出時間與心力，充分發揮優勢。`),
+                content: p(`特生A-sA-1 烹調用具的認識與使用。 特生A-sA-2 食物烹調前的處理。 特生A-sA-3 食物的選購。 特生A-sA-4 食物的烹調方式。 特生A-sA-5 食物的保存方法。 特生A-sA-6 廚房的清洗及收納。 特生B-sA-1 衣物選購。 特生B-sA-2 服裝禮儀。 特生C-sA-1 青春期的清潔衛生。 特生C-sA-2 個人清潔用品的選用。 特生C-sA-3 簡易儀容裝扮的技巧。 特生D-sA-1 青春期的身心健康。 特生D-sA-2 簡易急救措施。 特生D-sA-3 就醫知能。 特生D-sA-4 健康檢查的認識。 特生D-sA-5 社區醫療資源的運用。 特生E-sA-1 物品再利用的方式。 特生E-sA-2 金融機構的運用。 特生E-sA-3 個人預算、收支與管理。 特生E-sA-4 繳納費用的方式。 特生E-sA-5 金融詐騙的認識與防範。 特生F-sA-1 居家物品的擺放與收納。 特生F-sA-2 家電用品的清潔。 特生F-sA-3 環境美化的知能。 特生G-sA-1 家電用品的使用與維護。 特生G-sA-2 家用修繕工具的使用。 特生G-sA-3 意外事件的處理。 特生G-sA-4 天然災害的應變。 特生H-sA-1 休閒活動內容與時間的規劃。 特生H-sA-2 邀請他人共同從事休閒活動的技巧。 特生I-sA-1 家庭成員間適當的互動方式。 特生I-sA-2 家庭成員的責任。 特生I-sA-3 性別多樣性的認識與尊重。 特生I-sA-4 親密關係建立、發展、結束過程中的風險與自我保護。 特生I-sA-5 性騷擾、性侵害與性霸凌的防護及求助。 特生I-sA-6 家庭暴力的自我保護與求助。 特生J-sA-1 交通路線規劃與轉乘技能。 特生J-sA-2 交通事故的處理。 特生K-sA-1 社區資源與設施的運用。 特生K-sA-2 消費者權益的認識。 特生K-sA-3 各種詐騙行為的認識與防範。 特生K-sA-4 身心障礙服務資源的認識與利用。 特生L-sA-1 自我生涯規劃的技巧。 特生L-sA-2 目標的執行與檢核。 特生L-sA-3 複雜問題的解決策略。 特生L-sA-4 自我回饋。 特生M-sA-1 自我倡導的實踐。 特生M-sA-2 自我效能。 特生M-sA-3 自我增強。 特生M-sA-4 自我實現。`)
+            }
+        },
+        "溝通訓練": {
+            "初階": {
+                performance: p(`特溝1-sP-1 覺察、分辨與理解聲音。 特溝1-sP-2 覺察、分辨各種溝通訊息。 特溝1-sP-3 專注於溝通者的聲音、唇型、動作手勢與表情。 特溝1-sP-4 了解日常的溝通訊息。 特溝1-sP-5 理解常用指令與基本句型。 特溝1-sP-6 理解與他人對話的主題內容。 特溝2-sP-1 發展出個人適切的溝通形式。 特溝2-sP-2 發出清楚明確的訊息。 特溝2-sP-3 表現出與人溝通的意圖。 特溝2-sP-4 表達正確且符合情境的訊息。 特溝2-sP-5 表達日常的基本溝通訊息。 特溝2-sP-6 以基本句型進行對話。 特溝3-sP-1 表達參與活動的意圖。 特溝3-sP-2 視情境主動回應他人。 特溝3-sP-3 確認對方注意後再表達訊息。 特溝3-sP-4 根據主題起始對話、加入對話或終止對話。 特溝4-sP-1 運用溝通技巧參與日常活動。 特溝4-sP-2 運用溝通技巧參與遊戲或團體活動。 特溝4-sP-3 接納他人的溝通形式。`),
+                content: p(`特溝A-sP-1 眼神注視。 特溝A-sP-2 動作、手勢與表情的模仿。 特溝A-sP-3 有溝通意義的身體姿勢與動作。 特溝A-sP-4 有溝通意義的手勢。 特溝A-sP-5 基本情緒的表情。 特溝B-sP-1 符合個人口語需求之輔具選用。 特溝B-sP-2 構音、音量及說話節奏。 特溝B-sP-3 常用詞彙。 特溝B-sP-4 符合口語語法的基本句型。 特溝B-sP-5 日常生活用語。 特溝B-sP-6 語意明確的說話內容。 特溝C-sP-1 手語的空間位置、手形、方向、動作及表情。 特溝C-sP-2 手語詞彙。 特溝C-sP-3 符合手語語法的基本句型。 特溝C-sP-4 語意明確的手語內容。 特溝C-sP-5 聾文化的認識。 特溝D-sP-1 符合溝通需求之實物（體）或小模型。 特溝D-sP-2 符合溝通需求之照片。 特溝D-sP-3 符合溝通需求之圖像或線條圖。 特溝D-sP-4 符合溝通需求之其他溝通符號。 特溝D-sP-5 符合溝通需求之文字符號。 特溝D-sP-6 國語口手語或手指語。 特溝D-sP-7 使用溝通符號進行溝通的技巧。`)
+            },
+            "進階": {
+                performance: p(`特溝1-sA-1 注意及分辨溝通情境中的多重訊息。 特溝1-sA-2 解讀較長或複雜的訊息內容。 特溝1-sA-3 理解複雜的指令與句型。 特溝1-sA-4 解讀他人表達訊息時的意圖、情緒或感受。 特溝1-sA-5 理解與他人對話的內容。 特溝2-sA-1 結合不同的溝通形式進行表達。 特溝2-sA-2 依情境需求調整適切的溝通形式。 特溝2-sA-3 表達複雜的溝通訊息。 特溝2-sA-4 以複雜句型進行對話。 特溝3-sA-1 依情境進行持續的對話輪替。 特溝3-sA-2 對不明確的訊息請求澄清。 特溝3-sA-3 適切轉換對話焦點。 特溝3-sA-4 溝通中斷時能進行修補。 特溝4-sA-1 就與人合作的內容進行溝通協調。 特溝4-sA-2 對他人提供指導與建議。 特溝4-sA-3 回應他人的指導與建議。 特溝4-sA-4 進行主題式的討論、發表與分享。 特溝4-sA-5 依據他人的理解狀況調整自己的溝通方式與策略。`),
+                content: p(`特溝A-sA-1 傳達情緒感受的手勢及肢體動作。 特溝A-sA-2 符合不同文化的手勢及肢體動作。 特溝B-sA-1 符合語法的複雜句型。 特溝B-sA-2 敘事的技巧。 特溝B-sA-3 聊天或討論的技巧。 特溝B-sA-4 摘要他人說話內容的技巧。 特溝B-sA-5 評論事物或分享想法的技巧。 特溝B-sA-6 參與活動時的應對技巧。 特溝C-sA-1 符合手語語法的複雜句型。 特溝C-sA-2 手語敘事的技巧。 特溝C-sA-3 手語聊天或討論的技巧。 特溝C-sA-4 摘要他人手語內容的技巧。 特溝C-sA-5 以手語評論事物或分享想法的技巧。 特溝C-sA-6 參與活動時的手語應對技巧。 特溝C-sA-7 手語翻譯服務的認識與應用。 特溝C-sA-8 聾文化的倡議。 特溝D-sA-1 連續性溝通符號的運用技巧。 特溝D-sA-2 依據溝通目的選用溝通輔具及溝通策略之技巧。 特溝D-sA-3 以輔助溝通系統參與社交活動的技巧。 特溝D-sA-4 輔助溝通系統應用的回饋。`)
+            }
+        },
+        "定向行動": {
+            "初階": {
+                performance: p(`特定1-sP-1 能透過光、影區辨不同的環境空間。 特定1-sP-2 能區辨環境中的各種聲音。 特定1-sP-3 能區辨環境中不同的味道。 特定1-sP-4 能用手區辨各種不同的材質，如粗細、硬軟、形狀、大小。 特定1-sP-5 能用腳區辨環境中的地面的材質。 特定2-sP-1 有效分析環境中行動所需要的資訊。 特定2-sP-2 應用各種行動技能與輔助科技在日常生活環境中獨立行走。 特定2-sP-3 應用輔助科技在非日常生活且複雜之環境中獨走技能。 特定3-sP-1 了解視障者無障礙環境的需求與內容。 特定3-sP-2 了解無障礙環境相關法規與權益。`),
+                content: p(`特定A-sP-1 聽覺的訓練。 特定A-sP-2 觸覺的訓練。 特定A-sP-3 視覺的訓練。 特定A-sP-4 嗅覺的訓練。 特定A-sP-5 本體覺的訓練。 特定A-sP-6 前庭覺的訓練。 特定B-sP-1 形狀的觸知覺。 特定B-sP-2 空間大小的迴聲知覺。 特定B-sP-3 空間距離的迴聲知覺。 特定B-sP-4 空間深度的迴聲知覺。 特定B-sP-5 方向的概念。 特定B-sP-6 方位的概念。 特定B-sP-7 時間的概念。 特定B-sP-8 靜止與動態的概念。 特定C-sP-1 多感官知覺定向模式訓練。 特定C-sP-2 環境中的各種陸標。 特定C-sP-3 環境中不同感覺系統的線索。 特定C-sP-4 環境的各種邊界線。 特定C-sP-5 心像旋轉的地理空間概念。 特定C-sP-6 心理地圖的建構。 特定C-sP-7 各種電子行動輔具及其功能。 特定C-sP-8 人身、環境、交通安全議題。 特定C-sP-9 社會資源與大眾運輸系統。 特定D-sP-1 各種手杖。 特定D-sP-2 追跡獨走技能。 特定D-sP-3 直線行走獨走技能。 特定D-sP-4 人導法。 特定D-sP-5 自身保護法。 特定D-sP-6 持杖法。 特定E-sP-1 詢問行走的路線訊息。 特定E-sP-2 尋找適當的時間與對象詢問。 特定E-sP-3 安全且適當的位置尋求協助。 特定E-sP-4 與人說話的適當距離與音量。 特定E-sP-5 回應協助者的基本禮貌。 特定E-sP-6 判斷回應求助訊息的合理性與正確性。`)
+            },
+            "進階": {
+                performance: p(`特定1-sA-1 了解自身在環境中所處位置。 特定1-sA-2 運用環境中各種不同的訊息建構心理地圖。 特定2-sA-1 有效分析預定到達的地點所需要的交通資訊。 特定2-sA-2 運用科技輔具的資訊規劃路線與行程。 特定2-sA-3 了解有聲號誌與規則。 特定2-sA-4 搭乘交通工具。 特定2-sA-5 應用各種行動技能或輔助科技在非日常生活環境中獨立行走。 特定2-sA-6 應用各種行動技能或輔助科技在複雜環境中獨立行走。 特定3-sA-1 積極宣導並參與規劃無障礙空間與設施。`),
+                content: p(`特定B-sA-1 知覺概念的統整。 特定B-sA-2 路徑的規劃。 特定C-sA-1 餐點、日用品等的擺放位置。 特定C-sA-2 公共空間的觸摸地圖。 特定C-sA-3 不熟悉環境中資訊的分析與統整。 特定D-sA-1 各種不同環境下的行動技能。 特定D-sA-2 不同目的與環境所使用的輔助科技。 特定E-sA-1 無障礙環境相關法規與權益的認識。 特定E-sA-2 無障礙生活環境相關公共建築與設施之推動與監督。`)
+            }
+        },
+        "輔助科技應用": {
+            "不分階段": {
+                performance: p(`特輔1-1 了解所需使用輔具的功能。 特輔1-2 認識所需使用輔具的構造。 特輔2-1 正向看待輔具的使用。 特輔2-2 選擇適宜需求的輔具。 特輔2-3 願意使用選擇的輔具。 特輔3-1 在協助下操作所使用的輔具。 特輔3-2 獨立操作所使用的輔具。 特輔4-1 維護所使用輔具的功能。 特輔4-2 定期檢查所使用的輔具並視需求送修。 特輔4-3 自行或尋求協助將所使用輔具的故障排除。`),
+                content: p(`特輔A-1 放大鏡功能與操作。 特輔A-2 望遠鏡功能與操作。 特輔A-3 擴視機功能與操作。 特輔A-4 以行動裝置為載具的低視能輔具功能與操作。 特輔A-5 其他低視能輔具功能與操作。 特輔A-6 點字機/點字板功能與操作。 特輔A-7 盲用電腦功能與操作。 特輔A-8 點字觸摸顯示器功能與操作。 特輔A-9 盲用鐘錶功能與操作。 特輔A-10 螢幕報讀軟體功能與操作。 特輔A-11 以行動裝置為載具的全盲輔具功能與操作。 特輔A-12 其他全盲輔具功能與操作。 特輔A-13 視覺輔具維護與簡易故障排除。 特輔B-1 助聽器功能與操作。 特輔B-2 人工電子耳功能與操作。 特輔B-3 調頻系統功能與操作。 特輔B-4 震動器功能與操作。 特輔B-5 以行動裝置為載具的聽覺輔具功能與操作。 特輔B-6 其他聽覺輔具功能與操作。 特輔B-7 聽覺輔具維護與簡易故障排除。 特輔C-1 柺杖功能與操作。 特輔C-2 助行器功能與操作。 特輔C-3 手杖功能與操作。 特輔C-4 步態訓練器功能與操作。 特輔C-5 輪椅功能與操作。 特輔C-6 電動輪椅功能與操作。 特輔C-7 移位板、移位滑墊功能與操作。 特輔C-8 移位機功能。 特輔C-9 爬梯機功能。 特輔C-10 以行動裝置為載具的行動移位輔具功能與操作。 特輔C-11 其他行動移位輔具功能與操作。 特輔C-12 減壓坐墊功能與操作。 特輔C-13 楔型墊功能與操作。 特輔C-14 擺位椅功能與操作。 特輔C-15 調整式課桌椅功能與操作。 特輔C-16 站立架功能與操作。 特輔C-17 其他擺位輔具功能與操作。 特輔C-18 行動移位與擺位輔具維護與簡易故障排除。 特輔D-1 有聲書功能與操作。 特輔D-2 電子書功能與操作。 特輔D-3 文字轉語音軟體功能與操作。 特輔D-4 電腦文書處理或寫作軟體功能與操作。 特輔D-5 以行動裝置為載具的閱讀輔具功能與操作。 特輔D-6 其他閱讀輔具功能與操作。 特輔D-7 握筆器功能與操作。 特輔D-8 語音輸入軟體功能與操作。 特輔D-9 以行動裝置為載具的書寫輔具功能與操作。 特輔D-10 其他書寫輔具功能與操作。 特輔D-11 閱讀與書寫輔具維護與簡易故障排除。 特輔E-1 溝通圖卡功能與操作。 特輔E-2 語音溝通器功能與操作。 特輔E-3 語音溝通軟體功能與操作。 特輔E-4 打字拼音軟體功能與操作。 特輔E-5 以行動裝置為載具的溝通輔具功能與操作。 特輔E-6 其他溝通輔具功能與操作。 特輔E-7 溝通輔具維護與簡易故障排除。 特輔F-1 替代性鍵盤或滑鼠功能與操作。 特輔F-2 可外接特殊開關之替代性鍵盤或滑鼠功能與操作。 特輔F-3 吹吸嘴控滑鼠功能與操作。 特輔F-4 紅外線貼片感應滑鼠功能與操作。 特輔F-5 眼控滑鼠功能與操作。 特輔F-6 以行動裝置為載具的電腦輔具功能與操作。 特輔F-7 其他電腦輔具功能與操作。 特輔F-8 電腦輔具維護與簡易故障排除。 特輔G-1 飲食與食物調理輔具功能與操作。 特輔G-2 穿著輔具功能與操作。 特輔G-3 盥洗輔具功能與操作。 特輔G-4 衛生輔具功能與操作。 特輔G-5 環境控制輔具功能與操作。 特輔G-6 其他生活輔具功能與操作。 特輔G-7 生活輔具維護與簡易故障排除。 特輔G-8 靜態活動休閒輔具功能與操作。 特輔G-9 動態活動休閒輔具功能與操作。 特輔G-10 活動休閒輔具維護與簡易故障排除。 特輔G-11 其他輔具功能與操作。 特輔G-12 其他輔具維護與簡易故障排除。`)
+            }
+        },
+        "功能性動作訓練": {
+            "初階": {
+                performance: p(`特功1-1 具備四肢與軀幹的關節活動能力。 特功2-1 具備維持身體姿勢技能。 特功2-2 具備改變身體姿勢技能。 特功2-3 具備移位技能。 特功2-4 具備移動技能。 特功2-5 具備舉起與移動物品技能。 特功2-6 具備手與手臂使用技能。 特功2-7 具備手部精細操作技能。 特功2-8 具備雙側協調與眼手協調技能。 特功2-9 具備動作計畫技能。 特功2-10 具備乘坐與駕駛交通工具技能。 特功3-1 參與生活作息。 特功3-2 參與學習活動。 特功3-3 參與非經常性活動。`),
+                content: p(`特功A-1 左/右上肢的關節活動。 特功A-2 左/右下肢的關節活動。 特功A-3 軀幹的關節活動。 特功B-1 頭頸直立姿勢的維持。 特功B-2 前臂支撐下俯臥姿勢的維持。 特功B-3 手掌支撐下俯臥姿勢的維持。 特功B-4 四足跪姿的維持。 特功B-5 高跪姿的維持。 特功B-6 地板坐姿的維持。 特功B-7 座椅坐姿的維持。 特功B-8 站姿的維持。 特功B-9 蹲姿的維持。 特功B-10 單腳站姿勢的維持。 特功C-1 翻身。 特功C-2 躺與坐姿的轉換。 特功C-3 地板坐姿與站姿的轉換。 特功C-4 座椅坐姿與站姿的轉換。 特功C-5 蹲姿與站姿的轉換。 特功C-6 彎腰拾物。 特功D-1 躺臥下的身體挪動。 特功D-2 地板坐姿下的身體挪動。 特功D-3 相同高度設備間的移位。 特功D-4 不同高度設備間的移位。 特功E-1 連續翻身。 特功E-2 腹部貼地的匍伏前進。 特功E-3 腹部離地以手和膝蓋的爬行。 特功E-4 扶物側走。 特功E-5 室內行走。 特功E-6 室外行走。 特功E-7 不同路面的行走。 特功E-8 單一台階的踏上或踏下。 特功E-9 障礙物的跨越。 特功E-10 兩腳一階或一腳一階的上下樓梯。 特功E-11 跑步。 特功E-12 雙腳或單腳的原地跳。 特功E-13 雙腳或單腳的向前跳。 特功E-14 雙腳或單腳的連續前跳。 特功E-15 攀爬。 特功E-16 同樓層的移動。 特功E-17 繞過障礙物。 特功E-18 狹窄走廊或擁擠校園裡的移動。 特功E-19 不同樓層間的移動。 特功E-20 不同建築物間的移動。 特功E-21 不同情境下安全移動的速度調整。 特功F-1 物品的舉起或放下。 特功F-2 物品的搬移。 特功F-3 物品的踢或推。 特功F-4 踢球。 特功F-5 腳踏車踏板的踩踏。 特功G-1 伸手及物。 特功G-2 推或拉物。 特功G-3 伸手取物。 特功G-4 物品的轉動或扭轉。 特功G-5 物品的拋丟或接住。 特功H-1 物品的抓握或放開。 特功H-2 手指耙起小物。 特功H-3 拇指合併其他手指及手掌的抓握。 特功H-4 前三指指腹的抓握。 特功H-5 拇指及食指尖的撿拾。 特功H-6 逐頁翻書。 特功H-7 開關按壓。 特功H-8 大拇指依序與其他四指的互碰。 特功H-9 單手連續撿起小物並移至掌心。 特功H-10 單手連續把掌心小物移至手指處放掉。 特功H-11 握筆位置的調整。 特功H-12 不同大小瓶蓋的旋開。 特功H-13 餐具的使用。 特功I-1 雙手持物。 特功I-2 換手持物。 特功I-3 雙掌互擊或拍手。 特功I-4 物品的接合或拔開。 特功I-5 握筆塗鴉。 特功I-6 疊高積木。 特功I-7 食物外皮或包裝的剝除或拆開。 特功I-8 串珠子。 特功I-9 前三指正確握筆。 特功I-10 紙張的對摺及摺痕的壓捏。 特功I-11 剪直線或曲線。 特功I-12 圓形、十字形、正方形或三角形的仿畫。 特功I-13 直線或曲線的描畫。 特功I-14 範圍內的著色。 特功I-15 數字或國字的描畫。 特功I-16 範圍內的書寫。 特功I-17 文具及學習材料的使用。 特功I-18 綁鞋帶。 特功I-19 電腦周邊裝置的操作。 特功I-20 滑鼠的使用。 特功I-21 有目的的依序按壓鍵盤。 特功J-1 簡單或單一動作的模仿。 特功J-2 複雜或連續二個以上動作的模仿。 特功J-3 指令下簡單或單一動作的執行。 特功J-4 指令下複雜或連續二個以上動作的執行。 特功J-5 序列性動作的執行。 特功J-6 個別需求之動作執行與整合。 特功K-1 人力交通工具的乘坐。 特功K-2 動力交通工具的乘坐。 特功K-3 騎腳踏車。`)
+            },
+            "進階": { performance: [], content: [] }
+        },
+        "點字": {
+            "初階": {
+                performance: p(`特點1-sP-1 認識點寫點字系統。 特點1-sP-2 運用點字系統點寫筆記。 特點2-sP-1 正確且熟練摸讀點字系統。 特點2-sP-2 正確且熟練摸讀不同材質呈現之點寫內容。`),
+                content: p(`特點B-sP-3 手指輕觸動作。 特點C-sP-1 注音符號點字系統符號的點寫與摸讀。 特點C-sP-6 英文點字系統符號的點寫與摸讀。`)
+            },
+            "進階": { performance: [], content: [] }
+        }
+    };
+
+    let cart = []; // {domain, id, text, type, theme}
+    let uploadedImageBase64 = null;
+    let uploadedImageMimeType = null;
+    
+    // 用於校訂課程的圖片暫存
+    let uploadedCurriculumImageBase64 = null;
+    let uploadedCurriculumImageMimeType = null;
+
+    // --- 計算並顯示該年度生肖 ---
+    function getZodiac(twYear) {
+        const zodiacs = ['猴', '雞', '狗', '豬', '鼠', '牛', '虎', '兔', '龍', '蛇', '馬', '羊'];
+        const year = parseInt(twYear) + 1911;
+        if (isNaN(year)) return '';
+        return zodiacs[year % 12];
+    }
+
+    function updateZodiacDisplay() {
+        const twYear = parseInt(document.getElementById('schoolYear').value);
+        if(!isNaN(twYear)){
+            const z1 = getZodiac(twYear);
+            const z2 = getZodiac(twYear + 1);
+            const d1 = document.getElementById('zodiacDisplay1');
+            const d2 = document.getElementById('zodiacDisplay2');
+            if (d1) d1.innerText = z1;
+            if (d2) d2.innerText = z2;
+        }
+    }
+
+    // --- 導覽邏輯 ---
+    function goToStep(step) {
+        document.querySelectorAll('.step-content').forEach(c => c.classList.remove('active'));
+        document.querySelectorAll('.step-item').forEach(t => t.classList.remove('active'));
+        
+        document.getElementById('step' + step).classList.add('active');
+        document.getElementById('tab' + step).classList.add('active');
+        
+        // 標記已完成步驟
+        for(let i=1; i<step; i++) document.getElementById('tab'+i).classList.add('completed');
+        
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function toggleClassType() {
+        const type = document.getElementById('classType').value;
+        const opt = document.getElementById('originalClassOption');
+        if(opt) {
+            if (type === '集中式特教班') {
+                opt.classList.remove('hidden');
+            } else {
+                opt.classList.add('hidden');
+                // 若原選原班，切回外加
+                const originalRadio = document.querySelector('input[name="scheduleType"][value="原班"]');
+                if (originalRadio && originalRadio.checked) {
+                    document.querySelector('input[name="scheduleType"][value="外加"]').checked = true;
+                }
+            }
+        }
+    }
+
+    // --- 動態更新過濾選單階段選項 ---
+    function updateStageOptions() {
+        const domain = document.getElementById('filterDomain').value;
+        const stageSelect = document.getElementById('filterStage');
+        stageSelect.innerHTML = ''; 
+
+        const twoStages = ['生活管理', '定向行動', '功能性動作訓練', '點字', '溝通訓練'];
+        const noStages = ['輔助科技應用'];
+
+        if (twoStages.includes(domain)) {
+            stageSelect.innerHTML = `
+                <option value="初階">初階 (sP/基礎)</option>
+                <option value="進階">進階 (sA/進階)</option>
+            `;
+        } else if (noStages.includes(domain)) {
+            stageSelect.innerHTML = `
+                <option value="不分階段">不分學習階段</option>
+            `;
+        } else {
+            stageSelect.innerHTML = `
+                <option value="I">第一階段 (國小1-2年級)</option>
+                <option value="II">第二階段 (國小3-4年級)</option>
+                <option value="III">第三階段 (國小5-6年級)</option>
+                <option value="IV">第四階段 (國中7-9年級)</option>
+                <option value="V">第五階段 (高中10-12年級)</option>
+            `;
+        }
+        
+        renderIndicators(); 
+    }
+
+    // --- 指標渲染 (步驟2) ---
+    function renderIndicators() {
+        const domain = document.getElementById('filterDomain').value;
+        const stage = document.getElementById('filterStage').value;
+        const pList = document.getElementById('performanceList');
+        const cList = document.getElementById('contentList');
+        
+        pList.innerHTML = ''; cList.innerHTML = '';
+        const data = curriculumData[domain]?.[stage];
+
+        if(!data || (data.performance.length === 0 && data.content.length === 0)) {
+            pList.innerHTML = `<p class="text-gray-400 font-bold p-4 text-center w-full">💡 系統提示：目前「${domain}」領域的「${stage}」暫無快速點選資料，您仍可使用右上方【AI 特需領域課綱索引工具】或自行於下一步填寫。</p>`;
+            return;
+        }
+
+        data.performance.forEach(item => pList.appendChild(createIndicatorCard(item, domain, '學習表現')));
+        data.content.forEach(item => cList.appendChild(createIndicatorCard(item, domain, '學習內容')));
+    }
+
+    function createIndicatorCard(item, domain, type) {
+        const card = document.createElement('label');
+        card.className = 'curriculum-card';
+        const isChecked = cart.some(c => c.id === item.id);
+        
+        // 渲染時加入主題標籤
+        const themeBadge = item.theme ? `<span class="text-indigo-600 font-black mr-1">${item.theme}</span>` : '';
+        
+        card.innerHTML = `
+            <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleIndicator('${item.id}', '${domain}', '${type}')">
+            <div>
+                <div class="text-xs font-black text-blue-400 mb-1">${item.id}</div>
+                <div class="text-gray-700 font-bold">${themeBadge}${item.text}</div>
+            </div>
+        `;
+        return card;
+    }
+
+    // 全域尋找指標物件 (以便在不同階段/領域中切換勾選狀態)
+    function findItemById(id) {
+        for (const dom in curriculumData) {
+            for (const stg in curriculumData[dom]) {
+                let item = curriculumData[dom][stg].performance.find(x => x.id === id);
+                if (item) return item;
+                item = curriculumData[dom][stg].content.find(x => x.id === id);
+                if (item) return item;
+            }
+        }
+        return null;
+    }
+
+    function toggleIndicator(id, domain, type) {
+        const idx = cart.findIndex(c => c.id === id);
+        if(idx > -1) {
+            cart.splice(idx, 1);
+        } else {
+            const item = findItemById(id);
+            if (item) cart.push({ ...item, domain, type });
+        }
+        document.getElementById('cartCount').innerText = cart.length;
+    }
+
+    // --- 自動分類邏輯 (關鍵) ---
+    function processSelectionsAndMoveToStep3() {
+        const mainDomainValue = document.getElementById('courseDomainSelect').value;
+        const mainDomainName = mainDomainValue.match(/\((.*?)\)/)?.[1] || mainDomainValue;
+
+        let mainLines = "";
+        let infusedLines = "";
+
+        cart.forEach(item => {
+            const themeStr = item.theme ? `${item.theme} ` : '';
+            const line = `${themeStr}${item.id} ${item.text}`; // 將主題與內容合併
+            
+            if (item.domain === mainDomainName || mainDomainValue.includes(item.domain)) {
+                mainLines += line + "\n";
+            } else {
+                infusedLines += line + " (融特需)\n";
+            }
+        });
+
+        document.getElementById('curriculumPrompt').value = mainLines.trim();
+        document.getElementById('infusedIndicators').value = infusedLines.trim();
+
+        goToStep(3);
+        showToast("已自動根據科目領域完成指標分類！✨");
+    }
+
+    // --- 指標變色排版邏輯 ---
+    function formatIndicatorsHTML(text) {
+        if(!text) return '';
+        return text.split('\n').map(line => {
+            let t = line.trim();
+            if(!t) return '';
+            if(t.startsWith('**')) return t.replace(/\*\*(.*?)\*\*/g, '<b style="color:black;text-decoration:underline;">$1</b>');
+            if(t.includes('融特需')) return `<span style="color:var(--fusion-blue);font-family:'DFKai-SB','標楷體';">${t}</span>`;
+            let processed = t.replace(/([\(（]融.*?[)）])/g, '<span style="color:var(--fusion-blue);">$1</span>');
+            return `<span style="color:black;font-family:'DFKai-SB','標楷體';">${processed}</span>`;
+        }).filter(l => l).join('<br>');
+    }
+
+    // --- 處理校訂課程特色圖片上傳 ---
+    document.getElementById('curriculumUpload').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            uploadedCurriculumImageBase64 = event.target.result.split(',')[1];
+            uploadedCurriculumImageMimeType = file.type;
+            document.getElementById('curriculumUploadStatus').classList.remove('hidden');
+            showToast("校訂計畫圖片已載入！請點擊辨識按鈕。");
+        };
+        reader.readAsDataURL(file);
+    });
+
+    // --- AI 自動辨識校訂課程名稱 ---
+    document.getElementById('aiCurriculumBtn').addEventListener('click', async () => {
+        const text = document.getElementById('curriculumFeatureText').value.trim();
+        if(!text && !uploadedCurriculumImageBase64) {
+            alert("請先輸入文字或上傳圖片！");
+            return;
+        }
+        
+        const btn = document.getElementById('aiCurriculumBtn');
+        const originalText = btn.innerText;
+        btn.innerText = "⏳ 辨識中...";
+        btn.disabled = true;
+
+        const apiKey = "";
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+
+        const payloadParts = [];
+        if (text) payloadParts.push({ text: `校訂課程特色內容：\n${text}` });
+        if (uploadedCurriculumImageBase64) {
+            payloadParts.push({
+                inlineData: { mimeType: uploadedCurriculumImageMimeType, data: uploadedCurriculumImageBase64 }
+            });
+        }
+        
+        const sysPrompt = "請根據提供的校訂課程特色內容（文字或圖片），總結並提取出最適合的「校訂課程名稱」（通常為 4~10 個字，例如：悅讀繪本、我是社交小達人、在地文化探展）。請直接輸出該名稱，不需任何額外解釋、引號或標點符號。";
+
+        try {
+            const resp = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{ parts: payloadParts }],
+                    systemInstruction: { parts: [{ text: sysPrompt }] }
+                })
+            });
+            const res = await resp.json();
+            const resultText = res.candidates?.[0]?.content?.parts?.[0]?.text;
+            if(resultText) {
+                document.getElementById('referenceCourseName').value = resultText.trim();
+                showToast("✅ 課程名稱已自動填入！");
+            }
+        } catch(e) {
+            alert("API 連線失敗，請檢查連線。");
+        } finally {
+            btn.innerText = originalText;
+            btn.disabled = false;
+        }
+    });
+
+    // --- 處理行事曆圖片上傳 ---
+    document.getElementById('calendarUpload').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            const base64String = event.target.result.split(',')[1];
+            uploadedImageBase64 = base64String;
+            uploadedImageMimeType = file.type;
+            document.getElementById('uploadStatus').classList.remove('hidden');
+            showToast("行事曆圖片已載入！AI 將為您辨識。");
+        };
+        reader.readAsDataURL(file);
+    });
+
+    // --- 更新週次顯示與智慧平移防呆 ---
+    function updateTotalDisplay(tableId, targetWeeks) {
+        const tbody = document.querySelector(`#${tableId} tbody`);
+        if(!tbody) return;
+        const inputs = Array.from(tbody.querySelectorAll('.week-input'));
+        let total = inputs.reduce((sum, inp) => sum + (parseInt(inp.value) || 0), 0);
+        const footerSpan = document.querySelector(`#${tableId}-total`);
+        if (footerSpan) {
+            footerSpan.innerText = total;
+            if (total !== parseInt(targetWeeks)) {
+                footerSpan.classList.add('text-red-500');
+                footerSpan.classList.remove('text-green-600');
+            } else {
+                footerSpan.classList.add('text-green-600');
+                footerSpan.classList.remove('text-red-500');
+            }
+        }
+    }
+
+    function deleteRow(btn, tableId, targetWeeks) {
+        const row = btn.closest('tr');
+        const weekVal = parseInt(row.querySelector('.week-input').value) || 0;
+        row.remove();
+        
+        // 重新編號
+        const tbody = document.querySelector(`#${tableId} tbody`);
+        Array.from(tbody.querySelectorAll('tr')).forEach((tr, idx) => {
+            tr.cells[0].innerText = idx + 1;
+        });
+
+        // 將刪除的週數補給最後一列以維持總週數
+        const remainingInputs = Array.from(tbody.querySelectorAll('.week-input'));
+        if (remainingInputs.length > 0 && weekVal > 0) {
+            const lastInput = remainingInputs[remainingInputs.length - 1];
+            lastInput.value = parseInt(lastInput.value) + weekVal;
+        }
+
+        updateTotalDisplay(tableId, targetWeeks);
+        showToast("✅ 單元已刪除，並自動將週次加至最後一單元。");
+    }
+
+    document.getElementById('previewArea').addEventListener('change', function(e) {
+        if(e.target.classList.contains('week-input')) {
+            const table = e.target.closest('table');
+            const tableContainer = table.parentElement; 
+            const isSem1 = tableContainer.id === 'tableRender1';
+            const targetWeeks = isSem1 ? parseInt(document.getElementById('weeksSem1').value) : parseInt(document.getElementById('weeksSem2').value);
+            
+            const inputs = Array.from(table.querySelectorAll('.week-input'));
+            let currentTotal = inputs.reduce((sum, inp) => sum + (parseInt(inp.value) || 0), 0);
+            let diff = currentTotal - targetWeeks;
+            
+            if (diff > 0) {
+                // 如果增加週數超過目標，則從其他大於 1 的扣回來
+                let available = inputs.filter(inp => inp !== e.target && parseInt(inp.value) > 1);
+                while(diff > 0 && available.length > 0) {
+                    available.sort((a,b) => parseInt(b.value) - parseInt(a.value));
+                    available[0].value = parseInt(available[0].value) - 1;
+                    diff--;
+                    available = inputs.filter(inp => inp !== e.target && parseInt(inp.value) > 1);
+                }
+            } else if (diff < 0) {
+                // 如果減少，加給最後一個
+                let available = inputs.filter(inp => inp !== e.target);
+                if(available.length === 0) available = inputs;
+                while(diff < 0) {
+                    const lastInput = available[available.length - 1];
+                    lastInput.value = parseInt(lastInput.value) + 1;
+                    diff++;
+                }
+            }
+            updateTotalDisplay(tableContainer.id, targetWeeks);
+            showToast("🔄 已自動為您調整其他主題以符合總週數！");
+        }
+    });
+
+    // --- AI 生成進度表 ---
+    document.getElementById('generateBtn').addEventListener('click', async () => {
+        const mainPrompt = document.getElementById('curriculumPrompt').value.trim();
+        const infusedPrompt = document.getElementById('infusedIndicators').value.trim();
+        if(!mainPrompt && !infusedPrompt) return alert("請先在第二步挑選指標或填寫構想！");
+
+        document.getElementById('loaderArea').classList.remove('hidden');
+        document.getElementById('previewArea').classList.add('hidden');
+
+        const weeks1 = document.getElementById('weeksSem1').value || 21;
+        const weeks2 = document.getElementById('weeksSem2').value || 21;
+        
+        // 抓取學期起迄日期與行事曆
+        const sem1Dates = `${document.getElementById('sem1Start').value} ~ ${document.getElementById('sem1End').value}`;
+        const sem2Dates = `${document.getElementById('sem2Start').value} ~ ${document.getElementById('sem2End').value}`;
+        const calendarText = document.getElementById('schoolCalendar').value.trim();
+
+        // 抓取週次分配策略
+        const weekAllocation = document.getElementById('weekAllocation').value;
+
+        // 生肖邏輯
+        const includeZodiac = document.getElementById('includeZodiac').checked;
+        const twYear = parseInt(document.getElementById('schoolYear').value);
+        const zodiac1 = getZodiac(twYear);
+        const zodiac2 = getZodiac(twYear + 1);
+
+        const apiKey = ""; 
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+
+        let infusedInstruction = "";
+        if (infusedPrompt) {
+            infusedInstruction = `將「融滲指標」與「主領域指標」正確分類至「學習表現」與「學習內容」兩個標題下方，並依年級分段排列（使用 **一、二年級** 這種粗體格式）。`;
+        } else {
+            infusedInstruction = `由於使用者並未提供融滲指標，請直接將「主領域指標」正確分類至「學習表現」與「學習內容」兩個標題下方，不需要特別標註依年級分段排列。`;
+        }
+
+        let calendarInstruction = "";
+        if (calendarText || uploadedImageBase64) {
+            calendarInstruction = `\n【學校行事曆與重要節日】：\n${calendarText}\n(若有提供圖片，請辨識圖片內的行事曆)。請務必將上述節日、學校活動與對應的日期週次，巧妙地融入各週的「單元名稱/內容」設計中，讓課程主題能服膺學校活動。`;
+        }
+
+        if (includeZodiac && !isNaN(twYear)) {
+            calendarInstruction += `\n請特別將該學年度的農曆生肖（上學期為「${zodiac1}年」，下學期因為跨西曆年為「${zodiac2}年」）相關的節慶意象、文化或故事，巧妙地設計進適當週次（如過年春節期間）的單元主題中。`;
+        }
+
+        // 強化 AI 指令，結合行事曆邏輯與條件分類
+        const sysPrompt = `你是一位資深特教老師。請根據使用者提供的指標與構想產出計畫。
+        格式規範：
+        1. 嚴格將指標分類至「學習表現」與「學習內容」下方。${infusedInstruction}
+        2. 請務必保留原指標前方的 [主題] 標籤。
+        3. 第一學期剛好 ${weeks1} 週（學期區間：${sem1Dates}），第二學期剛好 ${weeks2} 週（學期區間：${sem2Dates}）。
+        4. 單元名稱需為雙段式：活潑的主題 / 具體內容。${calendarInstruction}
+        5. 教學週次分配策略：請嚴格遵守使用者指定的【${weekAllocation}】來安排每個單元的預計週數。
+        
+        請嚴格輸出以下 Markdown 格式標題與表格結構（不可省略）：
+        ### 學習表現
+        (在此列出學習表現指標)
+        
+        ### 學習內容
+        (在此列出學習內容指標)
+        
+        ### 本學年學習重點
+        (列點描述重點)
+        
+        ### 第一學期
+        | 序次 | 單元名稱/內容 | 預計週數 |
+        |---|---|---|
+        | 1 | (範例) 活潑主題 / 具體內容 | 2 |
+        
+        ### 第二學期
+        | 序次 | 單元名稱/內容 | 預計週數 |
+        |---|---|---|
+        | 1 | (範例) 活潑主題 / 具體內容 | 2 |`;
+
+        try {
+            const combinedPrompt = `【主領域指標】：\n${mainPrompt}\n\n【融滲指標】：\n${infusedPrompt}`;
+            
+            const payloadParts = [{ text: combinedPrompt }];
+            if (uploadedImageBase64) {
+                payloadParts.push({
+                    inlineData: {
+                        mimeType: uploadedImageMimeType,
+                        data: uploadedImageBase64
+                    }
+                });
+            }
+
+            const resp = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{ parts: payloadParts }],
+                    systemInstruction: { parts: [{ text: sysPrompt }] }
+                })
+            });
+            const res = await resp.json();
+            const text = res.candidates?.[0]?.content?.parts?.[0]?.text;
+            if(text) parseOutput(text);
+        } catch (e) {
+            alert("API 連線失敗，請檢查連線。");
+        } finally {
+            document.getElementById('loaderArea').classList.add('hidden');
+            document.getElementById('previewArea').classList.remove('hidden');
+        }
+    });
+
+    function parseOutput(md) {
+        const extract = (tag) => {
+            // 放寬正則條件，容許 AI 在標題後加上額外文字 (如 "第一學期進度表")
+            const r = new RegExp(`#{1,3}\\s*${tag}.*?\\n([\\s\\S]*?)(?=\\n#{1,3}|$)`, 'i');
+            const m = md.match(r);
+            return m ? m[1].trim() : '';
+        };
+
+        const perfText = extract('學習表現') || document.getElementById('curriculumPrompt').value;
+        const contentText = extract('學習內容') || document.getElementById('infusedIndicators').value;
+
+        document.getElementById('previewPerformance').innerHTML = formatIndicatorsHTML(perfText);
+        document.getElementById('previewContent').innerHTML = formatIndicatorsHTML(contentText);
+        document.getElementById('previewFocus').innerHTML = extract('本學年學習重點') || "請輸入學習重點...";
+
+        const parseTable = (t) => {
+            if (!t) return [['1', '⚠️ AI 產出表格格式異常，請重新產生或手動修改', '21']];
+            
+            let rows = t.split('\n')
+                    .map(l => l.trim()) // 過濾 AI 排版可能產生的空白前綴
+                    .filter(l => l.startsWith('|') && !l.includes('序次') && !l.includes('---'))
+                    .map(l => l.split('|').slice(1,-1).map(c => c.trim()));
+            
+            if (rows.length === 0) {
+                // 防呆：如果完全沒抓到表格，預設一列空值避免版面壞掉
+                return [['1', '⚠️ AI 未能產出表格，請重新產生或手動建立單元', '21']];
+            }
+            return rows;
+        };
+        
+        const renderTableUI = (data, tableId, targetWeeks) => {
+            let h = `<table class="output-table w-full">
+                <thead><tr><th class="w-10">序</th><th>內容</th><th class="w-16">週</th><th class="w-12">操作</th></tr></thead>
+                <tbody>`;
+            data.forEach((r, i) => {
+                h += `<tr>
+                    <td class="font-bold text-gray-400 align-middle">${i+1}</td>
+                    <td class="text-left text-xs"><textarea class="w-full border p-1 rounded bg-transparent" rows="2">${r[1]}</textarea></td>
+                    <td class="align-middle"><input type="number" min="1" class="week-input w-12 border rounded text-center font-bold text-blue-700" value="${parseInt(r[2]) || 1}"></td>
+                    <td class="align-middle"><button class="text-red-500 hover:bg-red-50 p-1 rounded font-bold" onclick="deleteRow(this, '${tableId}', ${targetWeeks})" title="刪除">🗑️</button></td>
+                </tr>`;
+            });
+            h += `</tbody>
+                <tfoot>
+                    <tr class="bg-gray-100 font-bold">
+                        <td colspan="2" class="text-right pr-4 text-gray-600">目前加總 / 目標週數：</td>
+                        <td colspan="2" class="text-left pl-2"><span id="${tableId}-total" class="text-green-600 text-lg">${targetWeeks}</span> / ${targetWeeks}</td>
+                    </tr>
+                </tfoot>
+            </table>`;
+            return h;
+        };
+
+        const w1 = document.getElementById('weeksSem1').value;
+        const w2 = document.getElementById('weeksSem2').value;
+        document.getElementById('tableRender1').innerHTML = renderTableUI(parseTable(extract('第一學期')), 'tableRender1', w1);
+        document.getElementById('tableRender2').innerHTML = renderTableUI(parseTable(extract('第二學期')), 'tableRender2', w2);
+        
+        // 初始更新狀態
+        updateTotalDisplay('tableRender1', w1);
+        updateTotalDisplay('tableRender2', w2);
+    }
+
+    function showToast(msg) {
+        const t = document.getElementById('toast');
+        t.innerText = msg; t.classList.remove('hidden');
+        setTimeout(() => t.classList.add('hidden'), 3000);
+    }
+
+    // --- 一鍵範例 ---
+    document.getElementById('fillExampleBtn').addEventListener('click', () => {
+        document.getElementById('schoolName').value = "OO";
+        document.getElementById('teacherName').value = "特教團隊";
+        document.getElementById('targetStudents').value = "許ＯＯ/三年級/自閉症";
+        document.getElementById('referenceCourseName').value = "生活小達人";
+        // 帶入預設行事曆時間作為範例
+        document.getElementById('sem1Start').value = "2024-08-30";
+        document.getElementById('sem1End').value = "2025-01-17";
+        document.getElementById('sem2Start').value = "2025-02-11";
+        document.getElementById('sem2End').value = "2025-06-30";
+        document.getElementById('schoolCalendar').value = "9/17 中秋節\n9/28 教師節\n10/10 國慶日\n10/31 萬聖節\n12/25 耶誕節\n12/31 跨年\n4/4 兒童節";
+        showToast("基本資料與節日範例已載入！🦦");
+    });
+
+    // --- Word 匯出 ---
+    document.getElementById('exportWordBtn').addEventListener('click', () => {
+        // 從勾選清單中擷取年級字串作為表頭
+        const checkedGrades = Array.from(document.querySelectorAll('#gradeCheckboxes input:checked')).map(cb => cb.value);
+        const extractedGrade = checkedGrades.length > 0 ? checkedGrades.join('、') + '年級' : '___年級';
+
+        // 蒐集表單資料
+        const formVals = {
+            classType: document.getElementById('classType').value,
+            county: document.getElementById('district').value,
+            schoolName: document.getElementById('schoolName').value,
+            schoolType: document.getElementById('schoolType').value,
+            year: document.getElementById('schoolYear').value,
+            grade: extractedGrade,
+            teacher: document.getElementById('teacherName').value,
+            weekPeriods: document.getElementById('weeklyPeriods').value,
+            courseDomain: document.getElementById('courseDomainSelect').value,
+            targetStudents: document.getElementById('targetStudents').value.replace(/\n/g, '<br>'),
+            refCourse: document.getElementById('referenceCourseName').value,
+            scheduleType: document.querySelector('input[name="scheduleType"]:checked') ? document.querySelector('input[name="scheduleType"]:checked').value : '外加'
+        };
+
+        const box = (b) => b ? '■' : '□';
+
+        // 核心素養處理 (階層式排版)
+        const cA1 = document.getElementById('ccA1').checked;
+        const cA2 = document.getElementById('ccA2').checked;
+        const cA3 = document.getElementById('ccA3').checked;
+        const cB1 = document.getElementById('ccB1').checked;
+        const cB2 = document.getElementById('ccB2').checked;
+        const cB3 = document.getElementById('ccB3').checked;
+        const cC1 = document.getElementById('ccC1').checked;
+        const cC2 = document.getElementById('ccC2').checked;
+        const cC3 = document.getElementById('ccC3').checked;
+
+        const coreHtml = `
+            <div style="line-height:1.6;text-align:left;">
+                A自主行動<br>
+                ${box(cA1)}A1.身心素質與自我精進 &nbsp;&nbsp; ${box(cA2)}A2.系統思考與問題解決 &nbsp;&nbsp; ${box(cA3)}A3.規劃執行與創新應變<br>
+                B溝通互動<br>
+                ${box(cB1)}B1.符號運用與溝通表達 &nbsp;&nbsp; ${box(cB2)}B2.科技資訊與媒體素養 &nbsp;&nbsp; ${box(cB3)}B3.藝術涵養與美感素養<br>
+                C社會參與<br>
+                ${box(cC1)}C1.道德實踐與公民意識 &nbsp;&nbsp; ${box(cC2)}C2.人際關係與團隊合作 &nbsp;&nbsp; ${box(cC3)}C3.多元文化與國際理解
+            </div>
+        `;
+
+        // 評量方式處理
+        const assessArr = ['觀察評量', '實作評量', '口語評量', '動態評量', '檔案評量', '指認', '多元評量'];
+        const checkedAssess = Array.from(document.querySelectorAll('#assessmentCheckboxes input:checked')).map(cb => cb.value);
+        const assessHtml = assessArr.map(a => `${box(checkedAssess.includes(a))} ${a}`).join(' &nbsp;&nbsp; ');
+
+        // 實施方式處理 (依據班級類型條件決定顯示選項)
+        let scheduleHtml = '';
+        if (formVals.classType === '集中式特教班') {
+            const scheduleArr = ['外加', '抽離', '原班'];
+            scheduleHtml = scheduleArr.map(a => `${box(formVals.scheduleType === a)} ${a}`).join(' &nbsp;&nbsp;&nbsp; ');
+        } else {
+            // 資源班或巡迴班，只顯示外加與抽離
+            const scheduleArr = ['外加', '抽離'];
+            scheduleHtml = scheduleArr.map(a => `${box(formVals.scheduleType === a)} ${a}`).join(' &nbsp;&nbsp;&nbsp; ');
+        }
+
+        const getTableData = (id) => {
+            return Array.from(document.querySelectorAll(`#${id} tbody tr`)).map(tr => {
+                return [tr.cells[0].innerText, tr.querySelector('textarea').value, tr.querySelector('input').value + ' 週'];
+            });
+        };
+        const s1 = getTableData('tableRender1');
+        const s2 = getTableData('tableRender2');
+        
+        const buildWordRows = (data, title) => {
+            if(data.length === 0) return '';
+            let h = `<tr><td colspan="10" style="border:1px solid black;text-align:center;background:#EEE;font-weight:bold;">${title}</td></tr>`;
+            h += `<tr><td style="border:1px solid black;width:5%;text-align:center;">序次</td><td colspan="3" style="border:1px solid black;width:40%;text-align:center;">單元名稱/內容</td><td style="border:1px solid black;width:5%;text-align:center;">預計週數</td>
+                      <td style="border:1px solid black;width:5%;text-align:center;">序次</td><td colspan="3" style="border:1px solid black;width:40%;text-align:center;">單元名稱/內容</td><td style="border:1px solid black;width:5%;text-align:center;">預計週數</td></tr>`;
+            const mid = Math.ceil(data.length / 2);
+            let total = 0;
+            for(let i=0; i<mid; i++){
+                const l = data[i], r = data[i+mid];
+                if(l) total += parseInt(l[2]) || 0;
+                if(r) total += parseInt(r[2]) || 0;
+                h += `<tr><td style="border:1px solid black;text-align:center;">${l?l[0]:''}</td><td colspan="3" style="border:1px solid black;text-align:left;">${l?l[1].replace(/\n/g, '<br>'):''}</td><td style="border:1px solid black;text-align:center;">${l?l[2]:''}</td>
+                          <td style="border:1px solid black;text-align:center;">${r?r[0]:''}</td><td colspan="3" style="border:1px solid black;text-align:left;">${r?r[1].replace(/\n/g, '<br>'):''}</td><td style="border:1px solid black;text-align:center;">${r?r[2]:''}</td></tr>`;
+            }
+            h += `<tr><td colspan="9" style="border:1px solid black;text-align:right;padding-right:10px;font-weight:bold;">總計</td><td style="border:1px solid black;text-align:center;font-weight:bold;">${total} 週</td></tr>`;
+            return h;
+        };
+
+        // Word HTML 模板建構 (保證全置於 Table 內，使用標楷體)
+        const html = `<html><head><meta charset='utf-8'>
+            <style>
+                table { border-collapse: collapse; width: 100%; font-family: 'DFKai-SB', '標楷體'; font-size: 12pt; }
+                td, th { border: 1px solid black; padding: 6px; }
+                .center { text-align: center; }
+            </style>
+            </head><body style="font-family:'DFKai-SB', '標楷體';">
+            <h2 class="center" style="font-size:16pt;margin-bottom:10px;">${formVals.county}${formVals.schoolName}${formVals.schoolType} ${formVals.year}學年度 ${formVals.grade} ${formVals.courseDomain}課程計畫</h2>
+            <table>
+                <tr>
+                    <td colspan="2" class="center" style="width:20%;">每週節數</td>
+                    <td colspan="3" class="center" style="width:30%;">${formVals.weekPeriods} 節</td>
+                    <td colspan="2" class="center" style="width:20%;">設計者</td>
+                    <td colspan="3" class="center" style="width:30%;">${formVals.teacher}</td>
+                </tr>
+                <tr>
+                    <td colspan="2" class="center">教學對象/年級<br>/障礙類別</td>
+                    <td colspan="8">${formVals.targetStudents}</td>
+                </tr>
+                <tr>
+                    <td colspan="2" class="center">核心素養</td>
+                    <td colspan="8">${coreHtml}</td>
+                </tr>
+                <tr>
+                    <td colspan="2" class="center">參照校訂課程名稱</td>
+                    <td colspan="8"><b>${formVals.refCourse}</b></td>
+                </tr>
+                <tr>
+                    <td rowspan="2" colspan="2" class="center">領綱學習重點</td>
+                    <td colspan="2" class="center" style="background:#EEE;"><b>學習表現</b></td>
+                    <td colspan="6">${document.getElementById('previewPerformance').innerHTML}</td>
+                </tr>
+                <tr>
+                    <td colspan="2" class="center" style="background:#EEE;"><b>學習內容</b></td>
+                    <td colspan="6">${document.getElementById('previewContent').innerHTML}</td>
+                </tr>
+                <tr>
+                    <td colspan="2" class="center">本學年學習重點</td>
+                    <td colspan="8">${document.getElementById('previewFocus').innerHTML.replace(/\n/g, '<br>')}</td>
+                </tr>
+                <tr>
+                    <td colspan="2" class="center">實施方式</td>
+                    <td colspan="8">${scheduleHtml}</td>
+                </tr>
+                <tr>
+                    <td colspan="2" class="center">評量方式</td>
+                    <td colspan="8">${assessHtml}</td>
+                </tr>
+                ${buildWordRows(s1, '第一學期')}
+                ${buildWordRows(s2, '第二學期')}
+            </table>
+        </body></html>`;
+
+        const blob = new Blob(['\ufeff', html], { type: 'application/msword' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `${formVals.year}學年度_${formVals.schoolName}_課程計畫_桃園市格式.doc`;
+        link.click();
+    });
+
+    // 初始化頁面選項與生肖顯示
+    window.onload = () => {
+        updateStageOptions();
+        updateZodiacDisplay();
+    };
+</script>
+
+</body>
+</html>

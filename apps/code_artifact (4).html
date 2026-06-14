@@ -1,0 +1,1177 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>角落小夥伴數學派對：百分率大冒險</title>
+    <style>
+        /* 載入 Google 字體 Klee One 作為安全備用字體 */
+        @import url('https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&display=swap');
+
+        /* 從開源字庫載入 芫荽體 (Iansui) */
+        @font-face {
+            font-family: 'Iansui';
+            src: local('Iansui'), local('芫荽'),
+                 url('https://cdn.jsdelivr.net/gh/ButTaiwan/iansui@master/Iansui-Regular.ttf') format('truetype');
+            font-display: swap;
+        }
+
+        /* 基礎設置與變數：粉彩色系、無襯線字體 */
+        :root {
+            --pastel-blue: #E3F2FD;
+            --pastel-pink: #FCE4EC;
+            --pastel-green: #E8F5E9;
+            --pastel-yellow: #FFF9C4;
+            --pastel-orange: #FFE0B2;
+            --pastel-purple: #F3E5F5;
+            --text-color: #4E342E; 
+            --bg-color: #FFFDF7;
+        }
+
+        body {
+            font-family: 'Iansui', '芫荽', 'Klee One', '微軟正黑體', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            text-align: center;
+            font-size: 18px;
+        }
+
+        #app {
+            background-color: white;
+            width: 100%;
+            max-width: 900px;
+            min-height: 650px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            overflow-x: hidden;
+            overflow-y: auto; /* 允許垂直滾動，避免內容過多被切掉 */
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 新增：響應式縮放，適配平板與手機小螢幕 */
+        @media (max-width: 768px) {
+            body { padding: 10px; }
+            input[type="text"], input[type="password"] { width: 80%; }
+            #question-container { font-size: 1.8em; flex-wrap: wrap; text-align: center; }
+            .place-value-grid { width: 100%; font-size: 0.9em; }
+            input[type="text"].grid-input { width: 35px; height: 35px; font-size: 1.5em; }
+        }
+
+        h1, h2 { color: #5D4037; }
+
+        input[type="text"], input[type="password"] {
+            font-size: 1.5em;
+            padding: 10px 20px;
+            border: 3px solid #FFCCBC;
+            border-radius: 15px;
+            text-align: center;
+            outline: none;
+            width: 250px;
+            margin-bottom: 20px;
+            font-family: inherit;
+            color: var(--text-color);
+        }
+        input:focus { border-color: #FFAB91; }
+
+        button {
+            font-family: inherit;
+            font-size: 1.2em;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            color: #5D4037;
+            transition: transform 0.1s, background-color 0.2s;
+            background-color: var(--pastel-green);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        button:active { transform: scale(0.95); }
+        button:disabled { background-color: #E0E0E0; color: #9E9E9E; cursor: not-allowed; box-shadow: none; }
+
+        /* 畫面通用設定 */
+        .screen {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+            flex-grow: 1;
+        }
+        .screen.active { display: flex; }
+
+        /* 登入畫面 */
+        #login-screen {
+            justify-content: center;
+            align-items: center;
+            background-color: var(--pastel-yellow);
+        }
+        .subtitle { font-size: 1.2em; margin-bottom: 20px; color: #795548; }
+
+        .selection-section { margin-bottom: 20px; width: 100%; max-width: 500px; }
+        .selection-title { font-size: 1.2em; color: #6D4C41; font-weight: bold; margin-bottom: 10px; }
+        .selection-group { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; }
+        .sel-btn { background-color: white; border: 3px solid #BBDEFB; padding: 8px 20px; border-radius: 15px; box-shadow: none; }
+        .sel-btn.active { background-color: var(--pastel-pink); border-color: #F06292; color: #880E4F; transform: scale(1.05); box-shadow: 0 4px 10px rgba(240, 98, 146, 0.3); }
+
+        .bottom-actions {
+            margin-top: 30px;
+            display: flex;
+            gap: 15px;
+            border-top: 2px dashed #BCAAA4;
+            padding-top: 20px;
+        }
+        .btn-blue { background-color: var(--pastel-blue); }
+        .btn-purple { background-color: var(--pastel-purple); }
+
+        /* 遊戲主畫面 */
+        header { background-color: var(--pastel-blue); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #BBDEFB; }
+        #user-greeting { font-size: 1.5em; font-weight: bold; }
+        .status-badges { display: flex; align-items: center; gap: 10px; }
+        .badge { background-color: white; padding: 5px 15px; border-radius: 20px; font-size: 1em; color: #5D4037; border: 2px solid #90CAF9; font-weight: bold; }
+        .score-badge { background-color: #FFF9C4; border-color: #FBC02D; color: #E65100; font-size: 1.2em;}
+        #home-btn { font-size: 1em; padding: 6px 15px; background-color: var(--pastel-orange); border: 2px solid #FFCC80; }
+
+        #main-area { flex-grow: 1; padding: 30px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; }
+        #question-container { font-size: 2.5em; font-weight: bold; margin-bottom: 20px; display: flex; align-items: center; justify-content: center; gap: 15px; }
+        #speaker-btn { background-color: var(--pastel-yellow); border-radius: 50%; width: 50px; height: 50px; padding: 0; display: none; justify-content: center; align-items: center; font-size: 1.2em; }
+
+        /* 提示區域與作答區 */
+        #hint-area { min-height: 120px; width: 100%; margin-bottom: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .grid-container { display: grid; gap: 2px; margin: 10px 0; background-color: #EEE; padding: 5px; border-radius: 10px; }
+        .grid-100 { grid-template-columns: repeat(10, 25px); }
+        .grid-10 { grid-template-columns: repeat(10, 30px); }
+        .grid-cell { width: 100%; aspect-ratio: 1; background-color: white; border-radius: 3px; border: 1px solid #CCC; }
+        .grid-cell.filled { background-color: #F48FB1; border-color: #F06292; }
+        .decimal-hint { font-size: 1.5em; background-color: var(--pastel-pink); padding: 15px 30px; border-radius: 15px; line-height: 1.6; }
+        .highlight-zero { color: #E91E63; font-weight: bold; }
+        .highlight-point { color: #1976D2; font-weight: bold; font-size: 1.2em;}
+
+        /* 新增：中級三步驟鷹架樣式 (符合圖片步驟) */
+        .inter-step-box {
+            background-color: white;
+            border: 2px solid #BBDEFB;
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 15px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+        }
+        .step-title {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #4E342E;
+            margin-bottom: 10px;
+        }
+        .inter-visual {
+            font-size: 2.5em;
+            font-family: Arial, sans-serif;
+            letter-spacing: 5px;
+            margin: 15px 0;
+        }
+        .mark-line {
+            border-bottom: 3px solid #1976D2;
+            padding-bottom: 2px;
+            text-decoration: none;
+            display: inline-block;
+            min-width: 20px;
+            text-align: center;
+        }
+        .mark-arrow {
+            color: #1976D2;
+            font-weight: bold;
+        }
+        .cross-out {
+            text-decoration: line-through;
+            text-decoration-color: #D32F2F;
+            text-decoration-thickness: 3px;
+            color: #9E9E9E;
+        }
+
+        /* 新增：步驟標題旁邊的手動語音按鈕 */
+        .step-speaker-btn {
+            background-color: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 1.2em;
+            margin-left: 10px;
+            padding: 0;
+            vertical-align: middle;
+            transition: transform 0.1s;
+            box-shadow: none;
+        }
+        .step-speaker-btn:hover { transform: scale(1.2); }
+        .step-speaker-btn:active { transform: scale(0.9); }
+
+        /* 新增：初級互動式定位板輔助格 */
+        .place-value-grid {
+            border-collapse: collapse;
+            margin: 10px auto;
+            background-color: white;
+            border: 2px solid #4E342E;
+        }
+        .place-value-grid td, .place-value-grid th {
+            border: 1px solid #4E342E;
+            padding: 8px 12px;
+            text-align: center;
+            vertical-align: middle;
+            position: relative; /* 為了定位紅點 */
+        }
+        .place-value-grid .pct-header {
+            color: #D32F2F;
+            font-size: 1.3em;
+            letter-spacing: 2px;
+            border-bottom: 2px solid #4E342E;
+            background-color: var(--pastel-pink); /* 新增粉色底色 */
+        }
+        
+        /* 新增：小數的黃色表頭 */
+        .place-value-grid .dec-header {
+            color: #E65100;
+            font-size: 1.3em;
+            letter-spacing: 2px;
+            border-bottom: 2px solid #4E342E;
+            background-color: var(--pastel-yellow); /* 新增黃色底色 */
+        }
+
+        /* 新增：題幹「百分率」與「小數」文字的高亮底色 */
+        .highlight-pct {
+            background-color: var(--pastel-pink);
+            padding: 2px 8px;
+            border-radius: 8px;
+        }
+
+        .highlight-dec {
+            background-color: var(--pastel-yellow);
+            padding: 2px 8px;
+            border-radius: 8px;
+        }
+        
+        /* 新增：初級分數換百分率的「分子粉色高亮」 */
+        .highlight-num {
+            background-color: var(--pastel-pink);
+            border-radius: 6px 6px 0 0;
+        }
+        
+        /* 修正：加入 input[type="text"] 提高 CSS 權重，並將 padding 與 margin 歸零 */
+        input[type="text"].grid-input {
+            width: 45px;
+            height: 45px;
+            padding: 0;
+            margin-bottom: 0;
+            font-size: 1.8em;
+            text-align: center;
+            border: 2px solid #90CAF9;
+            border-radius: 8px;
+            color: var(--text-color);
+            background-color: #FAFAFA;
+            outline: none;
+            transition: all 0.2s;
+        }
+        input[type="text"].grid-input:focus { border-color: #1976D2; background-color: #E3F2FD; }
+        input[type="text"].grid-input.correct {
+            background-color: #C8E6C9;
+            border-color: #4CAF50;
+            color: #2E7D32;
+            font-weight: bold;
+        }
+        .red-dot {
+            position: absolute;
+            bottom: -7px;
+            right: -7px;
+            width: 14px;
+            height: 14px;
+            background-color: white;
+            border: 3px solid #D32F2F;
+            border-radius: 50%;
+            z-index: 10;
+            box-sizing: border-box;
+        }
+
+        /* 垂直分數顯示 */
+        .fraction { display: inline-flex; flex-direction: column; align-items: center; vertical-align: middle; margin: 0 5px; font-size: 0.9em; }
+        .fraction .numerator { border-bottom: 3px solid var(--text-color); padding: 2px 8px; width: 100%; text-align: center; box-sizing: border-box; }
+        .fraction .denominator { padding: 2px 8px; width: 100%; text-align: center; box-sizing: border-box; }
+        .input-fraction .numerator { border-bottom: 3px solid var(--text-color); padding: 0; }
+
+        #answer-area { width: 100%; display: flex; justify-content: center; align-items: center; gap: 20px; min-height: 100px; }
+        .option-btn { font-size: 1.8em; padding: 15px 30px; min-width: 150px; }
+        .structural-hint { font-size: 2em; display: flex; align-items: center; gap: 10px; letter-spacing: 5px; }
+        .structural-hint input { font-size: 1em; width: 150px; letter-spacing: 2px; border: none; border-bottom: 4px solid var(--text-color); border-radius: 0; background: transparent; text-align: center; }
+        .input-fraction .numerator input { border-bottom: none; width: 80px; padding: 5px; }
+        #advanced-input { font-size: 2em; padding: 10px; width: 200px; border: 3px solid #BCAAA4; border-radius: 10px; }
+        #submit-btn { background-color: var(--pastel-blue); font-size: 1.5em; margin-left: 20px; display: none; }
+
+        /* 回饋彈跳視窗 */
+        #feedback-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(255, 255, 255, 0.9); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 100; }
+        .feedback-box { background-color: white; padding: 40px; border-radius: 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); text-align: center; animation: popIn 0.4s; }
+        @keyframes popIn { 0% { transform: scale(0.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        .feedback-emoji { font-size: 5em; margin-bottom: 20px; }
+        .feedback-text { font-size: 2em; font-weight: bold; margin-bottom: 30px; }
+
+        /* 表格與列表 (排行榜、老師專區) */
+        .data-screen { background-color: var(--pastel-blue); padding: 30px; overflow-y: auto; }
+        .data-container { background-color: white; border-radius: 20px; padding: 20px; width: 90%; margin: 0 auto; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { padding: 12px; border-bottom: 2px solid #E3F2FD; font-size: 1.2em; text-align: center; }
+        th { background-color: var(--pastel-orange); color: #5D4037; }
+        .rank-1 { font-size: 1.5em; font-weight: bold; color: #D84315; }
+        .rank-2 { font-size: 1.3em; font-weight: bold; color: #EF6C00; }
+        .rank-3 { font-size: 1.2em; font-weight: bold; color: #F9A825; }
+        
+        .nav-bar { display: flex; justify-content: space-between; margin-bottom: 20px; }
+        
+        .teacher-tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
+        .tab-btn { background-color: #EEE; color: #757575; }
+        .tab-btn.active { background-color: var(--pastel-purple); color: #4A148C; border: 2px solid #CE93D8; }
+        
+        .analysis-card { background-color: var(--pastel-pink); padding: 15px; border-radius: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .analysis-q { font-size: 1.3em; font-weight: bold; }
+        .analysis-count { background: white; padding: 5px 15px; border-radius: 10px; color: #C2185B; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div id="app">
+    <!-- 1. 登入畫面 -->
+    <div id="login-screen" class="screen active">
+        <h1>🐻 角落小夥伴數學派對 🐧</h1>
+        <div class="subtitle">百分率大冒險</div>
+        
+        <input type="text" id="nickname-input" placeholder="請輸入暱稱或班級座號" autocomplete="off">
+        
+        <div class="selection-section">
+            <div class="selection-title">選擇難度</div>
+            <div class="selection-group" id="diff-group">
+                <button class="sel-btn diff-sel" data-val="beginner">初級</button>
+                <button class="sel-btn diff-sel" data-val="intermediate">中級</button>
+                <button class="sel-btn diff-sel" data-val="advanced">高級</button>
+            </div>
+        </div>
+
+        <div class="selection-section">
+            <div class="selection-title">選擇關卡</div>
+            <div class="selection-group" id="cat-group">
+                <button class="sel-btn cat-sel" data-val="decimal">小數與百分率</button>
+                <button class="sel-btn cat-sel" data-val="fraction">分數與百分率</button>
+            </div>
+        </div>
+
+        <!-- 補回：語音朗讀的勾選開關 -->
+        <div class="selection-section" style="margin-bottom: 15px;">
+            <label style="cursor: pointer; font-size: 1.2em; color: #4E342E; font-weight: bold;">
+                <input type="checkbox" id="voice-toggle" style="transform: scale(1.5); margin-right: 10px;" checked>
+                🔊 開啟自動語音朗讀
+            </label>
+        </div>
+
+        <button id="start-btn" style="font-size: 1.5em;" disabled>開始派對</button>
+
+        <div class="bottom-actions">
+            <button id="btn-goto-leaderboard" class="btn-blue">🏆 排行榜</button>
+            <button id="btn-goto-teacher" class="btn-purple">👩‍🏫 老師專區</button>
+        </div>
+    </div>
+
+    <!-- 2. 遊戲主畫面 -->
+    <div id="game-screen" class="screen">
+        <header>
+            <div id="user-greeting">歡迎，<span id="display-name"></span>！</div>
+            <div class="status-badges">
+                <span class="badge score-badge">分數: <span id="current-score-display">0</span></span>
+                <span id="status-cat" class="badge">關卡</span>
+                <span id="status-diff" class="badge">難度</span>
+                <button id="home-btn">🏠 結算並回主選單</button>
+            </div>
+        </header>
+
+        <div id="main-area">
+            <div id="question-container">
+                <span id="question-text">題目載入中...</span>
+                <button id="speaker-btn" title="朗讀題目">🔊</button>
+            </div>
+            <div id="hint-area"></div>
+            <div id="answer-area"></div>
+            <button id="submit-btn">送出答案</button>
+        </div>
+
+        <!-- 回饋彈跳視窗 -->
+        <div id="feedback-overlay">
+            <div class="feedback-box">
+                <div class="feedback-emoji" id="feedback-emoji">🌟</div>
+                <div class="feedback-text" id="feedback-text">答對了！</div>
+                <button id="next-btn">下一題</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. 排行榜畫面 -->
+    <div id="leaderboard-screen" class="screen data-screen">
+        <div class="nav-bar">
+            <h2>🏆 派對排行榜</h2>
+            <button class="btn-back-home">返回主選單</button>
+        </div>
+        <div class="data-container">
+            <table>
+                <thead><tr><th>名次</th><th>姓名</th><th>難度</th><th>分數</th></tr></thead>
+                <tbody id="leaderboard-body">
+                    <!-- 動態載入 -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 4. 老師登入畫面 -->
+    <div id="teacher-login-screen" class="screen data-screen" style="justify-content: center; align-items: center;">
+        <div class="data-container" style="max-width: 400px; text-align: center;">
+            <h2>👩‍🏫 老師專區登入</h2>
+            <p style="color: #795548; font-size: 0.9em;">(預設密碼: 1234)</p>
+            <input type="password" id="teacher-pwd" placeholder="請輸入密碼">
+            <br>
+            <button id="btn-teacher-login">登入</button>
+            <button class="btn-back-home" style="margin-left: 10px; background-color: #EEE;">取消</button>
+        </div>
+    </div>
+
+    <!-- 5. 老師專區主畫面 -->
+    <div id="teacher-screen" class="screen data-screen">
+        <div class="nav-bar">
+            <h2>👩‍🏫 老師教學分析專區</h2>
+            <button class="btn-back-home">登出並返回主選單</button>
+        </div>
+        <div class="data-container">
+            <div class="teacher-tabs">
+                <button class="tab-btn active" id="tab-records">學生紀錄</button>
+                <button class="tab-btn" id="tab-analysis">常錯題型分析</button>
+            </div>
+            
+            <!-- 學生紀錄區塊 -->
+            <div id="view-records">
+                <table style="margin-bottom: 20px;">
+                    <thead><tr><th>時間</th><th>姓名</th><th>關卡</th><th>難度</th><th>分數</th></tr></thead>
+                    <tbody id="teacher-records-body"></tbody>
+                </table>
+            </div>
+
+            <!-- 分析與匯出區塊 -->
+            <div id="view-analysis" style="display: none;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h3 style="color: #4E342E;">🔥 班級常錯排行榜 (前5名)</h3>
+                    <button id="btn-export-csv" style="background-color: #4CAF50; color: white;">📥 匯出 CSV 報表</button>
+                </div>
+                <div id="analysis-list">
+                    <!-- 動態載入 -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- 題庫資料設計 ---
+    // 修改：刪除 3 位小數等複雜題型，替換為符合資源班程度的簡單基礎題
+    const questionsPool = [
+        // Type 1: 小數 -> 百分率
+        { type: 1, q: "0.7", a: "70%", distractors: ["7%", "0.07%"], instruction: "化為百分率", step1Grid: ['0', '7', '', ''], step2Grid: ['0', '7', '0', ''], interStep2: `0 . <u class="mark-line">7</u> <u class="mark-line">0</u> <span class="mark-arrow">➡</span>`, interStep3: `<s class="cross-out">0 . </s> 7 0` },
+        { type: 1, q: "0.82", a: "82%", distractors: ["8.2%", "0.082%"], instruction: "化為百分率", step1Grid: ['0', '8', '2', ''], step2Grid: ['0', '8', '2', ''], interStep2: `0 . <u class="mark-line">8</u> <u class="mark-line">2</u> <span class="mark-arrow">➡</span>`, interStep3: `<s class="cross-out">0 . </s> 8 2` },
+        { type: 1, q: "0.05", a: "5%", distractors: ["50%", "0.5%"], instruction: "化為百分率", step1Grid: ['0', '0', '5', ''], step2Grid: ['0', '0', '5', ''], interStep2: `0 . <u class="mark-line">0</u> <u class="mark-line">5</u> <span class="mark-arrow">➡</span>`, interStep3: `<s class="cross-out">0 . 0 </s> 5` },
+        { type: 1, q: "0.6", a: "60%", distractors: ["6%", "0.06%"], instruction: "化為百分率", step1Grid: ['0', '6', '', ''], step2Grid: ['0', '6', '0', ''], interStep2: `0 . <u class="mark-line">6</u> <u class="mark-line">0</u> <span class="mark-arrow">➡</span>`, interStep3: `<s class="cross-out">0 . </s> 6 0` },
+        
+        // Type 2: 百分率 -> 小數
+        { type: 2, q: "65%", a: "0.65", distractors: ["6.5", "0.065"], instruction: "化為小數", step1Grid: ['', '6', '5', ''], step2Grid: ['0', '6', '5', ''], interStep2: `<span class="mark-arrow">⬅</span> <u class="mark-line">6</u> <u class="mark-line">5</u> %`, interStep3: `0 . <u class="mark-line">6</u> <u class="mark-line">5</u>` },
+        { type: 2, q: "80%", a: "0.8", distractors: ["0.08", "8.0"], instruction: "化為小數", step1Grid: ['', '8', '0', ''], step2Grid: ['0', '8', '0', ''], interStep2: `<span class="mark-arrow">⬅</span> <u class="mark-line">8</u> <u class="mark-line">0</u> %`, interStep3: `0 . <u class="mark-line">8</u> <u class="mark-line">0</u>` },
+        { type: 2, q: "9%", a: "0.09", distractors: ["0.9", "0.009"], instruction: "化為小數", step1Grid: ['', '', '9', ''], step2Grid: ['0', '0', '9', ''], interStep2: `<span class="mark-arrow">⬅</span> <u class="mark-line">0</u> <u class="mark-line">9</u> %`, interStep3: `0 . <u class="mark-line">0</u> <u class="mark-line">9</u>` },
+        { type: 2, q: "34%", a: "0.34", distractors: ["3.4", "0.034"], instruction: "化為小數", step1Grid: ['', '3', '4', ''], step2Grid: ['0', '3', '4', ''], interStep2: `<span class="mark-arrow">⬅</span> <u class="mark-line">3</u> <u class="mark-line">4</u> %`, interStep3: `0 . <u class="mark-line">3</u> <u class="mark-line">4</u>` },
+
+        // Type 3 & 4: 分數與百分率互換 (保持不變)
+        { type: 3, q: "7/10", a: "70%", distractors: ["7%", "0.7%"], instruction: "化為百分率", num: 7, den: 10 },
+        { type: 3, q: "32/100", a: "32%", distractors: ["3.2%", "320%"], instruction: "化為百分率", num: 32, den: 100 },
+        { type: 3, q: "5/10", a: "50%", distractors: ["5%", "0.5%"], instruction: "化為百分率", num: 5, den: 10 },
+        { type: 3, q: "99/100", a: "99%", distractors: ["9.9%", "990%"], instruction: "化為百分率", num: 99, den: 100 },
+        { type: 4, q: "90%", a: "90/100", distractors: ["9/100", "900/100"], instruction: "化為分數" },
+        { type: 4, q: "18%", a: "18/100", distractors: ["1.8/100", "180/100"], instruction: "化為分數" },
+        { type: 4, q: "7%", a: "7/100", distractors: ["70/100", "0.7/100"], instruction: "化為分數" },
+        { type: 4, q: "100%", a: "100/100", distractors: ["10/100", "1/100"], instruction: "化為分數" }
+    ];
+
+    // --- 系統狀態 (單次運行記憶體) ---
+    let gameRecords = []; // 儲存所有遊玩紀錄
+    let currentUser = "";
+    let selectedDiff = "";
+    let selectedCat = "";
+    
+    // 當前遊戲狀態
+    let currentSessionData = null; 
+    let currentQuestion = null;
+    let currentQuestionAttempts = 0; // 記錄當前題目嘗試次數
+
+    // --- 畫面切換控制 ---
+    function showScreen(screenId) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(screenId).classList.add('active');
+    }
+    
+    document.querySelectorAll('.btn-back-home').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.getElementById('teacher-pwd').value = "";
+            showScreen('login-screen');
+        });
+    });
+
+    // --- 輔助函式：分數渲染 ---
+    function formatText(text, highlightNumerator = false) {
+        if (typeof text === 'string' && text.match(/^\d+\/\d+$/)) {
+            const parts = text.split('/');
+            const numClass = highlightNumerator ? 'numerator highlight-num' : 'numerator';
+            return `<span class="fraction"><span class="${numClass}">${parts[0]}</span><span class="denominator">${parts[1]}</span></span>`;
+        }
+        return text;
+    }
+
+    // --- 登入畫面邏輯 ---
+    const nicknameInput = document.getElementById('nickname-input');
+    const startBtn = document.getElementById('start-btn');
+    const diffSels = document.querySelectorAll('.diff-sel');
+    const catSels = document.querySelectorAll('.cat-sel');
+
+    function checkStartConditions() {
+        startBtn.disabled = !(nicknameInput.value.trim() !== "" && selectedDiff !== "" && selectedCat !== "");
+    }
+
+    nicknameInput.addEventListener('input', checkStartConditions);
+
+    diffSels.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            diffSels.forEach(b => b.classList.remove('active'));
+            e.target.classList.add('active');
+            selectedDiff = e.target.dataset.val;
+            checkStartConditions();
+        });
+    });
+
+    catSels.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            catSels.forEach(b => b.classList.remove('active'));
+            e.target.classList.add('active');
+            selectedCat = e.target.dataset.val;
+            checkStartConditions();
+        });
+    });
+
+    // 開始遊戲
+    startBtn.addEventListener('click', () => {
+        currentUser = nicknameInput.value.trim();
+        document.getElementById('display-name').textContent = currentUser;
+        document.getElementById('status-cat').textContent = selectedCat === 'decimal' ? '小數與百分率' : '分數與百分率';
+        const diffNames = { 'beginner': '初級', 'intermediate': '中級', 'advanced': '高級' };
+        document.getElementById('status-diff').textContent = diffNames[selectedDiff];
+
+        // 初始化當局資料
+        currentSessionData = {
+            name: currentUser,
+            difficulty: diffNames[selectedDiff],
+            category: selectedCat === 'decimal' ? '小數與百分率' : '分數與百分率',
+            score: 0,
+            wrongQuestions: [],
+            timestamp: new Date()
+        };
+        updateScoreDisplay();
+
+        showScreen('game-screen');
+        loadNextQuestion();
+    });
+
+    // 結算並回主選單
+    document.getElementById('home-btn').addEventListener('click', () => {
+        if(currentSessionData && (currentSessionData.score > 0 || currentSessionData.wrongQuestions.length > 0)) {
+            gameRecords.push({...currentSessionData}); // 儲存紀錄
+        }
+        currentSessionData = null;
+        showScreen('login-screen');
+    });
+
+    // --- 遊戲邏輯 ---
+    const hintArea = document.getElementById('hint-area');
+    const answerArea = document.getElementById('answer-area');
+    const submitBtn = document.getElementById('submit-btn');
+    const speakerBtn = document.getElementById('speaker-btn');
+    const questionText = document.getElementById('question-text');
+
+    function updateScoreDisplay() {
+        document.getElementById('current-score-display').textContent = currentSessionData.score;
+    }
+
+    function loadNextQuestion() {
+        currentQuestionAttempts = 0; // 重置嘗試次數
+        let filteredPool = questionsPool.filter(q => 
+            selectedCat === 'decimal' ? (q.type === 1 || q.type === 2) : (q.type === 3 || q.type === 4)
+        );
+        currentQuestion = filteredPool[Math.floor(Math.random() * filteredPool.length)];
+        
+        hintArea.innerHTML = ""; answerArea.innerHTML = "";
+        answerArea.style.display = "flex"; // 重置顯示狀態
+        submitBtn.style.display = "none"; speakerBtn.style.display = "flex";
+        
+        // 替換題幹中的文字，為「百分率」加上粉色底、「小數」加上黃色底
+        let instructionText = currentQuestion.instruction
+            .replace(/百分率/g, '<span class="highlight-pct">百分率</span>')
+            .replace(/小數/g, '<span class="highlight-dec">小數</span>');
+            
+        // 判斷是否為初級的「分數換百分率」題目，是的話分子加上粉底視覺提示
+        let isBeginnerFractionToPct = (selectedDiff === "beginner" && currentQuestion.type === 3);
+        
+        questionText.innerHTML = `請將 ${formatText(currentQuestion.q, isBeginnerFractionToPct)} ${instructionText}`;
+
+        if (selectedDiff === "beginner") renderBeginner();
+        else if (selectedDiff === "intermediate") renderIntermediate();
+        else renderAdvanced();
+    }
+
+    function renderBeginner() {
+        if (currentQuestion.type === 3 || currentQuestion.type === 4) {
+            // 分數類型：維持原有的百格板圖示
+            const isHundred = currentQuestion.type === 3 ? currentQuestion.den === 100 : true;
+            const fillCount = currentQuestion.type === 3 ? currentQuestion.num : parseInt(currentQuestion.q);
+            const gridDiv = document.createElement('div');
+            gridDiv.className = `grid-container ${isHundred ? 'grid-100' : 'grid-10'}`;
+            for(let i=0; i<(isHundred?100:10); i++) {
+                const cell = document.createElement('div');
+                cell.className = `grid-cell ${i < fillCount ? 'filled' : ''}`;
+                gridDiv.appendChild(cell);
+            }
+            hintArea.appendChild(gridDiv);
+        } else {
+            // 小數類型：重構為「強制三步驟操作」的鷹架流程
+            let currentBeginnerStep = 1;
+            answerArea.style.display = "none"; // 填寫完成前先隱藏選擇題按鈕
+
+            function createGridInput(index) {
+                return `<input type="text" class="grid-input" id="grid-in-${index}" maxlength="1" autocomplete="off">`;
+            }
+
+            hintArea.innerHTML = `
+                <div id="grid-msg-container" style="font-size: 1.1em; margin-bottom: 10px; font-weight: bold; display: flex; justify-content: center; align-items: center; gap: 10px;">
+                    <div id="grid-msg" style="color: #E91E63;">👇 【步驟 1】請先將題目數字填入定位板</div>
+                    <button class="step-speaker-btn" id="beginner-speaker-btn" onclick="manualSpeakText('步驟一，請先將題目數字填入定位板')">🔊</button>
+                </div>
+                <table class="place-value-grid">
+                    <tr>
+                        <td class="dec-header" style="background-color: var(--pastel-yellow); color: #E65100;">個位</td>
+                        <td style="background-color: var(--pastel-yellow); color: #E65100; font-weight: bold;">小數點</td>
+                        <td colspan="3" class="pct-header">百分率 <span style="font-family: Arial, sans-serif;">%</span></td>
+                    </tr>
+                    <tr>
+                        <td>${createGridInput(0)}</td>
+                        <td class="grid-dot" style="font-size: 1.8em; font-weight: bold;">.</td>
+                        <td>${createGridInput(1)}</td>
+                        <td>
+                            ${createGridInput(2)}
+                            <div class="red-dot"></div>
+                        </td>
+                        <td>${createGridInput(3)}</td>
+                    </tr>
+                </table>
+                <button id="btn-check-grid" style="font-size: 1.2em; padding: 8px 20px; background-color: var(--pastel-blue); border-radius: 10px; margin-top: 15px;">檢查步驟</button>
+            `;
+
+            const inputs = hintArea.querySelectorAll('.grid-input');
+            
+            // 自動 Focus 到第一個框
+            if (inputs.length > 0) inputs[0].focus();
+
+            // 綁定檢查按鈕事件
+            document.getElementById('btn-check-grid').addEventListener('click', () => {
+                let allCorrect = true;
+                let expectedGrid = currentBeginnerStep === 1 ? currentQuestion.step1Grid : currentQuestion.step2Grid;
+
+                inputs.forEach((input, index) => {
+                    if (input.disabled) return; // 已經正確鎖定的欄位跳過檢查
+                    let val = toHalfWidth(input.value.trim());
+                    let expected = expectedGrid[index];
+
+                    if (val === expected) {
+                        if (val !== '') input.classList.add('correct');
+                    } else {
+                        allCorrect = false;
+                        input.style.backgroundColor = '#FFCDD2';
+                        setTimeout(() => {
+                            if (!input.disabled) {
+                                input.value = '';
+                                input.style.backgroundColor = '#FAFAFA';
+                            }
+                        }, 800);
+                    }
+                });
+
+                if (allCorrect) {
+                    // 將正確填寫的欄位鎖定
+                    inputs.forEach((input, index) => {
+                        if (expectedGrid[index] !== '') {
+                            input.disabled = true;
+                            input.classList.add('correct');
+                        } else {
+                            // 預期為空的值，確保清空並移除綠底
+                            input.value = '';
+                            input.classList.remove('correct');
+                        }
+                    });
+
+                    if (currentBeginnerStep === 1) {
+                        // 判斷是否需要進入步驟 2 (補零)
+                        let needsStep2 = false;
+                        for (let i = 0; i < 4; i++) {
+                            if (currentQuestion.step1Grid[i] !== currentQuestion.step2Grid[i]) needsStep2 = true;
+                        }
+
+                        if (needsStep2) {
+                            currentBeginnerStep = 2;
+                            document.getElementById('grid-msg').innerHTML = "✅ 步驟 1 完成！<br>👇 【步驟 2】請在空格處補 0";
+                            document.getElementById('grid-msg').style.color = "#E65100";
+                            document.getElementById('beginner-speaker-btn').setAttribute('onclick', "manualSpeakText('步驟二，請在空格處補零')");
+                            speakText("步驟二，請在空格處補零");
+                            // 焦點移動到第一個尚未鎖定的欄位
+                            const nextInput = Array.from(inputs).find(inp => !inp.disabled);
+                            if (nextInput) nextInput.focus();
+                        } else {
+                            // 不需要補零，直接進入步驟 3
+                            currentBeginnerStep = 3;
+                            document.getElementById('grid-msg').innerHTML = "✅ 定位板填寫完成！<br>👇 【步驟 3】請選擇正確答案：";
+                            document.getElementById('grid-msg').style.color = "#2E7D32";
+                            document.getElementById('beginner-speaker-btn').setAttribute('onclick', "manualSpeakText('步驟三，請選擇正確答案')");
+                            document.getElementById('btn-check-grid').style.display = "none";
+                            speakText("步驟三，請選擇正確答案");
+                            answerArea.style.display = 'flex';
+                        }
+                    } else if (currentBeginnerStep === 2) {
+                        // 步驟 2 完成，進入步驟 3
+                        currentBeginnerStep = 3;
+                        document.getElementById('grid-msg').innerHTML = "✅ 定位板填寫完成！<br>👇 【步驟 3】請選擇正確答案：";
+                        document.getElementById('grid-msg').style.color = "#2E7D32";
+                        document.getElementById('beginner-speaker-btn').setAttribute('onclick', "manualSpeakText('步驟三，請選擇正確答案')");
+                        document.getElementById('btn-check-grid').style.display = "none";
+                        speakText("步驟三，請選擇正確答案");
+                        answerArea.style.display = 'flex';
+                    }
+                }
+            });
+        }
+        
+        // 渲染選擇題按鈕
+        const options = [currentQuestion.a, ...currentQuestion.distractors].sort(() => Math.random() - 0.5);
+        options.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerHTML = formatText(opt);
+            btn.onclick = () => checkAnswerChoice(opt);
+            answerArea.appendChild(btn);
+        });
+    }
+
+    // 將中級輸入框生成邏輯獨立出來，方便在動畫結束後呼叫
+    function setupIntermediateInput() {
+        const hintDiv = document.createElement('div');
+        hintDiv.className = 'structural-hint';
+        let inputHtml = '';
+        if (currentQuestion.type === 1 || currentQuestion.type === 3) inputHtml = `<input type="text" id="inter-input" autocomplete="off"> %`;
+        else if (currentQuestion.type === 2) {
+            const ansLen = currentQuestion.a.length;
+            inputHtml = `<input type="text" id="inter-input" placeholder="0 . ${"_ ".repeat(ansLen - 2)}" autocomplete="off">`;
+        } else if (currentQuestion.type === 4) {
+            inputHtml = `<div class="fraction input-fraction"><div class="numerator"><input type="text" id="inter-input" autocomplete="off"></div><div class="denominator">100</div></div>`;
+        }
+        hintDiv.innerHTML = inputHtml; 
+        answerArea.appendChild(hintDiv);
+        answerArea.style.display = "flex";
+        submitBtn.style.display = "block"; 
+        
+        // 延遲一下確保元素出現後再 focus
+        setTimeout(() => { document.getElementById('inter-input').focus(); }, 100);
+    }
+
+    function renderIntermediate() {
+        if (currentQuestion.type === 1 || currentQuestion.type === 2) {
+            // 小數與百分率：使用最新的三步驟圖解劃記引導
+            answerArea.style.display = "none";
+            submitBtn.style.display = "none";
+
+            const isType1 = currentQuestion.type === 1; // 1: 小數->百分率, 2: 百分率->小數
+            const targetName = isType1 ? "百分率" : "小數";
+            const correctBtnId = isType1 ? "btn-dir-right" : "btn-dir-left";
+
+            let step1Speech = `步驟一，查圖確定方向。${currentQuestion.q} 用${targetName}表示`;
+            let step2TextHTML = isType1 ? '【步驟 2：依照方向以小數點後第一位為起點進行劃記】<br><span style="font-size:0.8em; color:#795548;">註：空格補 0</span>' : '【步驟 2：依照方向從<span style="border:1px solid #4E342E; padding: 0 4px; margin: 0 4px;">個位</span>開始移動劃記】';
+            let step2Speech = isType1 ? '步驟二，依照方向以小數點後第一位為起點進行劃記。記得空格要補零喔！' : '步驟二，依照方向從個位開始移動劃記。';
+            let step3TextHTML = isType1 ? '【步驟 3：劃掉前面沒有劃記的地方，只填入後方數字】' : '【步驟 3：在停止處點上小數點以及小數點左邊補 0】';
+            let step3Speech = isType1 ? '步驟三，劃掉前面沒有劃記的地方，只填入後方數字。請在下方填入最後答案。' : '步驟三，在停止處點上小數點，以及小數點左邊補零。請在下方填入最後答案。';
+
+            let html = `
+                <div class="inter-step-box" id="inter-step-1">
+                    <div class="step-title">
+                        【步驟 1：查圖確定方向】 ${currentQuestion.q} 用${targetName}表示
+                        <button class="step-speaker-btn" onclick="manualSpeakText('${step1Speech}')">🔊</button>
+                    </div>
+                    <div style="margin: 10px 0; color: #E91E63; font-weight: bold;">👇 請選擇移動方向：</div>
+                    <div style="display: flex; gap: 15px; justify-content: center;">
+                        <button id="btn-dir-left" style="background-color: #E1F5FE; border: 2px solid #81D4FA;">百分率➡小數<br>(向左 ⬅ 移動 2 位)</button>
+                        <button id="btn-dir-right" style="background-color: #E1F5FE; border: 2px solid #81D4FA;">小數➡百分率<br>(向右 ➡ 移動 2 位)</button>
+                    </div>
+                    <div id="dir-error" style="color: #D32F2F; margin-top: 10px; font-weight: bold; display: none;">❌ 方向不對喔，請再想想看！</div>
+                </div>
+
+                <div class="inter-step-box" id="inter-step-2" style="display: none;">
+                    <div class="step-title">
+                        ${step2TextHTML}
+                        <button class="step-speaker-btn" onclick="manualSpeakText('${step2Speech}')">🔊</button>
+                    </div>
+                    <div class="inter-visual">${currentQuestion.interStep2}</div>
+                    <button id="btn-next-step3" style="background-color: var(--pastel-blue); margin-top: 10px;">下一步</button>
+                </div>
+
+                <div class="inter-step-box" id="inter-step-3" style="display: none;">
+                    <div class="step-title">
+                        ${step3TextHTML}
+                        <button class="step-speaker-btn" onclick="manualSpeakText('${step3Speech}')">🔊</button>
+                    </div>
+                    <div class="inter-visual">${currentQuestion.interStep3}</div>
+                    <div style="color: #2E7D32; font-weight: bold; margin-bottom: 10px;">✅ 請在下方填入最後答案</div>
+                </div>
+            `;
+            
+            hintArea.innerHTML = html;
+            
+            // 步驟 1 按鈕邏輯
+            const btnLeft = document.getElementById('btn-dir-left');
+            const btnRight = document.getElementById('btn-dir-right');
+            const dirError = document.getElementById('dir-error');
+
+            function handleDirChoice(clickedBtnId) {
+                if (clickedBtnId === correctBtnId) {
+                    btnLeft.style.display = "none";
+                    btnRight.style.display = "none";
+                    dirError.style.display = "none";
+                    document.getElementById('inter-step-1').innerHTML += `<div style="color: #2E7D32; font-weight: bold; font-size: 1.2em;">✅ 選擇正確！</div>`;
+                    document.getElementById('inter-step-2').style.display = "block";
+                    
+                    speakText(step2Speech);
+                } else {
+                    dirError.style.display = "block";
+                    speakText("方向不對喔，請再想想看！");
+                    setTimeout(() => { dirError.style.display = "none"; }, 1500);
+                }
+            }
+            
+            btnLeft.onclick = () => handleDirChoice('btn-dir-left');
+            btnRight.onclick = () => handleDirChoice('btn-dir-right');
+
+            // 步驟 2 按鈕邏輯
+            document.getElementById('btn-next-step3').onclick = () => {
+                document.getElementById('btn-next-step3').style.display = "none";
+                document.getElementById('inter-step-3').style.display = "block";
+                
+                speakText(step3Speech);
+                
+                setupIntermediateInput();
+            };
+
+        } else {
+            // 分數與百分率：維持原本的靜態文字提示
+            answerArea.style.display = "flex";
+            const visualHintDiv = document.createElement('div');
+            visualHintDiv.className = 'decimal-hint';
+            visualHintDiv.style.backgroundColor = '#E3F2FD';
+            visualHintDiv.style.fontSize = '1.2em';
+            
+            if (currentQuestion.type === 3) {
+                visualHintDiv.innerHTML = `💡 提示：先將分數的分母擴分為 100`;
+            } else if (currentQuestion.type === 4) {
+                visualHintDiv.innerHTML = `💡 提示：百分率就是分母為 100 的分數`;
+            }
+            hintArea.appendChild(visualHintDiv);
+            setupIntermediateInput();
+        }
+    }
+
+    function renderAdvanced() {
+        answerArea.innerHTML = `<input type="text" id="adv-input" placeholder="請輸入完整答案" autocomplete="off"><div style="font-size: 0.7em; color: #795548; margin-top: 10px; width: 100%;">※ 提示：分數請用分子/分母輸入（如 7/10），百分率請包含 %</div>`;
+        submitBtn.style.display = "block"; document.getElementById('adv-input').focus();
+    }
+
+    function checkAnswerChoice(selectedOpt) { handleAnswer(selectedOpt === currentQuestion.a); }
+    
+    // 輔助函式：全形轉半形 (避免學生輸入全形數字導致系統判斷錯誤)
+    function toHalfWidth(str) {
+        return str.replace(/[\uff01-\uff5e]/g, function(ch) {
+            return String.fromCharCode(ch.charCodeAt(0) - 0xfee0);
+        });
+    }
+
+    function checkAnswerInput() {
+        let userInput = "";
+        if (selectedDiff === "intermediate") {
+            userInput = document.getElementById('inter-input').value.trim();
+            userInput = toHalfWidth(userInput); // 轉半形
+            if (userInput.startsWith('.')) userInput = '0' + userInput; // 容錯：.07 -> 0.07
+
+            if (currentQuestion.type === 1 || currentQuestion.type === 3) userInput += "%";
+            if (currentQuestion.type === 4) userInput += "/100";
+        } else {
+            userInput = document.getElementById('adv-input').value.replace(/\s+/g, '');
+            userInput = toHalfWidth(userInput); // 轉半形
+            if (userInput.startsWith('.')) userInput = '0' + userInput; // 容錯：.07 -> 0.07
+        }
+        handleAnswer(userInput === currentQuestion.a);
+    }
+
+    // 加入這行：綁定送出按鈕的點擊事件
+    submitBtn.addEventListener('click', checkAnswerInput);
+
+    const feedbackOverlay = document.getElementById('feedback-overlay');
+    function handleAnswer(isCorrect) {
+        currentQuestionAttempts++;
+        
+        // 停止之前的語音，避免重疊
+        if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+        
+        if (isCorrect) {
+            // 語音鼓勵 (加入安全防護，找不到打勾選項也不會當機)
+            const voiceToggle = document.getElementById('voice-toggle');
+            if (voiceToggle && voiceToggle.checked && 'speechSynthesis' in window) {
+                const praises = ["太棒了！", "答對了，你好厲害！", "做得好！", "非常棒喔！"];
+                const praise = praises[Math.floor(Math.random() * praises.length)];
+                const utterance = new SpeechSynthesisUtterance(praise);
+                utterance.lang = 'zh-TW';
+                utterance.rate = 1.0;
+                window.speechSynthesis.speak(utterance);
+            }
+            
+            // 只有首次答對才給 10 分
+            if (currentQuestionAttempts === 1) {
+                currentSessionData.score += 10;
+                updateScoreDisplay();
+            }
+            document.getElementById('feedback-emoji').textContent = ["🐻‍❄️", "🐧", "🦎", "🐱", "🍤"][Math.floor(Math.random() * 5)];
+            document.getElementById('feedback-text').textContent = "答對了！太棒了！";
+            document.getElementById('feedback-text').style.color = "#388E3C";
+            document.getElementById('next-btn').style.display = "inline-block";
+        } else {
+            // 答錯記錄 (避免同一題重複記錄)
+            if (currentQuestionAttempts === 1) {
+                const qText = `${currentQuestion.q} ${currentQuestion.instruction}`;
+                if (!currentSessionData.wrongQuestions.includes(qText)) {
+                    currentSessionData.wrongQuestions.push({ q: qText, a: currentQuestion.a });
+                }
+            }
+            document.getElementById('feedback-emoji').textContent = "💭";
+            document.getElementById('feedback-text').textContent = "再試一次看看喔！";
+            document.getElementById('feedback-text').style.color = "#D32F2F";
+            document.getElementById('next-btn').style.display = "none";
+            speakText("再試一次看看喔！");
+            setTimeout(() => { feedbackOverlay.style.display = 'none'; }, 1500);
+            
+            // 清空輸入框
+            const inputField = document.getElementById(selectedDiff === 'intermediate' ? 'inter-input' : 'adv-input');
+            if(inputField) { inputField.value = ""; inputField.focus(); }
+        }
+        feedbackOverlay.style.display = 'flex';
+    }
+
+    document.getElementById('next-btn').addEventListener('click', () => {
+        feedbackOverlay.style.display = 'none';
+        loadNextQuestion();
+    });
+    
+    // 支援 Enter 鍵送出
+    document.addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') {
+            const feedbackActive = feedbackOverlay.style.display === 'flex';
+            const checkGridBtn = document.getElementById('btn-check-grid');
+            
+            if (document.getElementById('login-screen').classList.contains('active') && !startBtn.disabled) {
+                startBtn.click();
+            } else if (document.getElementById('game-screen').classList.contains('active')) {
+                if (feedbackActive && document.getElementById('next-btn').style.display === 'inline-block') {
+                    document.getElementById('next-btn').click(); // 答對時按 Enter 下一題
+                } else if (!feedbackActive) {
+                    if (checkGridBtn && checkGridBtn.style.display !== 'none') {
+                        checkGridBtn.click(); // 初級檢查按鈕
+                    } else if (submitBtn.style.display === 'block') {
+                        submitBtn.click(); // 中/高級正常答題送出
+                    }
+                }
+            } else if (document.getElementById('teacher-login-screen').classList.contains('active')) {
+                document.getElementById('btn-teacher-login').click();
+            }
+        }
+    });
+
+    // --- 排行榜邏輯 ---
+    document.getElementById('btn-goto-leaderboard').addEventListener('click', () => {
+        const tbody = document.getElementById('leaderboard-body');
+        tbody.innerHTML = "";
+        
+        let sortedRecords = [...gameRecords].sort((a, b) => b.score - a.score);
+        if(sortedRecords.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="4">目前還沒有紀錄喔，趕快來挑戰吧！</td></tr>`;
+        } else {
+            sortedRecords.slice(0, 10).forEach((rec, index) => {
+                let rankClass = index < 3 ? `rank-${index+1}` : '';
+                let rankIcon = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index+1}`;
+                tbody.innerHTML += `<tr><td class="${rankClass}">${rankIcon}</td><td>${rec.name}</td><td>${rec.difficulty}</td><td style="font-weight:bold; color:#E65100;">${rec.score}</td></tr>`;
+            });
+        }
+        showScreen('leaderboard-screen');
+    });
+
+    // --- 老師專區邏輯 ---
+    document.getElementById('btn-goto-teacher').addEventListener('click', () => showScreen('teacher-login-screen'));
+    document.getElementById('btn-teacher-login').addEventListener('click', () => {
+        if (document.getElementById('teacher-pwd').value === "1234") {
+            renderTeacherRecords();
+            renderTeacherAnalysis();
+            showScreen('teacher-screen');
+        } else {
+            alert("密碼錯誤！ (提示：1234)");
+        }
+    });
+
+    const tabRecords = document.getElementById('tab-records');
+    const tabAnalysis = document.getElementById('tab-analysis');
+    const viewRecords = document.getElementById('view-records');
+    const viewAnalysis = document.getElementById('view-analysis');
+
+    tabRecords.addEventListener('click', () => {
+        tabRecords.classList.add('active'); tabAnalysis.classList.remove('active');
+        viewRecords.style.display = 'block'; viewAnalysis.style.display = 'none';
+    });
+    tabAnalysis.addEventListener('click', () => {
+        tabAnalysis.classList.add('active'); tabRecords.classList.remove('active');
+        viewRecords.style.display = 'none'; viewAnalysis.style.display = 'block';
+    });
+
+    function renderTeacherRecords() {
+        const tbody = document.getElementById('teacher-records-body');
+        tbody.innerHTML = "";
+        if(gameRecords.length === 0) tbody.innerHTML = `<tr><td colspan="5">尚未有學生遊玩紀錄。</td></tr>`;
+        else {
+            [...gameRecords].reverse().forEach(rec => {
+                const timeStr = rec.timestamp.getHours() + ":" + String(rec.timestamp.getMinutes()).padStart(2, '0');
+                tbody.innerHTML += `<tr><td>${timeStr}</td><td>${rec.name}</td><td>${rec.category}</td><td>${rec.difficulty}</td><td>${rec.score}</td></tr>`;
+            });
+        }
+    }
+
+    function getAnalysisData() {
+        let errorCounts = {};
+        gameRecords.forEach(rec => {
+            rec.wrongQuestions.forEach(wq => {
+                let key = wq.q + " (正確答案: " + wq.a + ")";
+                errorCounts[key] = (errorCounts[key] || 0) + 1;
+            });
+        });
+        return Object.entries(errorCounts).map(([q, count]) => ({q, count})).sort((a, b) => b.count - a.count);
+    }
+
+    function renderTeacherAnalysis() {
+        const listDiv = document.getElementById('analysis-list');
+        listDiv.innerHTML = "";
+        const sortedErrors = getAnalysisData();
+        
+        if (sortedErrors.length === 0) {
+            listDiv.innerHTML = `<p style="color: #4CAF50; font-size: 1.2em; font-weight: bold;">太棒了！目前大家答題都很順利，沒有常錯題型。</p>`;
+        } else {
+            sortedErrors.slice(0, 5).forEach((err, index) => {
+                listDiv.innerHTML += `
+                    <div class="analysis-card">
+                        <div class="analysis-q"><span style="color:#D32F2F;">No.${index+1}</span> ${err.q}</div>
+                        <div class="analysis-count">錯了 ${err.count} 次</div>
+                    </div>`;
+            });
+        }
+    }
+
+    // 匯出 CSV 功能
+    document.getElementById('btn-export-csv').addEventListener('click', () => {
+        const sortedErrors = getAnalysisData();
+        if(sortedErrors.length === 0) { alert("目前無錯誤數據可匯出。"); return; }
+
+        let csvContent = "\uFEFF"; // 加入 BOM 確保 Excel 中文不亂碼
+        csvContent += "排名,題目與正確答案,錯誤總次數\n";
+        
+        sortedErrors.forEach((err, index) => {
+            // 處理 CSV 欄位可能包含逗號的問題，加上雙引號
+            const safeText = `"${err.q.replace(/"/g, '""')}"`; 
+            csvContent += `${index + 1},${safeText},${err.count}\n`;
+        });
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        const dateStr = new Date().toISOString().slice(0, 10);
+        link.setAttribute("download", `角落數學_常錯題型分析_${dateStr}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    });
+
+    // 獨立的語音輔助函式 (提供步驟切換時發聲)
+    function speakText(text) {
+        const voiceToggle = document.getElementById('voice-toggle');
+        if (voiceToggle && voiceToggle.checked && 'speechSynthesis' in window) {
+            window.speechSynthesis.cancel(); // 停止先前的語音，避免重疊
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'zh-TW';
+            utterance.rate = 0.85;
+            window.speechSynthesis.speak(utterance);
+        }
+    }
+
+    // 新增：手動點擊按鈕時強制發聲 (不受勾選框控制)
+    window.manualSpeakText = function(text) {
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'zh-TW';
+            utterance.rate = 0.85;
+            window.speechSynthesis.speak(utterance);
+        }
+    };
+
+    // 語音功能 (主要朗讀題目)
+    function speakQuestion() {
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel(); // 停止先前的語音
+            let spokenQ = currentQuestion.q;
+            if (spokenQ.match(/^\d+\/\d+$/)) {
+                const parts = spokenQ.split('/');
+                spokenQ = `${parts[1]}分之${parts[0]}`;
+            }
+            let textToSpeak = `請將 ${spokenQ} ${currentQuestion.instruction}`;
+            
+            // 加入初級/中級的步驟一語音提示
+            if (selectedDiff === "beginner" && (currentQuestion.type === 1 || currentQuestion.type === 2)) {
+                textToSpeak += "。步驟一，請先將題目數字填入定位板。";
+            } else if (selectedDiff === "intermediate" && (currentQuestion.type === 1 || currentQuestion.type === 2)) {
+                textToSpeak += "。步驟一，查圖確定方向。";
+            }
+
+            const utterance = new SpeechSynthesisUtterance(textToSpeak);
+            utterance.lang = 'zh-TW'; utterance.rate = 0.85;
+            window.speechSynthesis.speak(utterance);
+        } else {
+            alert("很抱歉，你的瀏覽器不支援語音功能喔！");
+        }
+    }
+
+    speakerBtn.addEventListener('click', speakQuestion);
+</script>
+</body>
+</html>

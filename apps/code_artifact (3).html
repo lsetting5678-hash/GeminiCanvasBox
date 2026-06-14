@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>互動連線賓果</title>
+    <!-- 引入 Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入 Google Fonts: 芫荽體 (Iansui) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Iansui&display=swap" rel="stylesheet">
+    <!-- 引入 canvas-confetti 彩帶特效 -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- 引入 QRCode.js 生成條碼 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    
+    <style>
+        /* 全域字體設定 */
+        body {
+            font-family: 'Iansui', sans-serif;
+            background-color: #fdf5e6;
+            color: #333;
+        }
+
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+
+        .btn-primary {
+            background-color: #ffb6b9;
+            border: 4px solid #475569;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .btn-primary:hover { transform: translateY(-4px); box-shadow: 0 8px 0 #475569; }
+        .btn-primary:active { transform: translateY(0); box-shadow: 0 0 0 #475569; }
+
+        .btn-secondary {
+            background-color: #bae1ff;
+            border: 4px solid #475569;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .btn-secondary:hover { transform: translateY(-4px); box-shadow: 0 8px 0 #475569; }
+        .btn-secondary:active { transform: translateY(0); box-shadow: 0 0 0 #475569; }
+
+        .bingo-cell {
+            background-color: #ffffff;
+            border: 4px solid #475569;
+            border-radius: 12px;
+            aspect-ratio: 1 / 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            user-select: none;
+            text-align: center;
+            padding: 8px;
+            word-break: break-word;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .bingo-cell.selected {
+            background-color: #fff9c4;
+            border-color: #ff9800;
+            box-shadow: 0 8px 15px rgba(255, 152, 0, 0.4), inset 0 0 20px rgba(255, 235, 59, 0.5);
+            transform: scale(1.05);
+            color: #d32f2f;
+        }
+
+        .title-text {
+            color: #475569;
+            text-shadow: 2px 2px 0px #bae1ff, 4px 4px 0px #ffb6b9;
+            letter-spacing: 2px;
+        }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body class="min-h-screen flex p-4 md:p-8">
+
+    <!-- 自訂訊息對話框 -->
+    <div id="msg-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center hidden">
+        <div class="bg-white p-8 rounded-3xl border-8 border-slate-700 max-w-sm w-full mx-4 shadow-2xl transform transition-all">
+            <h3 class="text-2xl font-bold mb-4 text-center text-slate-700" id="msg-title">提示</h3>
+            <p class="text-lg text-slate-600 mb-6 text-center" id="msg-content">訊息內容</p>
+            <button id="msg-close-btn" class="w-full btn-secondary text-xl font-bold py-3 rounded-2xl">知道囉！</button>
+        </div>
+    </div>
+
+    <!-- 調整：加入 m-auto 達到智慧置中，內容過長時可正常向下捲動 -->
+    <div class="m-auto max-w-3xl w-full bg-white/80 backdrop-blur-md rounded-[2.5rem] border-8 border-slate-700 p-6 sm:p-8 shadow-2xl relative overflow-hidden">
+        
+        <!-- 背景裝飾 -->
+        <div class="absolute -top-10 -left-10 w-32 h-32 bg-yellow-200 rounded-full mix-blend-multiply filter blur-xl opacity-70"></div>
+        <div class="absolute -bottom-10 -right-10 w-32 h-32 bg-pink-200 rounded-full mix-blend-multiply filter blur-xl opacity-70"></div>
+
+        <h1 class="text-4xl sm:text-5xl font-extrabold text-center mb-8 title-text z-10 relative">互動連線賓果</h1>
+
+        <!-- Loading -->
+        <div id="loading-view" class="text-center py-10 z-10 relative">
+            <p class="text-2xl text-slate-600 animate-pulse">連線準備中...</p>
+        </div>
+
+        <!-- 視圖 1: 首頁 -->
+        <div id="home-view" class="space-y-6 hidden z-10 relative">
+            <button id="go-host-btn" class="w-full btn-primary text-2xl font-bold py-6 rounded-3xl flex items-center justify-center gap-4">
+                <span class="text-3xl">👑</span> 建立房間 (老師)
+            </button>
+            <button id="go-join-btn" class="w-full btn-secondary text-2xl font-bold py-6 rounded-3xl flex items-center justify-center gap-4">
+                <span class="text-3xl">🎮</span> 加入遊戲 (學生)
+            </button>
+        </div>
+
+        <!-- 視圖 2: 老師開房設定 -->
+        <div id="host-setup-view" class="space-y-6 hidden z-10 relative">
+            <div>
+                <label class="block text-xl font-bold text-slate-700 mb-4">1. 選擇賓果內容類型：</label>
+                <div class="grid grid-cols-3 sm:grid-cols-5 gap-2 mb-4">
+                    <label class="cursor-pointer">
+                        <input type="radio" name="bingo-type" value="number" class="hidden peer">
+                        <div class="text-center p-2 rounded-2xl border-4 border-slate-300 peer-checked:border-pink-400 peer-checked:bg-pink-100 font-bold text-slate-600 hover:bg-slate-50 text-sm sm:text-base whitespace-nowrap">🔢 數字</div>
+                    </label>
+                    <label class="cursor-pointer">
+                        <input type="radio" name="bingo-type" value="word" class="hidden peer" checked>
+                        <div class="text-center p-2 rounded-2xl border-4 border-slate-300 peer-checked:border-pink-400 peer-checked:bg-pink-100 font-bold text-slate-600 hover:bg-slate-50 text-sm sm:text-base whitespace-nowrap">📝 語詞</div>
+                    </label>
+                    <label class="cursor-pointer">
+                        <input type="radio" name="bingo-type" value="image" class="hidden peer">
+                        <div class="text-center p-2 rounded-2xl border-4 border-slate-300 peer-checked:border-pink-400 peer-checked:bg-pink-100 font-bold text-slate-600 hover:bg-slate-50 text-sm sm:text-base whitespace-nowrap">🎨 圖案</div>
+                    </label>
+                    <label class="cursor-pointer">
+                        <input type="radio" name="bingo-type" value="alphabet" class="hidden peer">
+                        <div class="text-center p-2 rounded-2xl border-4 border-slate-300 peer-checked:border-pink-400 peer-checked:bg-pink-100 font-bold text-slate-600 hover:bg-slate-50 text-sm sm:text-base whitespace-nowrap">🔤 字母</div>
+                    </label>
+                    <label class="cursor-pointer">
+                        <input type="radio" name="bingo-type" value="bopomofo" class="hidden peer">
+                        <div class="text-center p-2 rounded-2xl border-4 border-slate-300 peer-checked:border-pink-400 peer-checked:bg-pink-100 font-bold text-slate-600 hover:bg-slate-50 text-sm sm:text-base whitespace-nowrap">🗣️ 注音</div>
+                    </label>
+                </div>
+            </div>
+
+            <div id="setup-number-area" class="hidden bg-slate-50 p-4 rounded-3xl border-4 border-slate-200 shadow-inner">
+                <label class="block text-lg font-bold text-slate-700 mb-2">設定數字範圍：</label>
+                <div class="flex items-center gap-4">
+                    <input type="number" id="num-min" value="1" class="w-full border-4 border-slate-700 rounded-2xl p-3 text-xl text-center focus:outline-none focus:ring-4 focus:ring-pink-300">
+                    <span class="text-2xl font-bold text-slate-500">~</span>
+                    <input type="number" id="num-max" value="25" class="w-full border-4 border-slate-700 rounded-2xl p-3 text-xl text-center focus:outline-none focus:ring-4 focus:ring-pink-300">
+                </div>
+                <p class="text-sm text-slate-500 mt-2 pl-1" id="number-hint">* 建議範圍至少包含 16 個數字</p>
+            </div>
+
+            <div id="setup-word-area" class="bg-slate-50 p-4 rounded-3xl border-4 border-slate-200 shadow-inner">
+                <label class="block text-lg font-bold text-slate-700 mb-2">輸入語詞 (用逗號隔開)：</label>
+                <textarea id="words-input" rows="3" class="w-full border-4 border-slate-700 rounded-2xl p-4 text-lg focus:outline-none focus:ring-4 focus:ring-pink-300" placeholder="例如：蘋果, 香蕉, 橘子, 西瓜..."></textarea>
+            </div>
+
+            <div id="setup-image-area" class="hidden bg-slate-50 p-4 rounded-3xl border-4 border-slate-200 shadow-inner">
+                <label class="block text-lg font-bold text-slate-700 mb-2">選擇圖案主題 (可多選)：</label>
+                <div class="flex flex-wrap gap-4 mb-4">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" value="animals" class="theme-checkbox w-6 h-6 text-pink-500 rounded focus:ring-pink-400" checked>
+                        <span class="text-lg">🐶 可愛動物</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" value="fruits" class="theme-checkbox w-6 h-6 text-pink-500 rounded focus:ring-pink-400">
+                        <span class="text-lg">🍎 新鮮水果</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" value="weather" class="theme-checkbox w-6 h-6 text-pink-500 rounded focus:ring-pink-400">
+                        <span class="text-lg">☀️ 天氣變化</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" value="vehicles" class="theme-checkbox w-6 h-6 text-pink-500 rounded focus:ring-pink-400">
+                        <span class="text-lg">🚗 交通工具</span>
+                    </label>
+                </div>
+                <div id="theme-preview" class="mt-4 text-2xl tracking-widest text-center pointer-events-none">🐶🐱🐭🐹🐰🦊🐻🐼...</div>
+            </div>
+
+            <div id="setup-alphabet-area" class="hidden bg-slate-50 p-4 rounded-3xl border-4 border-slate-200 shadow-inner">
+                <label class="block text-lg font-bold text-slate-700 mb-2">選擇字母大小寫：</label>
+                <select id="alphabet-type" class="w-full border-4 border-slate-700 rounded-2xl p-3 text-xl focus:outline-none focus:ring-4 focus:ring-pink-300 bg-white">
+                    <option value="uppercase">大寫 (A-Z)</option>
+                    <option value="lowercase">小寫 (a-z)</option>
+                </select>
+            </div>
+
+            <div id="setup-bopomofo-area" class="hidden bg-slate-50 p-4 rounded-3xl border-4 border-slate-200 shadow-inner flex items-center justify-center">
+                <p class="text-xl font-bold text-slate-600 text-center py-4">系統將自動打亂 37 個注音符號<br><span class="text-pink-500 text-sm">ㄅㄆㄇㄈㄉㄊㄋㄌ...</span></p>
+            </div>
+
+            <div>
+                <label class="block text-xl font-bold text-slate-700 mb-4">2. 選擇賓果盤大小：</label>
+                <div class="flex gap-2 sm:gap-4 mb-2">
+                    <label class="flex-1 cursor-pointer">
+                        <input type="radio" name="grid-size" value="3" class="hidden peer">
+                        <div class="text-center p-3 rounded-2xl border-4 border-slate-300 peer-checked:border-pink-400 peer-checked:bg-pink-100 font-bold text-slate-600 hover:bg-slate-50">3 x 3</div>
+                    </label>
+                    <label class="flex-1 cursor-pointer">
+                        <input type="radio" name="grid-size" value="4" class="hidden peer" checked>
+                        <div class="text-center p-3 rounded-2xl border-4 border-slate-300 peer-checked:border-pink-400 peer-checked:bg-pink-100 font-bold text-slate-600 hover:bg-slate-50">4 x 4</div>
+                    </label>
+                    <label class="flex-1 cursor-pointer">
+                        <input type="radio" name="grid-size" value="5" class="hidden peer">
+                        <div class="text-center p-3 rounded-2xl border-4 border-slate-300 peer-checked:border-pink-400 peer-checked:bg-pink-100 font-bold text-slate-600 hover:bg-slate-50">5 x 5</div>
+                    </label>
+                </div>
+                <label class="flex items-center gap-3 cursor-pointer mt-4 opacity-50 transition-opacity" id="free-space-container">
+                    <input type="checkbox" id="has-free-space" class="w-6 h-6 text-pink-500 rounded focus:ring-pink-400" disabled>
+                    <span class="text-lg font-bold text-slate-700">中央包含 Free 格 (免費送一格)</span>
+                </label>
+                <p id="free-space-hint" class="text-sm text-pink-500 mt-1">※ 4x4 沒有正中央，此選項僅適用於 3x3 與 5x5</p>
+            </div>
+
+            <div>
+                <label class="block text-xl font-bold text-slate-700 mb-2">3. 學生人數：</label>
+                <input type="number" id="students-count" min="1" max="50" value="28" class="w-full border-4 border-slate-700 rounded-2xl p-4 text-xl focus:outline-none focus:ring-4 focus:ring-pink-300 text-center">
+            </div>
+            
+            <div class="flex gap-4 pt-4">
+                <button id="back-home-from-host" class="w-1/3 bg-slate-200 border-4 border-slate-700 text-slate-700 text-xl font-bold py-3 rounded-2xl hover:bg-slate-300">返回</button>
+                <button id="create-room-btn" class="w-2/3 btn-primary text-xl font-bold py-3 rounded-2xl">產生賓果盤！</button>
+            </div>
+        </div>
+
+        <!-- 視圖 3: 老師大廳 (顯示房號與連線狀態) -->
+        <div id="host-lobby-view" class="text-center space-y-4 hidden z-10 relative">
+            <h2 class="text-3xl font-bold text-slate-700">房間已建立成功！</h2>
+            <div class="bg-pink-100 border-4 border-slate-700 rounded-3xl p-6 relative flex flex-col items-center">
+                <p class="text-xl text-slate-600 mb-4 font-bold">請學生掃描 QR Code 或是輸入代碼：</p>
+                <div id="qrcode-container" class="bg-white p-4 rounded-2xl border-4 border-slate-300 shadow-md mb-4 flex justify-center items-center min-w-[200px] min-h-[200px]"></div>
+                <p id="display-room-id" class="text-6xl font-extrabold text-pink-600 tracking-widest drop-shadow-md my-2">A8B2</p>
+                <button id="copy-link-btn" class="mt-4 bg-white border-4 border-pink-400 text-pink-600 text-lg font-bold py-3 px-6 rounded-2xl hover:bg-pink-50 flex items-center justify-center gap-2 mx-auto w-full max-w-xs">
+                    <span class="text-2xl">🔗</span> 複製專屬邀請連結
+                </button>
+            </div>
+            
+            <!-- 即時連線學生區塊 -->
+            <div class="bg-slate-50 border-4 border-slate-300 rounded-3xl p-6 mt-4">
+                <h3 class="text-2xl font-bold text-slate-700 mb-4 flex items-center justify-center gap-2">
+                    <span class="text-3xl">📡</span> 已連線學生座號 (<span id="connected-count">0</span> 人)
+                </h3>
+                <!-- 調整：加入 max-h-[30vh] 與 overflow-y-auto 控制內部高度避免版面過長 -->
+                <div id="joined-students-list" class="flex flex-wrap gap-3 justify-center min-h-[50px] items-center content-start max-h-[30vh] overflow-y-auto p-2">
+                    <span class="text-slate-400 font-bold text-lg">等待學生加入中...</span>
+                </div>
+            </div>
+
+            <button id="back-home-from-lobby" class="btn-secondary text-xl font-bold py-3 px-8 rounded-2xl mt-4">結束遊戲返回首頁</button>
+        </div>
+
+        <!-- 視圖 4: 學生加入房間 -->
+        <div id="join-view" class="space-y-6 hidden z-10 relative">
+            <div>
+                <label class="block text-xl font-bold text-slate-700 mb-2">房間代碼：</label>
+                <input type="text" id="join-room-id" class="w-full border-4 border-slate-700 rounded-2xl p-4 text-3xl text-center uppercase focus:outline-none focus:ring-4 focus:ring-blue-300" placeholder="例如：A8B2" maxlength="4">
+            </div>
+            <div>
+                <label class="block text-xl font-bold text-slate-700 mb-2">你的座號：</label>
+                <input type="number" id="join-seat-num" min="1" max="50" class="w-full border-4 border-slate-700 rounded-2xl p-4 text-2xl text-center focus:outline-none focus:ring-4 focus:ring-blue-300" placeholder="例如：15">
+            </div>
+            <div class="flex gap-4 pt-4">
+                <button id="back-home-from-join" class="w-1/3 bg-slate-200 border-4 border-slate-700 text-slate-700 text-xl font-bold py-3 rounded-2xl hover:bg-slate-300">返回</button>
+                <button id="join-room-btn" class="w-2/3 btn-secondary text-xl font-bold py-3 rounded-2xl">進入遊戲！</button>
+            </div>
+        </div>
+
+        <!-- 視圖 5: 賓果遊戲盤面 -->
+        <div id="board-view" class="hidden z-10 relative">
+            <div class="flex justify-between items-end mb-4">
+                <div>
+                    <span class="bg-blue-100 text-blue-800 border-2 border-blue-800 rounded-full px-3 py-1 font-bold mr-2 text-sm" id="info-room">房間: A8B2</span>
+                    <span class="bg-pink-100 text-pink-800 border-2 border-pink-800 rounded-full px-3 py-1 font-bold text-sm" id="info-seat">座號: 15</span>
+                </div>
+                <button id="leave-game-btn" class="text-slate-500 font-bold hover:text-slate-800 underline">離開</button>
+            </div>
+            
+            <div id="bingo-grid" class="grid gap-2 sm:gap-3">
+                <!-- 由 JavaScript 動態生成 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase 邏輯 -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, updateDoc, arrayUnion, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { apiKey: "", authDomain: "", projectId: "", storageBucket: "", messagingSenderId: "", appId: "" };
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'bingo-game-app';
+        let currentUser = null;
+        let roomSnapshotUnsubscribe = null;
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        const views = {
+            loading: document.getElementById('loading-view'),
+            home: document.getElementById('home-view'),
+            hostSetup: document.getElementById('host-setup-view'),
+            hostLobby: document.getElementById('host-lobby-view'),
+            join: document.getElementById('join-view'),
+            board: document.getElementById('board-view')
+        };
+
+        function showView(viewName) {
+            Object.values(views).forEach(v => v.classList.add('hidden'));
+            if(views[viewName]) views[viewName].classList.remove('hidden');
+        }
+
+        function showMsg(title, content) {
+            document.getElementById('msg-title').innerText = title;
+            document.getElementById('msg-content').innerText = content;
+            document.getElementById('msg-modal').classList.remove('hidden');
+        }
+        document.getElementById('msg-close-btn').addEventListener('click', () => {
+            document.getElementById('msg-modal').classList.add('hidden');
+        });
+
+        // 認證
+        const initAuth = async () => {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (error) {
+                console.error("Auth Error:", error);
+                showMsg("連線錯誤", "無法連線至遊戲伺服器。");
+            }
+        };
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUser = user;
+                const urlParams = new URLSearchParams(window.location.search);
+                const roomParam = urlParams.get('room');
+                
+                if (roomParam) {
+                    document.getElementById('join-room-id').value = roomParam.toUpperCase();
+                    showView('join');
+                } else {
+                    showView('home');
+                }
+            }
+        });
+        initAuth();
+
+        // 工具
+        function generateRoomId(length = 4) {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let result = '';
+            for (let i = 0; i < length; i++) { result += chars.charAt(Math.floor(Math.random() * chars.length)); }
+            return result;
+        }
+
+        function shuffleArray(array) {
+            let curId = array.length;
+            while (0 !== curId) {
+                let randId = Math.floor(Math.random() * curId);
+                curId -= 1;
+                let tmp = array[curId];
+                array[curId] = array[randId];
+                array[randId] = tmp;
+            }
+            return array;
+        }
+
+        function speakText(text) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'zh-TW';
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        function triggerBingoConfetti() {
+            var duration = 3 * 1000;
+            var animationEnd = Date.now() + duration;
+            var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 100 };
+            function randomInRange(min, max) { return Math.random() * (max - min) + min; }
+            var interval = setInterval(function() {
+                var timeLeft = animationEnd - Date.now();
+                if (timeLeft <= 0) return clearInterval(interval);
+                var particleCount = 50 * (timeLeft / duration);
+                confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
+                confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
+            }, 250);
+            speakText("恭喜連線！賓果！");
+            showMsg("🎉 賓果！", "太棒了！你已經成功連成一線啦！");
+        }
+
+        // --- 介面控制切換邏輯 ---
+        const typeRadios = document.querySelectorAll('input[name="bingo-type"]');
+        const setupAreas = {
+            number: document.getElementById('setup-number-area'),
+            word: document.getElementById('setup-word-area'),
+            image: document.getElementById('setup-image-area'),
+            alphabet: document.getElementById('setup-alphabet-area'),
+            bopomofo: document.getElementById('setup-bopomofo-area')
+        };
+        typeRadios.forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                Object.values(setupAreas).forEach(area => area.classList.add('hidden'));
+                setupAreas[e.target.value].classList.remove('hidden');
+            });
+        });
+
+        const sizeRadios = document.querySelectorAll('input[name="grid-size"]');
+        const freeSpaceCheckbox = document.getElementById('has-free-space');
+        const freeSpaceContainer = document.getElementById('free-space-container');
+        const freeSpaceHint = document.getElementById('free-space-hint');
+        const numberHint = document.getElementById('number-hint');
+
+        sizeRadios.forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                const size = parseInt(e.target.value);
+                if(numberHint) numberHint.innerText = `* 建議範圍至少包含 ${size * size} 個數字`;
+                if (size === 4) {
+                    freeSpaceCheckbox.checked = false;
+                    freeSpaceCheckbox.disabled = true;
+                    freeSpaceContainer.classList.add('opacity-50');
+                    freeSpaceHint.classList.remove('hidden');
+                } else {
+                    freeSpaceCheckbox.disabled = false;
+                    freeSpaceContainer.classList.remove('opacity-50');
+                    freeSpaceHint.classList.add('hidden');
+                }
+            });
+        });
+
+        const imageThemes = {
+            animals: ['🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼','🐨','🐯','🦁','🐮','🐷','🐸','🐵','🐔'],
+            fruits: ['🍎','🍐','🍊','🍋','🍌','🍉','🍇','🍓','🍈','🍒','🍑','🥭','🍍','🥥','🥝','🍅'],
+            weather: ['☀️','🌤️','⛅','☁️','🌦️','🌧️','⛈️','🌩️','🌨️','❄️','⛄','🌬️','💨','🌪️','🌫️','🌈'],
+            vehicles: ['🚗','🚕','🚙','🚌','🚎','🏎️','🚓','🚑','🚒','🚐','🛻','🚚','🚛','🚜','🛵','🚲']
+        };
+        const themeCheckboxes = document.querySelectorAll('.theme-checkbox');
+        const updateThemePreview = () => {
+            let combinedEmoji = [];
+            themeCheckboxes.forEach(cb => {
+                if(cb.checked) combinedEmoji = combinedEmoji.concat(imageThemes[cb.value]);
+            });
+            document.getElementById('theme-preview').innerText = combinedEmoji.length > 0 ? combinedEmoji.slice(0, 8).join('') + '...' : '請至少選擇一個主題！';
+        };
+        themeCheckboxes.forEach(cb => cb.addEventListener('change', updateThemePreview));
+
+        // --- 老師端功能 ---
+        document.getElementById('go-host-btn').addEventListener('click', () => showView('hostSetup'));
+        document.getElementById('back-home-from-host').addEventListener('click', () => showView('home'));
+        document.getElementById('back-home-from-lobby').addEventListener('click', () => {
+            if(roomSnapshotUnsubscribe) { roomSnapshotUnsubscribe(); roomSnapshotUnsubscribe = null; }
+            showView('home');
+        });
+
+        document.getElementById('create-room-btn').addEventListener('click', async () => {
+            if (!currentUser) return;
+            const numStudents = parseInt(document.getElementById('students-count').value);
+            if (isNaN(numStudents) || numStudents < 1) {
+                showMsg("資料不完整", "請確保設定正確的學生人數！");
+                return;
+            }
+
+            const gridSize = parseInt(document.querySelector('input[name="grid-size"]:checked').value);
+            const hasFreeSpace = document.getElementById('has-free-space').checked && gridSize !== 4;
+            const totalCells = gridSize * gridSize;
+            const requiredWords = hasFreeSpace ? totalCells - 1 : totalCells;
+
+            const selectedType = document.querySelector('input[name="bingo-type"]:checked').value;
+            let wordsArray = [];
+
+            if (selectedType === 'number') {
+                const min = parseInt(document.getElementById('num-min').value);
+                const max = parseInt(document.getElementById('num-max').value);
+                if (isNaN(min) || isNaN(max) || min > max) { showMsg("範圍錯誤", "數字範圍錯誤！"); return; }
+                for (let i = min; i <= max; i++) wordsArray.push(i.toString());
+            } else if (selectedType === 'word') {
+                const wordsInput = document.getElementById('words-input').value;
+                wordsArray = wordsInput.split(',').map(w => w.trim()).filter(w => w.length > 0);
+                if (wordsArray.length === 0) { showMsg("資料錯誤", "請至少輸入一個有效的語詞！"); return; }
+            } else if (selectedType === 'image') {
+                const checkedThemes = Array.from(document.querySelectorAll('.theme-checkbox:checked')).map(cb => cb.value);
+                if (checkedThemes.length === 0) { showMsg("資料錯誤", "請至少勾選一個圖案主題！"); return; }
+                checkedThemes.forEach(theme => { wordsArray = wordsArray.concat(imageThemes[theme]); });
+            } else if (selectedType === 'alphabet') {
+                const alphaType = document.getElementById('alphabet-type').value;
+                const startChar = alphaType === 'uppercase' ? 65 : 97;
+                for (let i = 0; i < 26; i++) wordsArray.push(String.fromCharCode(startChar + i));
+            } else if (selectedType === 'bopomofo') {
+                const bopomofoStr = 'ㄅㄆㄇㄈㄉㄊㄋㄌㄍㄎㄏㄐㄑㄒㄓㄔㄕㄖㄗㄘㄙㄧㄨㄩㄚㄛㄜㄝㄞㄟㄠㄡㄢㄣㄤㄥㄦ';
+                wordsArray = bopomofoStr.split('');
+            }
+
+            let pool = [...wordsArray];
+            while (pool.length < requiredWords) pool = pool.concat(wordsArray);
+
+            document.getElementById('create-room-btn').innerText = "產生中...";
+            document.getElementById('create-room-btn').disabled = true;
+
+            try {
+                const roomId = generateRoomId();
+                const boardsData = {};
+
+                for (let i = 1; i <= numStudents; i++) {
+                    let shuffled = shuffleArray([...pool]);
+                    let boardWords = shuffled.slice(0, requiredWords);
+                    if (hasFreeSpace) {
+                        const centerIndex = Math.floor(totalCells / 2);
+                        boardWords.splice(centerIndex, 0, 'FREE');
+                    }
+                    boardsData[i.toString()] = boardWords;
+                }
+
+                // 加入 joinedSeats 陣列用來紀錄連線學生
+                const roomRef = doc(collection(db, 'artifacts', appId, 'public', 'data', 'bingo_rooms'), roomId);
+                await setDoc(roomRef, {
+                    hostId: currentUser.uid,
+                    wordsCount: wordsArray.length,
+                    numStudents: numStudents,
+                    gridSize: gridSize,
+                    boards: boardsData,
+                    joinedSeats: [], 
+                    createdAt: new Date().toISOString()
+                });
+
+                document.getElementById('display-room-id').innerText = roomId;
+                
+                // 【關鍵修正 1】：必須先將畫面切換顯示，再繪製 QR Code。
+                // 否則 qrcode.js 在隱藏 (display:none) 的狀態下，會繪製出無法辨識的損壞圖片
+                showView('hostLobby');
+                
+                let currentUrl = window.location.href.split('?')[0];
+                try { if (window.top !== window.self && document.referrer) currentUrl = document.referrer.split('?')[0]; } catch (e) {}
+                const inviteLink = `${currentUrl}?room=${roomId}`;
+                
+                const qrContainer = document.getElementById('qrcode-container');
+                qrContainer.innerHTML = ''; 
+                new QRCode(qrContainer, {
+                    text: inviteLink,
+                    width: 200, height: 200,
+                    colorDark : "#000000", // 【關鍵修正 2】：改為純黑，確保平板相機高對比容易對焦
+                    colorLight : "#ffffff",
+                    correctLevel : QRCode.CorrectLevel.M // 【關鍵修正 3】：提高容錯率
+                });
+
+                document.getElementById('copy-link-btn').onclick = () => {
+                    try {
+                        const input = document.createElement('input');
+                        input.value = inviteLink;
+                        document.body.appendChild(input);
+                        input.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(input);
+                        showMsg("複製成功！", "已複製邀請連結！");
+                    } catch (err) { console.error(err); }
+                };
+
+                // --- 新增：設定即時監聽連線學生資料 ---
+                const listContainer = document.getElementById('joined-students-list');
+                const countContainer = document.getElementById('connected-count');
+                listContainer.innerHTML = '<span class="text-slate-400 font-bold text-lg">等待學生加入中...</span>';
+                countContainer.innerText = '0';
+
+                roomSnapshotUnsubscribe = onSnapshot(roomRef, (docSnap) => {
+                    if (docSnap.exists()) {
+                        const data = docSnap.data();
+                        const joinedSeats = data.joinedSeats || [];
+                        countContainer.innerText = joinedSeats.length;
+                        
+                        if (joinedSeats.length === 0) {
+                            listContainer.innerHTML = '<span class="text-slate-400 font-bold text-lg">等待學生加入中...</span>';
+                        } else {
+                            // 按照座號排序
+                            joinedSeats.sort((a, b) => parseInt(a) - parseInt(b));
+                            listContainer.innerHTML = joinedSeats.map(seat => 
+                                `<span class="bg-green-100 text-green-700 border-2 border-green-500 font-bold px-4 py-2 rounded-xl text-lg shadow-sm animate-bounce">座號 ${seat}</span>`
+                            ).join('');
+                        }
+                    }
+                });
+
+                // (原本的 showView('hostLobby'); 已經移到上方產生 QRCode 之前)
+            } catch (error) {
+                console.error("Create Room Error:", error);
+                showMsg("建立失敗", "發生錯誤，請稍後再試。");
+            } finally {
+                document.getElementById('create-room-btn').innerText = "產生賓果盤！";
+                document.getElementById('create-room-btn').disabled = false;
+            }
+        });
+
+        // --- 學生端功能 ---
+        document.getElementById('go-join-btn').addEventListener('click', () => showView('join'));
+        document.getElementById('back-home-from-join').addEventListener('click', () => showView('home'));
+        document.getElementById('leave-game-btn').addEventListener('click', () => showView('home'));
+
+        let currentBoardState = [];
+        let hasBingo = false;
+        let currentGridSize = 4;
+
+        document.getElementById('join-room-btn').addEventListener('click', async () => {
+            if (!currentUser) return;
+            const roomId = document.getElementById('join-room-id').value.trim().toUpperCase();
+            const seatNum = document.getElementById('join-seat-num').value.trim();
+            if (!roomId || !seatNum) { showMsg("資料不完整", "請輸入完整的房間代碼與座號！"); return; }
+
+            document.getElementById('join-room-btn').innerText = "讀取中...";
+            document.getElementById('join-room-btn').disabled = true;
+
+            try {
+                const roomRef = doc(collection(db, 'artifacts', appId, 'public', 'data', 'bingo_rooms'), roomId);
+                const roomSnap = await getDoc(roomRef);
+
+                if (roomSnap.exists()) {
+                    const data = roomSnap.data();
+                    const myBoard = data.boards[seatNum];
+                    currentGridSize = data.gridSize || 4;
+
+                    if (myBoard) {
+                        // --- 新增：更新 Firestore 紀錄此學生已連線 ---
+                        await updateDoc(roomRef, {
+                            joinedSeats: arrayUnion(seatNum)
+                        });
+
+                        renderBoard(roomId, seatNum, myBoard, currentGridSize);
+                        showView('board');
+                    } else {
+                        showMsg("座號錯誤", `找不到座號 ${seatNum} 的賓果盤。`);
+                    }
+                } else {
+                    showMsg("房間不存在", "找不到這個房間！");
+                }
+            } catch (error) {
+                console.error("Join Room Error:", error);
+                showMsg("加入失敗", "發生錯誤，請檢查連線。");
+            } finally {
+                document.getElementById('join-room-btn').innerText = "進入遊戲！";
+                document.getElementById('join-room-btn').disabled = false;
+            }
+        });
+
+        function renderBoard(roomId, seatNum, wordsArr, gridSize) {
+            document.getElementById('info-room').innerText = `房間: ${roomId}`;
+            document.getElementById('info-seat').innerText = `座號: ${seatNum}`;
+            const grid = document.getElementById('bingo-grid');
+            grid.innerHTML = '';
+            grid.style.gridTemplateColumns = `repeat(${gridSize}, minmax(0, 1fr))`;
+            
+            currentBoardState = Array(gridSize * gridSize).fill(false);
+            hasBingo = false;
+
+            wordsArr.forEach((word, index) => {
+                const cell = document.createElement('div');
+                let textSizeClass = gridSize === 5 ? 'text-xs sm:text-sm md:text-base' : 'text-sm sm:text-base md:text-xl';
+                cell.className = `bingo-cell ${textSizeClass}`;
+                
+                if (word === 'FREE') {
+                    cell.innerHTML = '<span class="text-2xl sm:text-3xl">⭐</span>';
+                    cell.classList.add('bg-pink-100', 'border-pink-500');
+                    currentBoardState[index] = true;
+                    cell.classList.add('selected');
+                } else {
+                    cell.innerText = word;
+                }
+                
+                cell.addEventListener('click', () => {
+                    if (word === 'FREE') return;
+                    speakText(word);
+                    currentBoardState[index] = !currentBoardState[index];
+                    if (currentBoardState[index]) cell.classList.add('selected');
+                    else cell.classList.remove('selected');
+                    if (!hasBingo) checkBingo(gridSize);
+                });
+                grid.appendChild(cell);
+            });
+            if (!hasBingo) checkBingo(gridSize);
+        }
+
+        function checkBingo(gridSize) {
+            const winLines = [];
+            for (let r = 0; r < gridSize; r++) {
+                let row = [];
+                for (let c = 0; c < gridSize; c++) row.push(r * gridSize + c);
+                winLines.push(row);
+            }
+            for (let c = 0; c < gridSize; c++) {
+                let col = [];
+                for (let r = 0; r < gridSize; r++) col.push(r * gridSize + c);
+                winLines.push(col);
+            }
+            let diag1 = [], diag2 = [];
+            for (let i = 0; i < gridSize; i++) {
+                diag1.push(i * gridSize + i);
+                diag2.push(i * gridSize + (gridSize - 1 - i));
+            }
+            winLines.push(diag1); winLines.push(diag2);
+
+            for (let line of winLines) {
+                if (line.every(index => currentBoardState[index] === true)) {
+                    hasBingo = true;
+                    triggerBingoConfetti();
+                    break;
+                }
+            }
+        }
+    </script>
+</body>
+</html>

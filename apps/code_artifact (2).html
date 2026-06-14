@@ -1,0 +1,1436 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>行為事件分析與策略建議</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* Base styles */
+        body {
+            font-family: 'Noto Serif TC', 'Inter', serif;
+            line-height: 1.7;
+            background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+            min-height: 100vh;
+            color: #1e293b;
+        }
+        
+        /* Glassmorphism & Card Styles */
+        .main-card {
+            background-color: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.15), 0 10px 15px -3px rgba(15, 23, 42, 0.05);
+        }
+
+        /* Result Cards */
+        .result-card {
+            background-color: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 1rem;
+            padding: 1.75rem;
+            margin-top: 0;
+            box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.05), 0 2px 4px -2px rgba(15, 23, 42, 0.05);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .result-card:hover {
+            box-shadow: 0 10px 15px -3px rgba(15, 23, 42, 0.1), 0 4px 6px -2px rgba(15, 23, 42, 0.05);
+        }
+        .result-card h3 {
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 3px solid #64748b;
+            display: inline-block;
+            width: 100%;
+        }
+        
+        /* Info Blocks */
+        .info-block {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.75rem;
+            padding: 1.25rem;
+            margin-bottom: 1.25rem;
+        }
+        .info-block:last-child { margin-bottom: 0; }
+        
+        .info-block h4 {
+            display: flex;
+            align-items: center;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #334155;
+            margin-top: 0;
+            margin-bottom: 0.75rem;
+        }
+        .info-block h4 svg {
+            margin-right: 0.75rem;
+            flex-shrink: 0;
+            width: 1.4rem;
+            height: 1.4rem;
+            color: #475569;
+        }
+        .info-block p {
+            color: #3f3f46;
+            font-size: 1rem;
+        }
+        .info-block p b {
+            color: #18181b;
+            font-weight: 700;
+        }
+
+        /* Strategy Items */
+        .strategy-item {
+            background-color: #ffffff;
+            border: 1px solid #cbd5e1;
+            border-left: 5px solid #64748b;
+            border-radius: 0.5rem;
+            padding: 0.85rem 1.2rem;
+            margin-bottom: 0.75rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            transition: all 0.2s;
+        }
+        .strategy-item:hover {
+            transform: translateX(2px);
+            box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.1);
+            border-left-color: #475569;
+        }
+        .strategy-item p {
+            color: #334155;
+            flex-grow: 1;
+            margin: 0;
+            padding-right: 1rem;
+            line-height: 1.6;
+        }
+
+        /* Buttons & Interactions */
+        .copy-item-btn {
+            cursor: pointer;
+            color: #94a3b8;
+            background: none;
+            border: none;
+            padding: 0.25rem;
+            margin-top: 0.1rem;
+            border-radius: 9999px;
+            flex-shrink: 0;
+            transition: all 0.2s;
+        }
+        .copy-item-btn:hover {
+            color: #334155;
+            background-color: #f1f5f9;
+            transform: scale(1.1);
+        }
+
+        /* Loading Animation */
+        #loader {
+            border: 4px solid #f1f5f9;
+            border-top: 4px solid #475569;
+            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            animation: spin 1s cubic-bezier(0.55, 0.055, 0.675, 0.19) infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        /* Tabs */
+        .tab-container { 
+            display: flex; 
+            background-color: #e2e8f0;
+            padding: 0.3rem;
+            border-radius: 0.75rem;
+            margin-right: 1rem;
+        }
+        .tab-btn {
+            padding: 0.6rem 1.5rem;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: #64748b;
+            border-radius: 0.5rem;
+            transition: all 0.2s;
+            text-align: center;
+        }
+        .tab-btn:hover {
+            color: #334155;
+        }
+        .tab-btn.active {
+            background-color: white;
+            color: #0f172a;
+            font-weight: 700;
+            box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.1);
+        }
+
+        /* Modal Styles */
+        #word-export-modal { display: none; }
+        #word-export-modal.active { display: flex; }
+
+        textarea, input, select {
+            font-family: 'Noto Serif TC', 'Inter', serif;
+        }
+        
+        /* Tag styling for format specific note */
+        #format-note, #crisis-note {
+            font-size: 0.85rem;
+            color: #059669;
+            background-color: #d1fae5;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            margin-top: 0.5rem;
+            font-weight: bold;
+            display: inline-block;
+        }
+        #format-note.original, #crisis-note.manual {
+            color: #475569;
+            background-color: #e2e8f0;
+        }
+
+        /* Save indicator animation */
+        .save-flash {
+            animation: flash-green 2s ease-out forwards;
+        }
+        @keyframes flash-green {
+            0% { opacity: 0; transform: translateY(5px); }
+            10% { opacity: 1; transform: translateY(0); }
+            80% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-5px); }
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4 md:p-8">
+
+    <div class="w-full max-w-xl md:max-w-4xl mx-auto">
+        <div class="main-card p-6 sm:p-10 rounded-2xl">
+            
+            <h1 class="text-3xl sm:text-4xl font-extrabold text-center text-slate-800 mb-3 tracking-tight">行為事件分析與策略建議</h1>
+            <p class="text-base text-center text-slate-500 mb-8 font-medium">AI 驅動的特教與輔導策略助手，協助您將觀察轉化為行動</p>
+            
+            <div class="bg-blue-50 border-l-4 border-blue-400 text-blue-800 p-4 rounded-r-lg mb-8 shadow-sm" role="alert">
+                <div class="flex items-start">
+                    <div class="py-1"><svg class="fill-current h-6 w-6 text-blue-500 mr-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M2.93 17.07A10 10 0 1 1 17.07 2.93 10 10 0 0 1 2.93 17.07zM9 5v6h2V5H9zm0 8v2h2v-2H9z"/></svg></div>
+                    <div>
+                        <p class="font-bold text-lg mb-1">使用前請注意</p>
+                        <p class="text-sm opacity-90">本工具生成的內容僅供參考。請老師們結合專業判斷與對學生的實際觀察，彈性運用分析結果。</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mb-6">
+                <label for="event-description" class="block mb-2 text-lg font-bold text-slate-700">描述學生行為事件</label>
+                <textarea id="event-description" rows="6" class="w-full p-4 border border-slate-200 rounded-xl focus:ring-4 focus:ring-slate-100 focus:border-slate-500 transition shadow-sm text-slate-700 text-base bg-slate-50" placeholder="請盡量詳細描述：&#10;1. 發生了什麼事？(人、事、時、地)&#10;2. 老師或同學當下的反應？&#10;3. 孩子的後續反應？&#10;&#10;範例：今天數學課，老師請小明上台解題，小明趴在桌上不肯動，老師催促他之後，他就開始大哭..."></textarea>
+                
+                <div class="mt-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                    <!-- 左側：匯出 / 匯入 紀錄 -->
+                    <div class="flex items-center gap-3 flex-wrap">
+                        <input type="file" id="import-file" accept=".json" class="hidden">
+                        <button id="import-btn" class="text-sm px-3 py-1.5 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 rounded-md font-medium transition flex items-center gap-1 shadow-sm">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                            匯入紀錄
+                        </button>
+                        <button id="export-btn" class="text-sm px-3 py-1.5 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded-md font-medium transition flex items-center gap-1 shadow-sm">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                            儲存紀錄
+                        </button>
+                        <div id="save-indicator" class="opacity-0 text-xs font-bold text-emerald-600 flex items-center ml-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                            已自動儲存
+                        </div>
+                    </div>
+                    <!-- 右側：清空 / 範例 -->
+                    <div class="flex items-center gap-4">
+                        <button id="clear-data-btn" class="text-sm text-red-500 hover:text-red-700 font-medium transition flex items-center gap-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
+                            清空內容
+                        </button>
+                        <button id="fill-example-btn" class="text-sm text-slate-600 hover:text-slate-800 font-medium transition flex items-center gap-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                            填入範例
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <button id="analyze-btn" class="w-full bg-gradient-to-r from-slate-600 to-slate-800 text-white font-bold py-4 px-6 rounded-xl hover:from-slate-700 hover:to-slate-900 focus:outline-none focus:ring-4 focus:ring-slate-200 transition-all transform hover:-translate-y-1 shadow-md flex items-center justify-center text-lg">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><path d="m9.06 2.22 2.33 2.33c.2.2.2.51 0 .71L9.06 7.58c-.2.2-.51.2-.71 0L6.02 5.25c-.2-.2-.2-.51 0-.71L8.35 2.22c.2-.2.51-.2.71 0Z"/><path d="m14.94 2.22 2.33 2.33c.2.2.2.51 0 .71l-2.33 2.33c-.2.2-.51.2-.71 0l-2.33-2.33c-.2-.2-.51 0-.71l2.33-2.33c.2-.2.51-.2.71 0l2.33-2.33c.2-.2.51-.2.71 0Z"/><path d="m9.06 16.42 2.33 2.33c.2.2.2.51 0 .71l-2.33 2.33c-.2.2-.51.2-.71 0l-2.33-2.33c-.2-.2-.2-.51 0-.71l2.33-2.33c.2-.2.51-.2.71 0Z"/><path d="m14.94 16.42 2.33 2.33c.2.2.2.51 0 .71l-2.33 2.33c-.2.2-.51.2-.71 0l-2.33-2.33c-.2-.2-.51 0-.71l2.33-2.33c.2-.2.51-.2.71 0Z"/><path d="M5.25 14.94 2.22 12c-.2-.2-.2-.51 0-.71l2.33-2.33c.2-.2.51-.2.71 0l2.33 2.33c.2.2.2.51 0 .71L5.96 14.94c-.2.2-.51.2-.71 0Z"/><path d="M18.75 14.94 16.42 12c-.2-.2-.2-.51 0-.71l2.33-2.33c.2-.2.51-.2.71 0l2.33 2.33c.2.2.2.51 0 .71L19.46 14.94c-.2.2-.51-.2-.71 0Z"/><path d="M12 14.25a2.25 2.25 0 1 0 0-4.5 2.25 2.25 0 0 0 0 4.5Z"/><path d="M12 5.25v-1.5"/><path d="M12 20.25v-1.5"/><path d="M5.25 12h-1.5"/><path d="M20.25 12h-1.5"/></svg>
+                開始智能分析
+            </button>
+        </div>
+
+        <div id="loading-container" class="mt-8 flex flex-col items-center justify-center gap-6 hidden">
+            <div id="loader"></div>
+            <p id="loading-message" class="text-slate-600 text-lg font-medium px-4 text-center animate-pulse">正在為您梳理脈絡...</p>
+        </div>
+
+        <div id="error-container" class="result-card hidden mt-6 border-l-4 border-red-500">
+             <h3 class="!border-none !mb-2 !pb-0 text-red-600 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                分析過程發生錯誤
+             </h3>
+             <p id="error-message" class="text-slate-700 ml-8"></p>
+        </div>
+
+        <div id="result-container" class="hidden mt-8">
+            <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 gap-4">
+                <div id="tab-container" class="tab-container flex-grow w-full lg:w-auto overflow-x-auto">
+                    <button id="tab-special-ed" class="tab-btn active w-1/2 lg:w-auto whitespace-nowrap">專業分析視角</button>
+                    <button id="tab-general-ed" class="tab-btn w-1/2 lg:w-auto whitespace-nowrap">一般建議視角</button>
+                </div>
+                
+                <div class="flex gap-2 w-full lg:w-auto">
+                    <button id="download-table-btn" class="flex-1 lg:flex-none bg-slate-700 text-white font-bold py-2.5 px-5 rounded-lg hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 transition shadow-sm flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+                        匯出行為功能介入方案
+                    </button>
+
+                    <button id="copy-btn" class="flex-1 lg:flex-none bg-white text-slate-700 border border-slate-300 font-bold py-2.5 px-5 rounded-lg hover:bg-slate-50 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-400 transition shadow-sm flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                        複製內容
+                    </button>
+                </div>
+            </div>
+
+            <div id="analysis-content" class="space-y-6">
+                <div id="special-ed-view"></div>
+                <div id="general-ed-view" class="hidden"></div>
+            </div>
+        </div>
+
+        <footer class="mt-12 mb-6 w-full text-center text-sm bg-white/80 backdrop-blur-sm border border-slate-200 rounded-2xl p-6 shadow-sm">
+            <div class="flex flex-col items-center gap-3 text-slate-600 font-medium">
+                <p>原版工具：<a href="https://spedmix.pages.dev/behavior" target="_blank" class="text-blue-600 hover:text-blue-800 hover:underline transition">米克師</a></p>
+                <p>延伸開發：桃市特 / Gemini (智能輔助)</p>
+                <p>原版連結：<a href="https://spedmix.pages.dev/behavior" target="_blank" class="text-blue-600 hover:text-blue-800 hover:underline transition break-all">https://spedmix.pages.dev/behavior</a></p>
+                <p>本作品基於原版工具改編，採用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh_TW" target="_blank" class="text-blue-600 hover:text-blue-800 hover:underline transition">CC BY-NC-SA 4.0 授權</a>。</p>
+                
+                <div class="mt-2 flex flex-wrap justify-center items-center gap-2">
+                    <span class="inline-flex items-center gap-2 bg-slate-100 text-slate-500 py-1.5 px-4 rounded-full text-xs">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                        自動編排桃園市 IEP 危機處理流程及行政支援
+                    </span>
+                    <span class="inline-flex items-center gap-2 bg-slate-100 text-slate-500 py-1.5 px-4 rounded-full text-xs">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                        隱私保護：學生姓氏不存於紀錄中
+                    </span>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Modal for Word Export -->
+    <div id="word-export-modal" class="fixed inset-0 z-50 items-center justify-center bg-black bg-opacity-50 hidden">
+        <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-2xl mx-4 border border-slate-200 max-h-[90vh] overflow-y-auto">
+            <h2 class="text-2xl font-bold text-slate-800 mb-4 border-b pb-2 border-slate-200">下載行為功能介入方案</h2>
+            <p class="text-slate-600 mb-4 text-sm">請選擇您需要的表格格式並輸入基本資料，系統將為您自動產出對應的 Word 檔。</p>
+            
+            <div class="space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="col-span-2 sm:col-span-1">
+                        <label class="block text-sm font-medium text-slate-700 mb-1">匯出格式</label>
+                        <select id="modal-format" class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-slate-500 bg-slate-50 text-slate-800">
+                            <option value="taoyuan">桃園市 IEP 格式 (含附件)</option>
+                            <option value="original">原版通用格式</option>
+                        </select>
+                        <span id="format-note" class="active text-xs mt-1 block">✓ 將自動合併目標行為敘述並填寫支援清單</span>
+                    </div>
+                    <div class="col-span-2 sm:col-span-1">
+                        <label class="block text-sm font-medium text-slate-700 mb-1">危機處理流程內容 <span class="text-xs text-indigo-600 font-normal">(依行為自動擬定)</span></label>
+                        <select id="modal-crisis" class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-indigo-400 bg-indigo-50/50 text-slate-800">
+                            <option value="auto">自動判斷 (依據行為事件內容編排)</option>
+                            <option value="emotion">需要 - 一般情緒失控處理流程</option>
+                            <option value="aggression">需要 - 攻擊 / 自傷 / 破壞行為流程</option>
+                            <option value="elopement">需要 - 擅自離開 / 失蹤處理流程</option>
+                            <option value="none">不需要 (表格留白)</option>
+                        </select>
+                        <span id="crisis-note" class="active text-xs mt-1 block">✓ 符合桃園市危機處理原則編寫</span>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="col-span-2 sm:col-span-2">
+                        <label class="block text-sm font-medium text-slate-700 mb-1">學生姓氏 <span class="text-xs text-red-500 font-normal">(為保護個資不儲存)</span></label>
+                        <input type="text" id="modal-name" class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-slate-500 bg-slate-50 text-slate-800" placeholder="例如：王 (自動加'OO')">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">班級</label>
+                        <input type="text" id="modal-class" class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-slate-500 bg-slate-50 text-slate-800" placeholder="例如：3年2班">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">個案管理老師</label>
+                        <input type="text" id="modal-teacher" class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-slate-500 bg-slate-50 text-slate-800" placeholder="例如：朱一老師">
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">計畫開始日期 / 擬定日期</label>
+                        <input type="date" id="modal-eval-date" class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-slate-500 bg-slate-50 text-slate-800">
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-6 flex justify-end gap-3">
+                <button id="modal-cancel-btn" class="px-4 py-2 text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200 transition font-medium">取消</button>
+                <button id="modal-confirm-btn" class="px-4 py-2 text-white bg-slate-700 rounded-lg hover:bg-slate-800 transition font-medium">確認並下載</button>
+            </div>
+        </div>
+    </div>
+
+<script>
+    // --- Core UI rendering functions (Moved to top to prevent ReferenceError) ---
+    const copyIconSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`;
+    const checkIconSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="color: #22c55e;"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+
+    function markdownToHtml(text) {
+        if (!text) return '';
+        return text.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+    }
+
+    function createCopiableListItem(htmlContent, plainText) {
+        const escapedText = plainText.replace(/"/g, '&quot;').replace(/'/g, '&apos;');
+        return `
+            <div class="strategy-item group">
+                <p>${htmlContent}</p>
+                <button class="copy-item-btn opacity-50 group-hover:opacity-100" data-copy-text="${escapedText}" title="複製此項">
+                    ${copyIconSVG}
+                </button>
+            </div>`;
+    }
+
+    function renderView(role, data) {
+        const specialEdView = document.getElementById('special-ed-view');
+        const generalEdView = document.getElementById('general-ed-view');
+        let viewContent = '';
+        const renderStrategyList = (list) => (list || []).map(s => createCopiableListItem(markdownToHtml(s), s.replace(/\*\*/g, ''))).join('');
+
+        if (role === 'special_ed') {
+            const sData = data || {};
+            const bgFactors = sData.background_factors || {};
+            const strategies = sData.intervention_strategies || {};
+            
+            viewContent = `
+                <div class="result-card"><h3>行為模式摘要 (FBA 基礎)</h3>
+                    <div class="info-block"><h4><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 4c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm0 14c-2.03 0-4.43-.82-6.14-2.88C7.55 15.8 9.68 15 12 15s4.45.8 6.14 2.12C16.43 19.18 14.03 20 12 20z"></path></svg>背景因素 (Setting Events)</h4>
+                        ${createCopiableListItem(`<b>個體背景：</b>${markdownToHtml(bgFactors.individual)}`, `個體背景：${(bgFactors.individual || '').replace(/\*\*/g, '')}`)}
+                        ${createCopiableListItem(`<b>環境背景：</b>${markdownToHtml(bgFactors.environment)}`, `環境背景：${(bgFactors.environment || '').replace(/\*\*/g, '')}`)}</div>
+                    <div class="info-block"><h4><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1s-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm0 15-4-4h3V9h2v5h3l-4 4z"></path></svg>行為分析 (ABC)</h4>
+                        ${createCopiableListItem(`<b>立即前事 (A)：</b>${markdownToHtml(sData.antecedent)}`, `立即前事 (A)：${(sData.antecedent || '').replace(/\*\*/g, '')}`)}
+                        ${createCopiableListItem(`<b>行為問題 (B)：</b>${markdownToHtml(sData.problem_behavior)}`, `行為問題 (B)：${(sData.problem_behavior || '').replace(/\*\*/g, '')}`)}
+                        ${createCopiableListItem(`<b>後果 (C)：</b>${markdownToHtml(sData.consequence)}`, `後果 (C)：${(sData.consequence || '').replace(/\*\*/g, '')}`)}
+                        ${createCopiableListItem(`<b>功能假設：</b>${markdownToHtml(sData.assumed_function)}`, `功能假設：${(sData.assumed_function || '').replace(/\*\*/g, '')}`)}</div>
+                    <div class="info-block"><h4><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"></path></svg>目標行為</h4>
+                        ${createCopiableListItem(`<b>期待行為：</b>${markdownToHtml(sData.desired_behavior)}`, `期待行為：${(sData.desired_behavior || '').replace(/\*\*/g, '')}`)}
+                        ${createCopiableListItem(`<b>替代行為：</b>${markdownToHtml(sData.alternative_behavior)}`, `替代行為：${(sData.alternative_behavior || '').replace(/\*\*/g, '')}`)}</div>
+                </div>
+                <div class="result-card"><h3>正向行為支持 (PBS) 介入策略計畫</h3>
+                     <div class="info-block"><h4><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5C21.27 7.61 17 4.5 12 4.5zm0 10c-2.48 0-4.5-2.02-4.5-4.5S9.52 5.5 12 5.5s4.5 2.02 4.5 4.5-2.02 4.5-4.5 4.5zm0-7C10.62 7.5 9.5 8.62 9.5 10s1.12 2.5 2.5 2.5 2.5-1.12 2.5-2.5-1.12-2.5-2.5-2.5z"></path></svg>前事處理與環境調整策略 (預防)</h4>${renderStrategyList(strategies.antecedent_strategies)}</div>
+                     <div class="info-block"><h4><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M14.5 12c.83 0 1.5-.67 1.5-1.5s-.67-1.5-1.5-1.5-1.5.67-1.5 1.5.67 1.5 1.5 1.5zm6-5H17v1.5c0 1.93-1.57 3.5-3.5 3.5S10 9.43 10 7.5V7H6.5c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V9c0-1.1-.9-2-2-2z"></path></svg>替代技能教導策略 (習得)</h4>${renderStrategyList(strategies.teaching_strategies)}</div>
+                     <div class="info-block"><h4><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1s3.1 1.39 3.1 3.1v2z"></path></svg>後果處理策略 (維持)</h4>${renderStrategyList(strategies.consequence_strategies)}</div>
+                </div>`;
+            specialEdView.innerHTML = viewContent;
+        } else if (role === 'general_ed') {
+            const gData = data || {};
+            const whatToTry = gData.what_to_try || {};
+            const gTitle = whatToTry.title || '給老師的行動建議';
+            const before = whatToTry.before || [];
+            const during = whatToTry.during || [];
+            const after = whatToTry.after || [];
+            
+            viewContent = `
+                <div class="result-card"><h3>給普通班老師的同理與建議</h3>
+                    <div class="info-block"><h4><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V6h5.17l2 2H20v10z"></path></svg>發生了什麼事？（事件梳理）</h4><p>${markdownToHtml(gData.what_happened)}</p></div>
+                    <div class="info-block"><h4><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"></path></svg>可以怎麼想？（行為背後的原因）</h4><p>${markdownToHtml(gData.why_it_happened)}</p></div>
+                </div>
+                <div class="result-card"><h3>${markdownToHtml(gTitle)}</h3>
+                     <div class="info-block"><h4><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"></path></svg>事前可以這樣準備（預防）</h4>${renderStrategyList(before)}</div>
+                     <div class="info-block"><h4><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"></path></svg>當下可以這樣應對（立即處理）</h4>${renderStrategyList(during)}</div>
+                     <div class="info-block"><h4><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"></path></svg>事後可以這樣引導（技能教學與修復）</h4>${renderStrategyList(after)}</div>
+                </div>`;
+            generalEdView.innerHTML = viewContent;
+        } 
+    }
+
+    // --- DOM Elements & Event Listeners ---
+    const analyzeBtn = document.getElementById('analyze-btn');
+    const eventDescription = document.getElementById('event-description');
+    const fillExampleBtn = document.getElementById('fill-example-btn');
+    const clearDataBtn = document.getElementById('clear-data-btn');
+    
+    // JSON Import/Export Elements
+    const exportBtn = document.getElementById('export-btn');
+    const importBtn = document.getElementById('import-btn');
+    const importFile = document.getElementById('import-file');
+
+    const resultContainer = document.getElementById('result-container');
+    const analysisContent = document.getElementById('analysis-content');
+    const loadingContainer = document.getElementById('loading-container');
+    const errorContainer = document.getElementById('error-container');
+    const errorMessage = document.getElementById('error-message');
+    const copyBtn = document.getElementById('copy-btn');
+    const downloadTableBtn = document.getElementById('download-table-btn');
+    const tabSpecialEd = document.getElementById('tab-special-ed');
+    const tabGeneralEd = document.getElementById('tab-general-ed');
+    const saveIndicator = document.getElementById('save-indicator');
+    
+    // Modal Elements
+    const wordExportModal = document.getElementById('word-export-modal');
+    const modalCancelBtn = document.getElementById('modal-cancel-btn');
+    const modalConfirmBtn = document.getElementById('modal-confirm-btn');
+    const modalFormatSelect = document.getElementById('modal-format');
+    const modalCrisisSelect = document.getElementById('modal-crisis');
+    const formatNote = document.getElementById('format-note');
+    const crisisNote = document.getElementById('crisis-note');
+    
+    let currentAnalysisData = {};
+    let activeTab = 'special_ed';
+    const STORAGE_KEY = 'behavior_analysis_tool_draft';
+
+    // Set today's date in input initially
+    document.getElementById('modal-eval-date').valueAsDate = new Date();
+
+    // Custom debounce function with cancellation support
+    function debounce(func, wait) {
+        let timeout;
+        const debounced = function(...args) {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(this, args), wait);
+        };
+        debounced.cancel = function() {
+            clearTimeout(timeout);
+        };
+        return debounced;
+    }
+
+    // --- JSON Export / Import Logic (Manual Save/Load, NO NAME SAVED) ---
+    exportBtn.addEventListener('click', () => {
+        const dataToExport = {
+            version: "1.0",
+            description: eventDescription.value,
+            analysis: currentAnalysisData,
+            modal: {
+                format: document.getElementById('modal-format').value,
+                crisis: document.getElementById('modal-crisis').value,
+                className: document.getElementById('modal-class').value,
+                teacher: document.getElementById('modal-teacher').value,
+                evalDate: document.getElementById('modal-eval-date').value
+            },
+            exportDate: new Date().toISOString()
+        };
+
+        const blob = new Blob([JSON.stringify(dataToExport, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        const timestamp = new Date().getTime();
+        link.download = `行為分析紀錄_${timestamp}.json`; // 使用時間戳代替學生姓名，保護隱私
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        showTemporaryMessage('紀錄已成功下載存檔！', 'success');
+    });
+
+    importBtn.addEventListener('click', () => {
+        importFile.click();
+    });
+
+    importFile.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            try {
+                const data = JSON.parse(event.target.result);
+                
+                if (data.description !== undefined) {
+                    eventDescription.value = data.description;
+                }
+                
+                if (data.modal) {
+                    if (data.modal.format) {
+                        modalFormatSelect.value = data.modal.format;
+                        modalFormatSelect.dispatchEvent(new Event('change'));
+                    }
+                    if (data.modal.crisis) {
+                        modalCrisisSelect.value = data.modal.crisis;
+                        modalCrisisSelect.dispatchEvent(new Event('change'));
+                    }
+                    if (data.modal.className) document.getElementById('modal-class').value = data.modal.className;
+                    if (data.modal.teacher) document.getElementById('modal-teacher').value = data.modal.teacher;
+                    if (data.modal.evalDate) {
+                        document.getElementById('modal-eval-date').value = data.modal.evalDate;
+                    }
+                } else {
+                    document.getElementById('modal-class').value = '';
+                    document.getElementById('modal-teacher').value = '';
+                }
+
+                if (data.analysis && Object.keys(data.analysis).length > 0) {
+                    currentAnalysisData = data.analysis;
+                    if (currentAnalysisData.special_ed) renderView('special_ed', currentAnalysisData.special_ed);
+                    if (currentAnalysisData.general_ed) renderView('general_ed', currentAnalysisData.general_ed);
+                    resultContainer.classList.remove('hidden');
+                    setActiveTab('special_ed');
+                } else {
+                    currentAnalysisData = {};
+                    resultContainer.classList.add('hidden');
+                    document.getElementById('special-ed-view').innerHTML = '';
+                    document.getElementById('general-ed-view').innerHTML = '';
+                }
+                
+                showTemporaryMessage('紀錄已成功匯入！', 'success');
+            } catch (err) {
+                console.error("Failed to parse JSON file:", err);
+                showTemporaryMessage('檔案格式錯誤，無法匯入！', 'error');
+            }
+        };
+        reader.readAsText(file);
+        e.target.value = '';
+    });
+
+    function resetAllState() {
+        // 1. 清空所有文字與資料
+        eventDescription.value = '';
+        currentAnalysisData = {};
+        
+        // 2. 清空 DOM 顯示
+        document.getElementById('special-ed-view').innerHTML = '';
+        document.getElementById('general-ed-view').innerHTML = '';
+        resultContainer.classList.add('hidden');
+        errorContainer.classList.add('hidden');
+        
+        // 3. 清空 Modal 內的資料
+        document.getElementById('modal-name').value = '';
+        document.getElementById('modal-class').value = '';
+        document.getElementById('modal-teacher').value = '';
+        document.getElementById('modal-crisis').value = 'auto';
+        document.getElementById('modal-format').value = 'taoyuan';
+        document.getElementById('modal-eval-date').valueAsDate = new Date();
+    }
+
+    clearDataBtn.addEventListener('click', () => {
+        if(confirm('確定要清空畫面上所有的輸入內容與分析結果嗎？')) {
+            // 取消正在等待的自動儲存，避免清空後舊資料又寫回去
+            if (debouncedSave && debouncedSave.cancel) {
+                debouncedSave.cancel();
+            }
+
+            // 徹底重置所有的畫面狀態
+            resetAllState();
+            
+            // 從 LocalStorage 徹底移除
+            localStorage.removeItem(STORAGE_KEY);
+            
+            showTemporaryMessage('內容已清空', 'success');
+        }
+    });
+
+    // --- Local Storage Auto-Save Logic (NO NAME SAVED) ---
+    function saveDraftToStorage() {
+        const dataToSave = {
+            description: eventDescription.value,
+            analysis: currentAnalysisData,
+            modal: {
+                format: document.getElementById('modal-format').value,
+                crisis: document.getElementById('modal-crisis').value,
+                // 為保護個資，此處不儲存 name 欄位
+                className: document.getElementById('modal-class').value,
+                teacher: document.getElementById('modal-teacher').value,
+                evalDate: document.getElementById('modal-eval-date').value
+            }
+        };
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
+            showSaveIndicator();
+        } catch (e) {
+            console.error("Failed to save draft to localStorage:", e);
+        }
+    }
+
+    function loadDraftFromStorage() {
+        const savedDraft = localStorage.getItem(STORAGE_KEY);
+        if (savedDraft) {
+            try {
+                const data = JSON.parse(savedDraft);
+                eventDescription.value = data.description || '';
+                
+                if (data.modal) {
+                    if (data.modal.format) {
+                        modalFormatSelect.value = data.modal.format;
+                        modalFormatSelect.dispatchEvent(new Event('change'));
+                    }
+                    if (data.modal.crisis) {
+                        modalCrisisSelect.value = data.modal.crisis;
+                        modalCrisisSelect.dispatchEvent(new Event('change'));
+                    }
+                    document.getElementById('modal-class').value = data.modal.className || '';
+                    document.getElementById('modal-teacher').value = data.modal.teacher || '';
+                    if (data.modal.evalDate) {
+                        document.getElementById('modal-eval-date').value = data.modal.evalDate;
+                    } else {
+                        document.getElementById('modal-eval-date').valueAsDate = new Date();
+                    }
+                } else {
+                    document.getElementById('modal-eval-date').valueAsDate = new Date();
+                }
+
+                if (data.analysis && Object.keys(data.analysis).length > 0) {
+                    currentAnalysisData = data.analysis;
+                    if (currentAnalysisData.special_ed) renderView('special_ed', currentAnalysisData.special_ed);
+                    if (currentAnalysisData.general_ed) renderView('general_ed', currentAnalysisData.general_ed);
+                    resultContainer.classList.remove('hidden');
+                    setActiveTab('special_ed');
+                }
+            } catch (e) {
+                console.error("Failed to parse saved draft:", e);
+                resetAllState();
+            }
+        } else {
+            // 如果沒有儲存的草稿（例如清空後重整頁面），強制覆蓋瀏覽器的表單快取
+            resetAllState();
+        }
+    }
+
+    function showSaveIndicator() {
+        saveIndicator.classList.remove('save-flash');
+        void saveIndicator.offsetWidth; 
+        saveIndicator.classList.add('save-flash');
+    }
+
+    const debouncedSave = debounce(saveDraftToStorage, 1000);
+    eventDescription.addEventListener('input', debouncedSave);
+    document.getElementById('modal-format').addEventListener('change', saveDraftToStorage);
+    document.getElementById('modal-crisis').addEventListener('change', saveDraftToStorage);
+    // 不監聽 modal-name 的變更來儲存，因為我們不存這個欄位
+    document.getElementById('modal-class').addEventListener('input', debouncedSave);
+    document.getElementById('modal-teacher').addEventListener('input', debouncedSave);
+    document.getElementById('modal-eval-date').addEventListener('change', saveDraftToStorage);
+
+    // --- AI Analysis Logic ---
+    function cleanAndSplitStrategies(list) {
+        if (!list || !Array.isArray(list)) return [];
+        const result = [];
+        list.forEach(item => {
+            if (typeof item === 'string') {
+                item.split('\n').forEach(line => {
+                    const cleanLine = line.replace(/^(\d+\.|[-*•])\s*/, '').trim();
+                    if (cleanLine) result.push(cleanLine);
+                });
+            }
+        });
+        return result;
+    }
+    
+    fillExampleBtn.addEventListener('click', () => {
+        eventDescription.value = `上課鐘響後，小明（自閉症，三年級）還在走廊看風景。老師請他進教室，他沒有反應。老師走近再次提醒，小明突然尖叫並用力推了老師一下，然後跑回自己的座位上趴著哭泣。
+其他同學看到後有些驚訝，但很快就安靜下來回到座位。老師當下先安撫小明的情緒，沒有立刻責備他。
+這已經是這週第三次發生類似的情況，通常都在下課換節、或是需要轉換活動時發生。`;
+        saveDraftToStorage();
+    });
+
+    async function callApi(systemPrompt, responseSchema, description) {
+        const userQuery = `請分析以下事件：\n\n${description}`;
+        const apiKey = "";
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+        
+        const payload = {
+            contents: [{ parts: [{ text: userQuery }] }],
+            systemInstruction: { parts: [{ text: systemPrompt }] },
+            generationConfig: {
+                responseMimeType: "application/json",
+                responseSchema: responseSchema
+            }
+        };
+        
+        let response;
+        const maxRetries = 3;
+        for (let i = 0; i < maxRetries; i++) {
+            try {
+                response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                if (response.ok) break;
+                if (i === maxRetries - 1) throw new Error(`API 請求失敗，狀態碼：${response.status}`);
+            } catch (error) {
+                if (i === maxRetries - 1) throw error;
+            }
+            await new Promise(resolve => setTimeout(resolve, Math.pow(2, i) * 1000));
+        }
+
+        const result = await response.json();
+        const jsonText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+        
+        if (!jsonText) {
+             throw new Error(`無法從 API 回應中獲取有效的分析結果。`);
+        }
+        
+        return JSON.parse(jsonText);
+    }
+
+    analyzeBtn.addEventListener('click', async () => {
+        const description = eventDescription.value.trim();
+        if (!description) {
+            showTemporaryMessage('請先輸入事件描述！', 'warning');
+            return;
+        }
+
+        resultContainer.classList.add('hidden');
+        errorContainer.classList.add('hidden');
+        loadingContainer.classList.remove('hidden');
+        analyzeBtn.disabled = true;
+        analyzeBtn.classList.add('opacity-50', 'cursor-not-allowed');
+
+        const specialEdPrompt = `你是一位專業的特教老師與行為分析師。請根據使用者提供的行為事件描述，分析並產生一份「行為模式摘要」。請嚴格依照指定的JSON格式回傳，內容需具體、專業且符合正向行為支持(PBS)原則。在回傳的文字中，請用 Markdown 的 **粗體** 語法來強調關鍵字詞。`;
+        const specialEdSchema = { 
+            type: "OBJECT", 
+            properties: { 
+                background_factors: { type: "OBJECT", properties: { individual: { type: "STRING" }, environment: { type: "STRING" } }, required: ["individual", "environment"] }, 
+                antecedent: { type: "STRING" }, 
+                problem_behavior: { type: "STRING" }, 
+                consequence: { type: "STRING" }, 
+                assumed_function: { type: "STRING" }, 
+                desired_behavior: { type: "STRING" }, 
+                alternative_behavior: { type: "STRING" }, 
+                intervention_strategies: { type: "OBJECT", properties: { antecedent_strategies: { type: "ARRAY", items: { type: "STRING" } }, teaching_strategies: { type: "ARRAY", items: { type: "STRING" } }, consequence_strategies: { type: "ARRAY", items: { type: "STRING" } } }, required: ["antecedent_strategies", "teaching_strategies", "consequence_strategies"] } 
+            },
+            required: ["background_factors", "antecedent", "problem_behavior", "consequence", "assumed_function", "desired_behavior", "alternative_behavior", "intervention_strategies"]
+        };
+        
+        const generalEdPrompt = `你是一位經驗豐富的輔導老師，正在對一位普通班老師提供建議。請用**非常白話、有同理心、不帶專業術語**的口吻來分析學生行為。請避免使用「前事、後果、功能、增強、消弱、替代行為」等詞語。請將分析結果包裝成給老師的直接建議。
+        【重要格式要求】
+        1. "before" 陣列請填寫「事前可以這樣準備（預防）」的策略。
+        2. "during" 陣列請填寫「當下可以這樣應對（立即處理）」的策略。
+        3. "after" 陣列請填寫「事後可以這樣引導（技能教學與修復）」的策略。
+        請「分項列點」，將每一個具體動作分成獨立的陣列元素。在回傳的文字中，請用 Markdown 的 **粗體** 語法來強調關鍵字詞。`;
+        const generalEdSchema = { 
+            type: "OBJECT", 
+            properties: { 
+                what_happened: { type: "STRING" }, 
+                why_it_happened: { type: "STRING" }, 
+                what_to_try: { 
+                    type: "OBJECT", 
+                    properties: { 
+                        title: { type: "STRING" }, 
+                        before: { type: "ARRAY", items: { type: "STRING" } }, 
+                        during: { type: "ARRAY", items: { type: "STRING" } }, 
+                        after: { type: "ARRAY", items: { type: "STRING" } } 
+                    },
+                    required: ["title", "before", "during", "after"]
+                } 
+            },
+            required: ["what_happened", "why_it_happened", "what_to_try"]
+        };
+        
+        try {
+            const [specialData, generalData] = await Promise.all([
+                callApi(specialEdPrompt, specialEdSchema, description),
+                callApi(generalEdPrompt, generalEdSchema, description)
+            ]);
+            
+            if (specialData && specialData.intervention_strategies) {
+                specialData.intervention_strategies.antecedent_strategies = cleanAndSplitStrategies(specialData.intervention_strategies.antecedent_strategies);
+                specialData.intervention_strategies.teaching_strategies = cleanAndSplitStrategies(specialData.intervention_strategies.teaching_strategies);
+                specialData.intervention_strategies.consequence_strategies = cleanAndSplitStrategies(specialData.intervention_strategies.consequence_strategies);
+            }
+            if (generalData && generalData.what_to_try) {
+                generalData.what_to_try.before = cleanAndSplitStrategies(generalData.what_to_try.before);
+                generalData.what_to_try.during = cleanAndSplitStrategies(generalData.what_to_try.during);
+                generalData.what_to_try.after = cleanAndSplitStrategies(generalData.what_to_try.after);
+            }
+            
+            currentAnalysisData.special_ed = specialData;
+            currentAnalysisData.general_ed = generalData;
+            
+            renderView('special_ed', specialData);
+            renderView('general_ed', generalData);
+            
+            resultContainer.classList.remove('hidden');
+            setActiveTab('special_ed');
+            
+            saveDraftToStorage();
+
+            setTimeout(() => { resultContainer.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 100);
+
+        } catch (error) {
+            console.error('分析時發生錯誤:', error);
+            errorMessage.textContent = `發生預期外的錯誤，請稍後再試或調整您的輸入內容。`;
+            errorContainer.classList.remove('hidden');
+        } finally {
+            loadingContainer.classList.add('hidden');
+            analyzeBtn.disabled = false;
+            analyzeBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        }
+    });
+
+    function setActiveTab(tabName) {
+        activeTab = tabName;
+        [tabSpecialEd, tabGeneralEd].forEach(tab => tab.classList.remove('active'));
+        [document.getElementById('special-ed-view'), document.getElementById('general-ed-view')].forEach(view => view.classList.add('hidden'));
+
+        if (tabName === 'special_ed') {
+            tabSpecialEd.classList.add('active');
+            document.getElementById('special-ed-view').classList.remove('hidden');
+        } else if (tabName === 'general_ed') {
+            tabGeneralEd.classList.add('active');
+            document.getElementById('general-ed-view').classList.remove('hidden');
+        }
+    }
+
+    tabSpecialEd.addEventListener('click', () => setActiveTab('special_ed'));
+    tabGeneralEd.addEventListener('click', () => setActiveTab('general_ed'));
+
+    modalFormatSelect.addEventListener('change', (e) => {
+        if (e.target.value === 'taoyuan') {
+            formatNote.classList.remove('original');
+            formatNote.textContent = '✓ 將自動合併目標行為敘述並填寫支援清單';
+        } else {
+            formatNote.classList.add('original');
+            formatNote.textContent = '✓ 將套用米克師原版簡明通用表格';
+        }
+    });
+
+    modalCrisisSelect.addEventListener('change', (e) => {
+        if (e.target.value === 'none') {
+            crisisNote.classList.add('manual');
+            crisisNote.textContent = '✗ 表格將留白，由老師後續自行填寫';
+        } else if (e.target.value === 'auto') {
+            crisisNote.classList.remove('manual');
+            crisisNote.textContent = '✓ 系統將自動判斷並寫入處置流程';
+        } else {
+            crisisNote.classList.remove('manual');
+            crisisNote.textContent = '✓ 將強制帶入您指定的危機處理流程';
+        }
+    });
+
+    downloadTableBtn.addEventListener('click', () => {
+        if (!currentAnalysisData.special_ed) {
+            showTemporaryMessage('請先產生特教觀點分析結果後再下載表格', 'warning');
+            return;
+        }
+        wordExportModal.classList.add('active');
+    });
+
+    modalCancelBtn.addEventListener('click', () => {
+        wordExportModal.classList.remove('active');
+    });
+
+    modalConfirmBtn.addEventListener('click', () => {
+        const format = document.getElementById('modal-format').value;
+        const crisisSelection = document.getElementById('modal-crisis').value;
+        const rawName = document.getElementById('modal-name').value.trim() || '某';
+        
+        // 自動加上 OO (取代原先的 '同學')
+        const name = rawName.endsWith('OO') ? rawName : rawName + 'OO';
+        
+        const className = document.getElementById('modal-class').value || '';
+        const teacher = document.getElementById('modal-teacher').value || '';
+        const evalDateInput = document.getElementById('modal-eval-date').value;
+        
+        let evalDateStr = '   年   月   日';
+        if (evalDateInput) {
+            const dateObj = new Date(evalDateInput);
+            evalDateStr = `${dateObj.getFullYear() - 1911} 年 ${dateObj.getMonth() + 1} 月 ${dateObj.getDate()} 日`;
+        }
+        
+        const sData = currentAnalysisData.special_ed || {};
+        const strategies = sData.intervention_strategies || {};
+        const cleanText = (text) => (text || '').replace(/\*\*/g, '').replace(/\n/g, '<br>');
+
+        // --- 危機處理流程內容判斷邏輯 ---
+        let finalCrisisType = crisisSelection;
+        const fullDesc = (sData.problem_behavior || '') + ' ' + eventDescription.value;
+        
+        if (crisisSelection === 'auto') {
+            if (fullDesc.match(/(打|推|踢|咬|攻擊|破壞|自傷|摔|暴力)/)) {
+                finalCrisisType = 'aggression';
+            } else if (fullDesc.match(/(跑|逃|離開|失蹤|不見|衝出|躲)/)) {
+                finalCrisisType = 'elopement';
+            } else {
+                finalCrisisType = 'emotion';
+            }
+        }
+
+        // 依據提供的校園 SOP 更新
+        const crisisOptions = {
+            none: {
+                pre: { s: '', p: '' },
+                peak: { s: '', p: '' },
+                post: { s: '', p: '' }
+            },
+            emotion: {
+                pre: { s: '察覺干擾課程前兆，任課教師給予口頭提示、重述指令，或讓個案在座位/冷靜區休息，減少言語刺激。', p: '任課教師' },
+                peak: { s: '若情緒持續失控，通報行政支援(學務處/輔導室)或特教助理員偕同將個案帶離現場冷靜。接納情緒予以宣洩。', p: '任課教師<br>輔導室行政<br>教師助理員' },
+                post: { s: '待情緒平復後，協同專輔教師或個管教師釐清事件動機，執行後續輔導管教，並與家長聯繫。', p: '個管教師<br>專輔教師<br>導師' }
+            },
+            aggression: {
+                pre: { s: '察覺衝突或攻擊前兆，任課教師立即評估狀況，若無法單獨處理，請班級幹部通報學務處、特教組或鄰近班級。', p: '任課教師<br>班級幹部' },
+                peak: { s: '遵循「阻卻危險傷害、建立安全距離、減少言語刺激」原則。引導同學遠離危險物品。學務處等行政人員到場採取必要強制措施(隔離或帶離)確保安全。', p: '任課教師<br>學務處<br>特教老師' },
+                post: { s: '傷口處理(健康中心)。通知家長告知狀況(必要時帶回就醫)。召開個案會議提出輔導策略，並對班級目睹同儕進行後續澄清與輔導。', p: '導師/個管<br>健康中心<br>專輔教師' }
+            },
+            elopement: {
+                pre: { s: '學生未經許可站起或出現欲離開教室之意圖，任課教師給予明確指令或轉移注意力，安撫情緒。', p: '任課教師' },
+                peak: { s: '上課無故奔出或未返回。校內失蹤立即通知導師、學務處(生輔/學創)及特教老師協尋；若於校外失蹤立即通知家長，必要時報警協尋。', p: '任課教師<br>學務處<br>特教老師' },
+                post: { s: '尋獲後安撫情緒，釐清離開原因。通知家長，並加強後續行蹤管理與安全教育。', p: '導師、個管教師<br>學務處' }
+            }
+        };
+
+        const crisisData = crisisOptions[finalCrisisType] || crisisOptions.none;
+        
+        let htmlContent = '';
+        let fileNamePrefix = '';
+
+        if (format === 'taoyuan') {
+            htmlContent = generateTaoyuanFormat(sData, strategies, name, className, teacher, evalDateStr, cleanText, crisisData);
+            fileNamePrefix = '桃園市_';
+        } else {
+            htmlContent = generateGeneralFormat(sData, strategies, name, className, teacher, evalDateStr, cleanText, crisisData);
+            fileNamePrefix = '';
+        }
+
+        const blob = new Blob(['\ufeff', htmlContent], { type: 'application/msword' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${fileNamePrefix}行為功能介入方案_${name}.doc`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        
+        wordExportModal.classList.remove('active');
+    });
+
+    // 關鍵字比對演算法
+    function categorizeStrategies(strategies, categoryMap) {
+        const categorized = {};
+        const unmapped = [];
+
+        (strategies || []).forEach(strategy => {
+            let matched = false;
+            for (const [catName, keywords] of Object.entries(categoryMap)) {
+                if (keywords.some(kw => strategy.includes(kw))) {
+                    if (!categorized[catName]) categorized[catName] = [];
+                    categorized[catName].push(strategy);
+                    matched = true;
+                    break; 
+                }
+            }
+            if (!matched) {
+                unmapped.push(strategy);
+            }
+        });
+        
+        if (unmapped.length > 0) {
+            categorized['其他相關策略'] = unmapped;
+        }
+
+        return categorized;
+    }
+
+    function matchStr(arr, keywords) {
+        if (!arr || !Array.isArray(arr)) return '□';
+        return arr.some(s => keywords.some(kw => s.includes(kw))) ? '■' : '□';
+    }
+
+    // 產生桃園市專屬格式 Word 內容 (包含危機處理流程與行政支援)
+    function generateTaoyuanFormat(sData, strategies, name, className, teacher, evalDateStr, cleanText, crisisData) {
+        
+        let fGainAttn = '□', fGainStim = '□', fEscDemand = '□', fEscAttn = '□', fEscInt = '□', fOther = '□';
+        const funcText = sData.assumed_function || '';
+        if (funcText.includes('獲得') || funcText.includes('引起注意') || funcText.includes('取得')) {
+            if (funcText.includes('內在') || funcText.includes('自我刺激')) fGainStim = '■';
+            else fGainAttn = '■';
+        } else if (funcText.includes('逃避') || funcText.includes('避免') || funcText.includes('拒絕')) {
+            if (funcText.includes('要求') || funcText.includes('任務') || funcText.includes('工作')) fEscDemand = '■';
+            else if (funcText.includes('內在') || funcText.includes('情緒') || funcText.includes('不適')) fEscInt = '■';
+            else fEscAttn = '■';
+        } else {
+            fOther = '■';
+        }
+
+        const ant = strategies.antecedent_strategies || [];
+        const tch = strategies.teaching_strategies || [];
+        const con = strategies.consequence_strategies || [];
+
+        const antCategoryMap = {
+            '環境調整(物理環境及動線)': ['座位', '位置', '地點', '動線', '環境安排', '物理環境', '佈置'],
+            '口頭或視覺提示': ['預告', '提示', '預先', '提醒', '視覺', '口頭', '圖卡', '牌'],
+            '結構化及作息安排': ['結構化', '課表', '作息', '明確界線', '規律', '時間表'],
+            '書包及文具用品調整': ['書包', '文具', '學用品', '紙箱', '筆袋', '課本'],
+            '提供示範與正向楷模': ['示範', '模範', '榜樣', '讚美', '稱讚', '鼓勵', '正向回饋'],
+            '安排同儕與人力協助': ['同儕', '小天使', '同學', '學伴', '人力', '志工'],
+            '生理與醫療需求調整': ['睡眠', '休息', '飲食', '喝水', '廁所', '生理', '飢餓', '醫療', '用藥', '服藥', '看診', '醫藥'],
+            '課程與評量方式調整': ['份量', '減少', '作業', '速度', '完成方式', '評量', '多元', '難度', '簡化', '簡單', '容易', '內容', '教材'],
+            '先兆中斷與轉移注意力': ['解決問題', '幫忙', '轉移', '分心', '離開現場', '告知', '選擇', '二選一', '阻遏', '中斷', '制止', '放鬆'],
+            '感覺刺激調整': ['感覺刺激', '替代物品', '感覺統合', '舒壓', '感官'],
+            '親師溝通與規定建立': ['契約', '約定', '公約', '班規', '規則', '規範', '一致', '家庭', '教養', '親職', '家長', '親師', '談話', '面談']
+        };
+
+        const tchCategoryMap = {
+            '替代行為訓練': ['替代', '另一種方式', '正確表達', '合宜方式', '取代'],
+            '社會技巧與人際互動': ['社會技巧', '社交', '人際', '互動', '交友', '衝突', '性別'],
+            '溝通與表達訓練': ['溝通', '表達', '口語', '說出來', '輔具', '科技', '語音'],
+            '情緒與壓力處理技巧': ['情緒', '壓力', '覺察', '放鬆', '深呼吸', '冷靜', '數數'],
+            '生活管理與適應能力': ['生活管理', '自理', '常規', '適應', '社區', '學校適應', '休閒', '興趣'],
+            '學習策略與專注力': ['學習策略', '讀書方法', '筆記', '專注', '注意力'],
+            '自我管理訓練': ['自我管理', '自我監控', '紅綠燈'],
+            '心理輔導與諮商': ['心理', '諮商', '輔導', '治療']
+        };
+
+        const conCategoryMap = {
+            '正增強與代幣制度': ['正增強', '獎勵', '稱讚', '點數', '貼紙', '代幣', '讚美', '特權'],
+            '負增強(移除嫌惡)': ['負增強', '免除', '減少要求', '不用寫'],
+            '區別性增強': ['區別性', '只增強'],
+            '消弱(不理會不當行為)': ['消弱', '不理會', '忽略', '冷處理'],
+            '反應代價(剝奪/限制)': ['代價', '扣點', '剝奪', '取消', '沒收', '懲罰'],
+            '情境式隔離': ['隔離', '暫停', '離開', '冷靜區'],
+            '自然後果與回歸原狀': ['自然後果', '回歸原狀', '復原', '收拾', '打掃'],
+            '過度矯正': ['過度矯正', '加倍', '多做'],
+            '反應阻擋(行為中斷)': ['阻擋', '中斷', '制止', '攔住', '肢體介入'],
+            '啟動緊急處理系統': ['緊急', '危機', '通報', '學務處', '求援']
+        };
+
+        function renderPhase(phaseName, strategiesArray, categoryMap) {
+            const categorized = categorizeStrategies(strategiesArray, categoryMap);
+            const keys = Object.keys(categorized);
+            const rowCount = Math.max(1, keys.length);
+            let rowsHtml = '';
+            if (keys.length === 0) {
+                rowsHtml += `<tr>
+                    <td class="center font-bold" rowspan="1" width="10%">${phaseName}</td>
+                    <td width="20%"></td>
+                    <td width="40%"></td>
+                    <td width="15%" class="center">班級導師<br>資源班教師</td>
+                    <td width="15%" style="padding:5px;">□有效 / □無效<br>□未執行(原因：)</td>
+                </tr>`;
+            } else {
+                keys.forEach((catName, index) => {
+                    const strats = categorized[catName].map((s, i) => `${index+1}-${i+1} ${cleanText(s)}`).join('<br><br>');
+                    const phaseCell = index === 0 ? `<td class="center font-bold" rowspan="${rowCount}" width="10%">${phaseName}</td>` : '';
+                    rowsHtml += `<tr>
+                        ${phaseCell}
+                        <td width="20%" style="padding:5px;">${index+1}. ${catName}</td>
+                        <td width="40%" style="padding:5px;">${strats}</td>
+                        <td width="15%" class="center" style="padding:5px;">班級導師<br>資源班教師</td>
+                        <td width="15%" style="padding:5px;">□有效 / □無效<br>□未執行(原因：)</td>
+                    </tr>`;
+                });
+            }
+            return rowsHtml;
+        }
+
+        const a_demo = matchStr(ant, ['示範', '模範', '榜樣']);
+        const a_cue = matchStr(ant, ['預告', '提示', '預先', '提醒', '視覺', '口頭', '圖卡', '牌']);
+        const a_praise_other = matchStr(ant, ['讚美', '稱讚', '鼓勵', '正向回饋']);
+        const a_seat = matchStr(ant, ['座位', '位置', '地點', '動線', '環境安排', '物理環境', '佈置']);
+        const a_struct = matchStr(ant, ['結構化', '課表', '作息', '明確界線', '規律', '時間表']);
+        const a_peer = matchStr(ant, ['同儕', '小天使', '同學', '學伴', '人力', '志工']);
+        const a_ncr = matchStr(ant, ['非後效', '固定給予', '定時給予']);
+        const a_sensory = matchStr(ant, ['感覺刺激', '替代物品', '感覺統合', '舒壓', '感官']);
+        const a_contract = matchStr(ant, ['契約', '約定', '公約']);
+        const a_rule = matchStr(ant, ['班規', '規則', '規範', '一致']);
+        const a_course_amt = matchStr(ant, ['份量', '減少', '作業', '速度', '完成方式', '評量', '多元', '難度', '簡化', '簡單', '容易', '內容', '教材']);
+        const a_interact_pos = matchStr(ant, ['正向', '接納', '同理', '溫和', '關係', '朋友', '友伴', '師生關係']);
+        const a_physio_rest = matchStr(ant, ['睡眠', '休息', '作息']);
+        const a_physio_need = matchStr(ant, ['飲食', '喝水', '廁所', '生理', '飢餓']);
+        const a_physio_med = matchStr(ant, ['醫療', '用藥', '服藥', '看診', '醫藥']);
+        const a_pre_solve = matchStr(ant, ['解決問題', '幫忙', '協助']);
+        const a_pre_shift = matchStr(ant, ['轉移', '分心', '離開現場']);
+        const a_pre_warn = matchStr(ant, ['告知', '選擇', '二選一']);
+        const a_pre_block = matchStr(ant, ['阻遏', '中斷', '制止']);
+        const a_fam_interact = matchStr(ant, ['家庭', '教養', '親職', '家長', '親師']);
+        const a_cog_talk = matchStr(ant, ['談話', '面談', '聊天']);
+
+        const b_alt = matchStr(tch, ['替代', '另一種方式', '正確表達', '合宜方式', '取代']);
+        const b_social = matchStr(tch, ['社會技巧', '社交', '人際', '互動', '交友', '衝突', '性別']);
+        const b_life = matchStr(tch, ['生活管理', '自理', '常規', '適應', '社區', '學校適應']);
+        const b_learn = matchStr(tch, ['學習策略', '讀書方法', '筆記', '專注', '注意力']);
+        const b_comm = matchStr(tch, ['溝通', '表達', '口語', '說出來', '輔具', '科技', '語音']);
+        const b_self = matchStr(tch, ['自我管理', '自我監控', '紅綠燈']);
+        const b_relax = matchStr(tch, ['情緒', '壓力', '覺察', '放鬆', '深呼吸', '冷靜', '數數']);
+        const b_psy = matchStr(tch, ['心理', '諮商', '輔導', '治療']);
+        const b_leisure = matchStr(tch, ['休閒', '興趣', '嗜好', '社團']);
+
+        const c_pos = matchStr(con, ['正增強', '獎勵', '稱讚', '點數', '貼紙', '代幣', '讚美', '特權']);
+        const c_neg = matchStr(con, ['負增強', '免除', '減少要求', '不用寫']);
+        const c_diff = matchStr(con, ['區別性', '只增強']);
+        const c_ext = matchStr(con, ['消弱', '不理會', '忽略', '冷處理']);
+        const c_sat = matchStr(con, ['厭膩', '大量給予']);
+        const c_cost = matchStr(con, ['代價', '扣點', '剝奪', '取消', '沒收', '懲罰']);
+        const c_iso = matchStr(con, ['隔離', '暫停', '離開', '冷靜區']);
+        const c_rest = matchStr(con, ['自然後果', '回歸原狀', '復原', '收拾', '打掃']);
+        const c_over = matchStr(con, ['過度矯正', '加倍', '多做']);
+        const c_block = matchStr(con, ['阻擋', '中斷', '制止', '攔住', '肢體介入']);
+        const c_crisis = matchStr(con, ['緊急', '危機', '通報', '學務處', '求援']);
+
+        // 自動產生的本方案所需行政支援內容
+        const adminSupportText = `
+            <b>1. 課程與環境調整：</b>提供特殊需求領域或社會技巧課程（教務處排課）；班級內座位調整及冷靜角設置（班級導師）。<br>
+            <b>2. 相關人力支援：</b>視需求申請特教學生助理人員協助（輔導室/特教組）。<br>
+            <b>3. 行政與危機處理支援：</b>巡堂協助提醒目標行為；若發生嚴重情緒或衝突，通報學務處及輔導室協助帶離個案、安撫情緒，避免二次衝突，並依據行為給予相應後果（學務處、輔導室）。<br>
+            <b>4. 專業人員：</b>視需求申請特教專業團隊服務（如心理諮商）或輔導室小團體輔導活動。
+        `;
+
+        const tableCss = `
+            <style>
+                body { font-family: 'DFKai-SB', '標楷體', serif; line-height: 1.4; color: #000; font-size: 11pt; }
+                table { border-collapse: collapse; width: 100%; margin-bottom: 15px; }
+                table, th, td { border: 1px solid black; }
+                th, td { padding: 8px; text-align: left; vertical-align: top; }
+                .center { text-align: center; vertical-align: middle; }
+                h1 { font-size: 14pt; font-weight: bold; margin-bottom: 10px; }
+                h2 { font-size: 12pt; font-weight: bold; margin-top: 20px; text-align: center;}
+                .appendix-table { font-size: 10pt; }
+                .appendix-table td { padding: 5px; }
+            </style>
+        `;
+
+        return `
+            <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+            <head><meta charset='utf-8'><title>桃園市 行為功能介入方案</title>${tableCss}</head>
+            <body>
+                <h1>參、具情緒與行為問題學生所需之行為功能介入方案及行政支援</h1>
+                <p>計畫開始時間： ${evalDateStr} &nbsp;&nbsp;&nbsp;&nbsp; 班級：${className} &nbsp;&nbsp;&nbsp;&nbsp; 姓名：${name}</p>
+                
+                <table>
+                    <tr>
+                        <th width="15%" class="center">標的行為</th>
+                        <td width="85%">
+                            ${cleanText(sData.antecedent)}${cleanText(sData.problem_behavior)}${cleanText(sData.consequence)}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th class="center">行為功能<br><span style="font-size:9pt; font-weight:normal;">(參考附件1)</span></th>
+                        <td>
+                            ${fGainAttn}獲得注意/事物/活動 &nbsp;&nbsp; ${fGainStim}獲得自我刺激<br>
+                            ${fEscDemand}逃避要求 &nbsp;&nbsp; ${fEscAttn}逃避注意/事物/活動 &nbsp;&nbsp; ${fEscInt}逃避內在不舒服的情緒 &nbsp;&nbsp; ${fOther}其他<br>
+                            <span style="font-size:10pt; color:#555;">(AI功能假設：${cleanText(sData.assumed_function)})</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th class="center">介入目標</th>
+                        <td>
+                            <b>期待行為：</b>${cleanText(sData.desired_behavior)}<br>
+                            <b>替代行為：</b>${cleanText(sData.alternative_behavior)}
+                        </td>
+                    </tr>
+                </table>
+
+                <table>
+                    <tr>
+                        <th colspan="2" width="30%" class="center">介入策略<br><span style="font-size:9pt; font-weight:normal;">(參考附件2、附件3介入策略參考表)</span></th>
+                        <th width="40%" class="center">執行方式</th>
+                        <th width="15%" class="center">負責人員</th>
+                        <th width="15%" class="center">執行情形</th>
+                    </tr>
+                    ${renderPhase('前事處理<br>與<br>先兆控制', ant, antCategoryMap)}
+                    ${renderPhase('行為教導', tch, tchCategoryMap)}
+                    ${renderPhase('後果處理', con, conCategoryMap)}
+                </table>
+
+                <table>
+                    <tr>
+                        <th width="20%" class="center">本方案所需<br>行政支援</th>
+                        <td width="80%">${adminSupportText}</td>
+                    </tr>
+                </table>
+                
+                <table>
+                    <tr><th colspan="3" class="center">危機處理流程(視學生需求擬定)</th></tr>
+                    <tr><th class="center" width="20%">行為發生階段</th><th class="center" width="60%">處理流程與策略</th><th class="center" width="20%">負責人員</th></tr>
+                    <tr><td class="center">行為前兆出現</td><td style="padding: 10px;">${crisisData.pre.s}</td><td class="center">${crisisData.pre.p}</td></tr>
+                    <tr><td class="center">行為高峰當下</td><td style="padding: 10px;">${crisisData.peak.s}</td><td class="center">${crisisData.peak.p}</td></tr>
+                    <tr><td class="center">行為高峰之後</td><td style="padding: 10px;">${crisisData.post.s}</td><td class="center">${crisisData.post.p}</td></tr>
+                </table>
+
+                <br clear="all" style="mso-special-character:line-break;page-break-before:always" />
+                
+                <h2>附件一：行為功能介入方案—次級預防策略參考表（1）</h2>
+                <table class="appendix-table">
+                    <tr><th class="center">前事處理與先兆中斷策略（A）</th><th class="center">行為教導策略（B）</th><th class="center">後果處理策略（C）</th></tr>
+                    <tr>
+                        <td>
+                            <b>●情境調整：</b><br>${a_demo}提供示範 ${a_cue}預告或提示<br>${a_praise_other}讚美及提示表現正向行為<br>${a_seat}調整座位、活動地點、物理環境<br>${a_struct}建立結構化環境(工作/課表/環境)<br>${a_peer}安排同儕志工<br>${a_ncr}安排非後效增強(NCR)<br>${a_sensory}感覺刺激替代、削弱<br>${a_contract}訂契約 ${a_rule}調整班規<br><br>
+                            <b>●課程調整：</b><br>${a_course_amt}份量與時間調整 ${a_course_amt}完成方式與評量<br>${a_course_amt}內容與難度調整<br><br>
+                            <b>●互動調整：</b><br>${a_interact_pos}提供正向互動的氛圍<br>${a_interact_pos}為個案建立良好的社會關係<br><br>
+                            <b>●生理調整：</b><br>${a_physio_rest}調整作息 ${a_physio_rest}調整睡眠<br>${a_physio_need}滿足生理需求 ${a_physio_med}評估就醫/用藥<br><br>
+                            <b>●先兆控制：</b><br>${a_pre_solve}協助解決問題 ${a_pre_shift}轉移注意<br>${a_pre_warn}告知行為後果提供選擇機會
+                        </td>
+                        <td>
+                            <b>●短期目標：</b><br>${b_alt}功能等值替代/替代行為<br><br>
+                            <b>●中長期目標：</b>(特殊需求領域課程)<br>${b_social}社會技巧 ${b_life}生活管理<br>${b_learn}學習策略 ${b_comm}溝通訓練<br>${b_comm}科技輔具應用<br><br>
+                            <b>● ${b_self}自我管理訓練</b><br><br>
+                            <b>●其他策略：</b><br>${b_relax}放鬆訓練<br>${b_psy}支持性心理治療<br>${b_psy}行為治療<br>${b_leisure}休閒生活訓練
+                        </td>
+                        <td>
+                            ${c_pos}正增強<br>${c_neg}負增強<br>${c_diff}區別性增強<br>${c_ext}消弱(不理會)<br>${c_sat}刺激的厭膩<br>${c_cost}反應代價(剝奪增強物、限制自由)<br>${c_iso}情境式隔離(隔離正增強物)<br>${c_rest}回歸原狀<br>${c_over}過度矯正<br>${c_block}反應阻擋(立刻肢體介入中斷)<br>${c_crisis}啟ٹی緊急處理系統
+                        </td>
+                    </tr>
+                </table>
+
+                <h2>附件二：行為功能介入方案—次級預防策略參考表（2）</h2>
+                <table class="appendix-table">
+                    <tr><th class="center" width="40%">前事處理與先兆控制策略</th><th class="center" width="30%">行為教導策略</th><th class="center" width="30%">後果處理策略</th></tr>
+                    <tr>
+                        <td>
+                            <b>A.個人相關因素</b><br>
+                            (1)生理: ${a_physio_med}醫藥 ${a_physio_rest}作息 ${a_physio_need}飲食<br>
+                            (2)心理: ${b_psy}諮商 ${b_relax}放鬆 ${b_social}社會技巧課<br>
+                            (3)認知: ${a_cog_talk}個別談話<br><br>
+                            <b>B.情境因素</b><br>
+                            (1)家庭: ${a_fam_interact}互動/教養調整 ${a_fam_interact}親職教育<br>
+                            (2)學校: ${a_seat}人事時地物調整 ${a_rule}一致管教 ${a_rule}調整班規 ${c_pos}建立增強制度 ${a_seat}環境/座位<br><br>
+                            <b>C.任務因素</b><br>
+                            ${a_contract}行為契約 ${a_course_amt}內容調整 ${a_course_amt}歷程/評量調整 ${a_course_amt}難度調整 ${a_peer}提供人力<br><br>
+                            <b>D.行為的先兆出現</b><br>
+                            ${a_cue}提示正向 ${a_pre_shift}轉移注意 ${b_relax}促進放鬆 ${a_pre_block}阻遏
+                        </td>
+                        <td>
+                            <b>(1)替代行為訓練：</b><br>
+                            ${b_alt}增加適當行為，減少不當行為。<br><br>
+                            <b>(2)相關行為訓練：</b><br>
+                            ${b_self}處理情緒技巧<br>${b_relax}呼吸/肌肉放鬆訓練<br>${a_pre_solve}問題解決訓練<br>${b_comm}溝通技巧訓練<br>${b_social}人際互動技巧<br>${b_social}處理衝突技巧<br>${b_life}學校/社區基本適應<br>${b_leisure}休閒/生活管理<br>${b_learn}專注力訓練
+                        </td>
+                        <td>
+                            <b>B.處理方式：</b><br>
+                            (1) ${c_diff}區別性增強<br>
+                            (2) ${c_ext}消弱<br>
+                            (3) ${c_cost}移除喜好刺激(負懲罰/反應代價)<br>
+                            (4) ${c_over}給予嫌惡刺激(自然/回歸/過度/阻擋)<br>
+                            (5) ${c_crisis}啟動緊急處理系統<br><br>
+                            <b>(正向鼓勵)：</b><br>
+                            ${c_pos}正增強<br>${c_neg}負增強
+                        </td>
+                    </tr>
+                </table>
+            </body></html>
+        `;
+    }
+
+    // 產生一般縣市通用格式 Word 內容 (包含行政支援與危機處理)
+    function generateGeneralFormat(sData, strategies, name, className, teacher, evalDateStr, cleanText, crisisData) {
+        let isGainInner = '□', isGainOuterPhys = '□', isGainOuterSoc = '□';
+        let isEscapeInner = '□', isEscapeOuterPhys = '□', isEscapeOuterSoc = '□';
+        
+        const funcText = sData.assumed_function || '';
+        if (funcText.includes('獲得') || funcText.includes('引起注意')) {
+            if (funcText.includes('內在') || funcText.includes('自我刺激')) isGainInner = '■';
+            else if (funcText.includes('物品') || funcText.includes('活動')) isGainOuterPhys = '■';
+            else isGainOuterSoc = '■';
+        } else if (funcText.includes('逃避') || funcText.includes('避免')) {
+             if (funcText.includes('內在') || funcText.includes('生理')) isEscapeInner = '■';
+            else if (funcText.includes('工作') || funcText.includes('任務')) isEscapeOuterPhys = '■';
+            else isEscapeOuterSoc = '■';
+        }
+
+        const formatListForTable = (list) => {
+            if (!list || list.length === 0) return '';
+            return list.map(item => `• ${cleanText(item)}`).join('<br><br>');
+        };
+
+        const docTitle = `行為功能介入方案`;
+        const tableCss = `
+            <style>
+                body { font-family: 'DFKai-SB', '標楷體', serif; line-height: 1.5; color: #000; font-size: 12pt; }
+                table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
+                table, th, td { border: 1px solid black; }
+                th, td { padding: 10px; text-align: left; vertical-align: middle; }
+                .center { text-align: center; }
+                h1 { font-size: 16pt; font-weight: bold; text-align: center; margin-bottom: 5px; }
+                .td-title { text-align: center; font-weight: bold; width: 15%; }
+            </style>
+        `;
+
+        // 判斷是否需要加入危機處理表格 (依據使用者選擇)
+        let crisisTableHtml = '';
+        if (crisisData && crisisData.pre && crisisData.pre.s !== '') {
+            crisisTableHtml = `
+                <br>
+                <table>
+                    <tr><th colspan="3" class="center">危機處理流程(視學生需求擬定)</th></tr>
+                    <tr><th class="center" width="20%">行為發生階段</th><th class="center" width="60%">處理流程與策略</th><th class="center" width="20%">負責人員</th></tr>
+                    <tr><td class="center">行為前兆出現</td><td style="padding: 10px;">${crisisData.pre.s}</td><td class="center">${crisisData.pre.p}</td></tr>
+                    <tr><td class="center">行為高峰當下</td><td style="padding: 10px;">${crisisData.peak.s}</td><td class="center">${crisisData.peak.p}</td></tr>
+                    <tr><td class="center">行為高峰之後</td><td style="padding: 10px;">${crisisData.post.s}</td><td class="center">${crisisData.post.p}</td></tr>
+                </table>
+            `;
+        }
+        
+        // 行政支援預設內容
+        const adminSupportText = `
+            <b>1. 課程與環境調整：</b>提供特殊需求領域或社會技巧課程；班級內座位調整及冷靜角設置。<br>
+            <b>2. 相關人力支援：</b>視需求申請特教學生助理人員協助。<br>
+            <b>3. 行政與危機處理：</b>若發生嚴重情緒或衝突，通報相關處室協助帶離個案、安撫情緒，並依據行為給予相應後果。<br>
+            <b>4. 專業人員：</b>視需求申請特教專業團隊服務或輔導活動。
+        `;
+
+        return `
+            <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+            <head><meta charset='utf-8'><title>${docTitle}</title>${tableCss}</head>
+            <body>
+                <h1>${docTitle}</h1>
+                <p>個案管理老師：${teacher} <span style="float:right;">評鑑/擬訂日期：${evalDateStr}</span></p>
+                <table>
+                    <tr>
+                        <td class="td-title">學生姓名</td><td width="35%">${name}</td>
+                        <td class="td-title">班級</td><td width="35%">${className}</td>
+                    </tr>
+                    <tr>
+                        <td class="td-title">行為問題<br>界定</td>
+                        <td colspan="3">${cleanText(sData.problem_behavior)}</td>
+                    </tr>
+                    <tr>
+                        <td class="td-title">行為功能</td>
+                        <td colspan="3">
+                            ${isGainInner}獲得內在刺激：<br>
+                            &nbsp;&nbsp;&nbsp;獲得外在刺激：${isGainOuterPhys}特定/物理刺激 &nbsp;&nbsp; ${isGainOuterSoc}社會刺激<br><br>
+                            ${isEscapeInner}逃避內在刺激：<br>
+                            &nbsp;&nbsp;&nbsp;逃避外在刺激：${isEscapeOuterPhys}特定/物理刺激 &nbsp;&nbsp; ${isEscapeOuterSoc}社會刺激<br><br>
+                            (分析參考：${cleanText(sData.assumed_function)})
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="td-title">行為介入<br>目標</td>
+                        <td colspan="3">
+                            <b>期待行為：</b>${cleanText(sData.desired_behavior)}<br>
+                            <b>替代行為：</b>${cleanText(sData.alternative_behavior)}
+                        </td>
+                    </tr>
+                </table>
+                <table>
+                    <tr>
+                        <th class="center" width="15%">策略</th>
+                        <th class="center" width="45%">執行方式</th>
+                        <th class="center" width="15%">負責人</th>
+                        <th class="center" width="25%">執行結果</th>
+                    </tr>
+                    <tr><td class="center font-bold">前事調整</td><td>${formatListForTable(strategies.antecedent_strategies)}</td><td></td><td></td></tr>
+                    <tr><td class="center font-bold">行為教導</td><td>${formatListForTable(strategies.teaching_strategies)}</td><td></td><td></td></tr>
+                    <tr><td class="center font-bold">後果控制</td><td>${formatListForTable(strategies.consequence_strategies)}</td><td></td><td></td></tr>
+                </table>
+                <br>
+                <table>
+                    <tr>
+                        <td class="td-title">本方案所需<br>行政支援</td>
+                        <td>${adminSupportText}</td>
+                    </tr>
+                </table>
+                ${crisisTableHtml}
+            </body></html>
+        `;
+    }
+
+    // Initialize application on load
+    document.addEventListener('DOMContentLoaded', () => {
+        loadDraftFromStorage();
+    });
+
+</script>
+
+</body>
+</html>

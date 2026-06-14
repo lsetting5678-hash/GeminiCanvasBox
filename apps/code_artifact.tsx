@@ -1,0 +1,555 @@
+import React, { useState, useEffect } from 'react';
+
+// 定義所有分數與小數配對資料
+const pairsData = [
+  { id: 1, fraction: '1/2', decimal: '0.5' },
+  { id: 2, fraction: '1/4', decimal: '0.25' },
+  { id: 3, fraction: '3/4', decimal: '0.75' },
+  { id: 4, fraction: '1/5', decimal: '0.2' },
+  { id: 5, fraction: '1/8', decimal: '0.125' },
+  { id: 6, fraction: '3/8', decimal: '0.375' },
+  { id: 7, fraction: '5/8', decimal: '0.625' },
+  { id: 8, fraction: '7/8', decimal: '0.875' },
+];
+
+// 獎金階梯
+const prizeLadder = [
+  '$1,000', '$2,000', '$3,000', '$5,000', '$10,000', '$20,000', '$40,000', '$80,000',
+  '$150,000', '$250,000', '$350,000', '$500,000', '$650,000', '$800,000', '$900,000', '$1,000,000',
+];
+
+export default function App() {
+  // 全局遊戲狀態: 'menu', 'playing_millionaire', 'playing_practice', 'gameover_millionaire', 'victory_millionaire', 'victory_practice'
+  const [gameState, setGameState] = useState('menu'); 
+
+  // --- 百萬挑戰賽 (Millionaire) 狀態 ---
+  const [questions, setQuestions] = useState([]);
+  const [currentQIndex, setCurrentQIndex] = useState(0);
+  const [selectedOption, setSelectedOption] = useState(null);
+  const [revealStatus, setRevealStatus] = useState(false);
+  const [showCorrectEffect, setShowCorrectEffect] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(10);
+  const [isTimeUp, setIsTimeUp] = useState(false);
+
+  // --- 撿紅點練習模式 (Practice) 狀態 ---
+  const [tableCards, setTableCards] = useState([]); // 桌面上的牌 (小數)
+  const [handCards, setHandCards] = useState([]);   // 玩家手牌 (分數)
+  const [activeHandCardId, setActiveHandCardId] = useState(null); // 目前選中的手牌
+  const [errorCardId, setErrorCardId] = useState(null); // 配對錯誤時震動的牌
+
+  // 載入彩帶特效庫 (canvas-confetti)
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js';
+    script.async = true;
+    document.body.appendChild(script);
+    return () => document.body.removeChild(script);
+  }, []);
+
+  // 新增：通用語音提示函數
+  const speakText = (text) => {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel(); // 唸新的句子前先中斷舊的
+      const speech = new SpeechSynthesisUtterance(text);
+      speech.lang = 'zh-TW';
+      speech.rate = 1.2;
+      window.speechSynthesis.speak(speech);
+    }
+  };
+
+  // 新增：分數轉中文讀音輔助函數 (確保唸出 "二分之一" 而非 "一斜線二")
+  const fractionToChinese = (fractionStr) => {
+    if (!fractionStr.includes('/')) return fractionStr;
+    const [num, den] = fractionStr.split('/');
+    const zhNums = {'1':'一', '2':'二', '3':'三', '4':'四', '5':'五', '6':'六', '7':'七', '8':'八'};
+    return `${zhNums[den] || den}分之${zhNums[num] || num}`;
+  };
+
+  // 激勵語音函數
+  const playEncourageSpeech = () => {
+    const encouragePhrases = ['太棒了！', '非常厲害！', '完全正確！', '繼續保持！', '好極了！', '你真棒！'];
+    const randomPhrase = encouragePhrases[Math.floor(Math.random() * encouragePhrases.length)];
+    speakText(randomPhrase);
+  };
+
+  // 播放歡呼音效
+  const playCheerSound = () => {
+    const cheerSound = new Audio('https://actions.google.com/sounds/v1/crowds/light_crowd_cheer_and_applause.ogg');
+    cheerSound.volume = 0.5;
+    cheerSound.play().catch(e => console.log('音效播放失敗:', e));
+  };
+
+  // ==========================================
+  //         百萬挑戰賽 (Millionaire Mode)
+  // ==========================================
+  
+  // 計時器邏輯 (僅在百萬挑戰賽運作)
+  useEffect(() => {
+    if (gameState !== 'playing_millionaire' || selectedOption !== null || revealStatus) return;
+
+    if (timeLeft === 0) {
+      setIsTimeUp(true);
+      setRevealStatus(true);
+      setTimeout(() => setGameState('gameover_millionaire'), 2500);
+      return;
+    }
+
+    const timerId = setInterval(() => setTimeLeft((prev) => prev - 1), 1000);
+    return () => clearInterval(timerId);
+  }, [timeLeft, gameState, selectedOption, revealStatus]);
+
+  const startMillionaireMode = () => {
+    let allQuestions = [];
+    pairsData.forEach((pair) => {
+      // 小數變分數
+      const wrongOptionsDecToFrac = pairsData.filter((p) => p.id !== pair.id).sort(() => Math.random() - 0.5).slice(0, 3).map((p) => p.fraction);
+      allQuestions.push({ questionValue: pair.decimal, correctValue: pair.fraction, options: [pair.fraction, ...wrongOptionsDecToFrac].sort(() => Math.random() - 0.5), questionType: '找分數' });
+      // 分數變小數
+      const wrongOptionsFracToDec = pairsData.filter((p) => p.id !== pair.id).sort(() => Math.random() - 0.5).slice(0, 3).map((p) => p.decimal);
+      allQuestions.push({ questionValue: pair.fraction, correctValue: pair.decimal, options: [pair.decimal, ...wrongOptionsFracToDec].sort(() => Math.random() - 0.5), questionType: '找小數' });
+    });
+
+    setQuestions(allQuestions.sort(() => Math.random() - 0.5)); // 打亂16題
+    setCurrentQIndex(0);
+    setSelectedOption(null);
+    setRevealStatus(false);
+    setTimeLeft(10);
+    setIsTimeUp(false);
+    setGameState('playing_millionaire');
+  };
+
+  const handleOptionClick = (option) => {
+    if (selectedOption || revealStatus) return;
+    setSelectedOption(option);
+
+    setTimeout(() => {
+      setRevealStatus(true);
+      if (option === questions[currentQIndex].correctValue) {
+        setShowCorrectEffect(true);
+        playCheerSound();
+        playEncourageSpeech();
+
+        if (window.confetti) {
+          window.confetti({ particleCount: 150, spread: 100, origin: { y: 0.5 }, colors: ['#FFD700', '#FFA500', '#00FF00', '#1E90FF'] });
+        }
+
+        setTimeout(() => {
+          setShowCorrectEffect(false);
+          setRevealStatus(false);
+          setSelectedOption(null);
+          
+          if (currentQIndex === 15) {
+            setGameState('victory_millionaire');
+            if (window.confetti) {
+              const end = Date.now() + 3000;
+              const frame = () => {
+                window.confetti({ particleCount: 5, angle: 60, spread: 55, origin: { x: 0 }, colors: ['#FFD700', '#FFA500'] });
+                window.confetti({ particleCount: 5, angle: 120, spread: 55, origin: { x: 1 }, colors: ['#FFD700', '#FFA500'] });
+                if (Date.now() < end) requestAnimationFrame(frame);
+              };
+              frame();
+            }
+          } else {
+            setCurrentQIndex((prev) => prev + 1);
+            setTimeLeft(10);
+          }
+        }, 2000);
+      } else {
+        setTimeout(() => setGameState('gameover_millionaire'), 2500);
+      }
+    }, 1500);
+  };
+
+  // ==========================================
+  //         撿紅點練習模式 (Practice Mode)
+  // ==========================================
+
+  const startPracticeMode = () => {
+    // 準備桌面牌 (小數)
+    const tCards = pairsData.map(p => ({ uniqueId: `t_${p.id}`, pairId: p.id, value: p.decimal, isMatched: false }));
+    // 準備手牌 (分數)
+    const hCards = pairsData.map(p => ({ uniqueId: `h_${p.id}`, pairId: p.id, value: p.fraction, isMatched: false }));
+
+    setTableCards(tCards.sort(() => Math.random() - 0.5));
+    setHandCards(hCards.sort(() => Math.random() - 0.5));
+    setActiveHandCardId(null);
+    setErrorCardId(null);
+    setGameState('playing_practice');
+
+    // 加入遊戲開始語音引導
+    setTimeout(() => speakText('開始撿紅點練習，請先點選下方的手牌，再去吃掉上方的小數吧！'), 500);
+  };
+
+  const handleHandCardSelect = (card) => {
+    if (card.isMatched) return;
+    const isSelecting = card.uniqueId !== activeHandCardId;
+    setActiveHandCardId(isSelecting ? card.uniqueId : null); // Toggle 選擇
+
+    if (isSelecting) {
+      // 選牌時語音朗讀該分數
+      speakText(fractionToChinese(card.value));
+    }
+  };
+
+  const handleTableCardClick = (tableCard) => {
+    if (tableCard.isMatched) return;
+    if (!activeHandCardId) {
+      // 提示玩家要先選牌
+      speakText('請先從下方選取一張手牌');
+      setErrorCardId(tableCard.uniqueId);
+      setTimeout(() => setErrorCardId(null), 400);
+      return;
+    }
+
+    const activeHandCard = handCards.find(c => c.uniqueId === activeHandCardId);
+    
+    // 檢查是否配對成功
+    if (activeHandCard.pairId === tableCard.pairId) {
+      // 配對成功！吃掉這組牌
+      setTableCards(prev => prev.map(c => c.uniqueId === tableCard.uniqueId ? { ...c, isMatched: true } : c));
+      setHandCards(prev => prev.map(c => c.uniqueId === activeHandCard.uniqueId ? { ...c, isMatched: true } : c));
+      setActiveHandCardId(null);
+      
+      playEncourageSpeech(); // 答對語音
+      if (window.confetti) {
+        window.confetti({ particleCount: 50, spread: 60, origin: { y: 0.8 } }); // 小規模彩帶
+      }
+
+      // 檢查是否全部吃完
+      const unmatchedTable = tableCards.filter(c => !c.isMatched);
+      if (unmatchedTable.length === 1) { // 目前這張也配對了，所以只剩1張代表全破
+        setTimeout(() => {
+          setGameState('victory_practice');
+          speakText('恭喜你，全部配對成功！');
+          playCheerSound();
+          if (window.confetti) window.confetti({ particleCount: 200, spread: 160 });
+        }, 800);
+      }
+    } else {
+      // 配對失敗 (震動提示)
+      speakText('哎呀，不對喔，再找找看');
+      setErrorCardId(tableCard.uniqueId);
+      setTimeout(() => setErrorCardId(null), 400);
+      setActiveHandCardId(null); // 清除選擇
+    }
+  };
+
+  // ==========================================
+  //                  UI 渲染
+  // ==========================================
+
+  const renderMathValue = (valueStr, isQuestion = false) => {
+    if (valueStr.includes('/')) {
+      const [numerator, denominator] = valueStr.split('/');
+      return (
+        <div className="inline-flex flex-col items-center justify-center font-bold align-middle mx-2">
+          <span className={`${isQuestion ? 'text-4xl sm:text-5xl' : 'text-xl sm:text-3xl'} leading-none`}>{numerator}</span>
+          <div className={`w-full border-t-[3px] ${isQuestion ? 'border-white my-2' : 'border-current my-1'}`}></div>
+          <span className={`${isQuestion ? 'text-4xl sm:text-5xl' : 'text-xl sm:text-3xl'} leading-none`}>{denominator}</span>
+        </div>
+      );
+    }
+    return <span className={`${isQuestion ? 'text-5xl sm:text-6xl' : 'text-2xl sm:text-4xl'} font-bold mx-2`}>{valueStr}</span>;
+  };
+
+  // --- 畫面: 主選單 ---
+  if (gameState === 'menu') {
+    return (
+      <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-4 text-white font-sans relative overflow-hidden">
+        {/* 背景裝飾 */}
+        <div className="absolute top-10 left-10 text-6xl opacity-10 font-black">1/8</div>
+        <div className="absolute bottom-20 right-10 text-6xl opacity-10 font-black">0.875</div>
+        
+        <div className="max-w-2xl text-center space-y-8 animate-fade-in-up z-10">
+          <h1 className="text-5xl sm:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-b from-white to-blue-300 drop-shadow-lg mb-2">
+            分數小數大作戰
+          </h1>
+          <p className="text-lg text-slate-300 max-w-lg mx-auto leading-relaxed mb-8">
+            請選擇你要遊玩的模式：
+          </p>
+
+          <div className="flex flex-col sm:flex-row gap-6 justify-center items-center mt-8">
+            {/* 練習模式按鈕 */}
+            <button
+              onClick={startPracticeMode}
+              className="group relative flex flex-col items-center justify-center p-6 w-64 h-48 bg-slate-800 border-2 border-rose-400 rounded-3xl hover:bg-rose-900/40 transition-all duration-300 hover:scale-105 hover:shadow-[0_0_30px_rgba(244,63,94,0.4)] cursor-pointer"
+            >
+              <div className="text-4xl mb-3">🃏</div>
+              <h2 className="text-2xl font-bold text-rose-300 mb-2">撿紅點練習</h2>
+              <p className="text-sm text-slate-400">無時間壓力，配對吃牌</p>
+            </button>
+
+            {/* 百萬模式按鈕 */}
+            <button
+              onClick={startMillionaireMode}
+              className="group relative flex flex-col items-center justify-center p-6 w-64 h-48 bg-slate-800 border-2 border-yellow-500 rounded-3xl hover:bg-yellow-900/50 transition-all duration-300 hover:scale-105 hover:shadow-[0_0_30px_rgba(234,179,8,0.5)] cursor-pointer"
+            >
+              <div className="text-4xl mb-3">💰</div>
+              <h2 className="text-2xl font-bold text-yellow-400 mb-2">百萬獎金賽</h2>
+              <p className="text-sm text-slate-400">10秒限時，刺激挑戰</p>
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // --- 畫面: 撿紅點練習模式 ---
+  if (gameState === 'playing_practice') {
+    return (
+      <div className="min-h-screen bg-orange-50 flex flex-col font-sans text-slate-800 pb-8">
+        {/* 頂部標題 */}
+        <div className="w-full bg-white/80 backdrop-blur-sm p-4 flex justify-between items-center shadow-sm border-b border-orange-100">
+          <div className="text-xl font-extrabold text-orange-500 flex items-center gap-2">
+            <span>🃏 撿紅點練習</span>
+          </div>
+          <button onClick={() => setGameState('menu')} className="px-5 py-2 bg-orange-100 hover:bg-orange-200 text-orange-700 rounded-full text-sm font-bold transition-colors">
+            返回選單
+          </button>
+        </div>
+
+        <div className="flex-1 flex flex-col max-w-5xl mx-auto w-full p-4 gap-6 sm:gap-8 mt-4">
+          
+          {/* 桌面區 (Table - 小數) */}
+          <div className="flex-1 bg-white/60 rounded-[2rem] p-6 border-[3px] border-orange-100 shadow-[inset_0_4px_20px_rgba(251,146,60,0.1)] flex flex-col relative">
+            <h3 className="text-orange-400 text-center font-black tracking-widest mb-4 uppercase flex items-center justify-center gap-2">
+              <span className="w-8 h-[2px] bg-orange-200"></span>
+              桌面牌
+              <span className="w-8 h-[2px] bg-orange-200"></span>
+            </h3>
+            <div className="flex-1 grid grid-cols-2 sm:grid-cols-4 gap-4 place-items-center content-center">
+              {tableCards.map(card => {
+                const isMatched = card.isMatched;
+                const isError = errorCardId === card.uniqueId;
+                
+                return (
+                  <div
+                    key={card.uniqueId}
+                    onClick={() => handleTableCardClick(card)}
+                    className={`
+                      w-full aspect-[4/3] max-w-[160px] flex items-center justify-center rounded-2xl transition-all duration-300
+                      ${isMatched ? 'opacity-0 scale-50 pointer-events-none' : 'opacity-100 scale-100 cursor-pointer shadow-sm hover:shadow-md hover:-translate-y-2 hover:border-orange-300'}
+                      ${isError ? 'animate-shake bg-red-100 border-2 border-red-400 text-red-600' : 'bg-white border-b-4 border-slate-100 text-indigo-900'}
+                    `}
+                  >
+                    {!isMatched && (
+                      <span className="text-3xl sm:text-4xl font-extrabold">{card.value}</span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            {/* 中間提示字 */}
+            {!activeHandCardId && tableCards.some(c => !c.isMatched) && (
+              <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+                <span className="bg-orange-400/90 text-white px-8 py-3 rounded-full font-bold animate-pulse backdrop-blur-sm shadow-lg">
+                  👇 請先從下方選取一張手牌
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* 手牌區 (Hand - 分數) */}
+          <div className="h-[230px] bg-rose-50/80 rounded-[2rem] p-4 sm:p-6 border-[3px] border-rose-100 shadow-sm relative flex flex-col">
+            <h3 className="text-rose-400 text-center font-black tracking-widest mb-3 uppercase flex items-center justify-center gap-2">
+              <span className="w-8 h-[2px] bg-rose-200"></span>
+              你的手牌
+              <span className="w-8 h-[2px] bg-rose-200"></span>
+            </h3>
+            <div className="flex-1 flex flex-wrap justify-center gap-3 sm:gap-4 overflow-y-auto pb-2">
+              {handCards.map(card => {
+                if (card.isMatched) return null; // 吃掉的手牌直接消失
+                const isActive = activeHandCardId === card.uniqueId;
+
+                return (
+                  <button
+                    key={card.uniqueId}
+                    onClick={() => handleHandCardSelect(card)}
+                    className={`
+                      relative w-[80px] sm:w-[100px] aspect-[3/4] rounded-2xl flex items-center justify-center transition-all duration-300 border-2
+                      ${isActive 
+                        ? 'bg-rose-400 border-rose-400 -translate-y-5 shadow-[0_15px_25px_rgba(244,63,94,0.3)] text-white scale-105' 
+                        : 'bg-white border-rose-100 text-rose-600 shadow-sm hover:-translate-y-2 hover:border-rose-300 hover:bg-rose-50'}
+                    `}
+                  >
+                    {isActive && <div className="absolute -top-4 text-2xl animate-bounce drop-shadow-md">👆</div>}
+                    {renderMathValue(card.value)}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+        </div>
+      </div>
+    );
+  }
+
+  // --- 畫面: 百萬挑戰賽 (Playing) ---
+  if (gameState === 'playing_millionaire') {
+    const currentQ = questions[currentQIndex];
+    const optionLabels = ['A', 'B', 'C', 'D'];
+
+    return (
+      <div className={`min-h-screen relative overflow-hidden transition-colors duration-500 flex flex-col font-sans ${showCorrectEffect ? 'bg-green-900' : 'bg-slate-900'}`}>
+        {showCorrectEffect && (
+          <div className="absolute inset-0 pointer-events-none flex items-center justify-center z-50 animate-pulse">
+            <div className="text-9xl text-green-400 font-black opacity-30 blur-sm scale-150">✓ CORRECT</div>
+          </div>
+        )}
+
+        <div className="w-full bg-slate-800 border-b border-slate-700 p-3 flex justify-between items-center text-white shadow-md z-10">
+          <button onClick={() => setGameState('menu')} className="text-sm bg-slate-700 hover:bg-slate-600 px-3 py-1 rounded transition">離開</button>
+          <div className="text-sm text-slate-400 sm:hidden">第 <span className="text-white font-bold">{currentQIndex + 1}/16</span> 題</div>
+          <div className="text-yellow-400 font-bold text-xl drop-shadow-[0_0_5px_rgba(250,204,21,0.8)] sm:hidden">
+            {prizeLadder[currentQIndex]}
+          </div>
+        </div>
+
+        <div className="flex-1 flex w-full max-w-6xl mx-auto z-10">
+          <div className="flex-1 flex flex-col justify-center items-center p-4 sm:p-8 w-full">
+            <div className="w-full max-w-3xl flex flex-col items-center">
+              
+              {/* 計時器 */}
+              <div className={`mb-6 text-2xl sm:text-3xl font-black tracking-widest flex items-center gap-2 transition-colors duration-300 ${timeLeft <= 3 ? 'text-red-500 animate-bounce drop-shadow-[0_0_10px_rgba(239,68,68,0.8)]' : 'text-white'}`}>
+                ⏱️ {timeLeft} 秒
+              </div>
+
+              {/* 題目框 */}
+              <div className="w-full relative mb-12 animate-fade-in text-center">
+                <div className="absolute inset-0 bg-blue-500 blur-xl opacity-20 rounded-[100px]"></div>
+                <div className="relative bg-gradient-to-b from-blue-900 to-slate-900 border-2 border-blue-400 rounded-[50px] sm:rounded-[100px] p-8 sm:p-12 shadow-2xl flex flex-col items-center justify-center min-h-[200px]">
+                  <span className="text-blue-300 font-semibold mb-4 tracking-wider text-sm sm:text-base uppercase">Question {currentQIndex + 1}</span>
+                  <div className="text-white flex items-center justify-center flex-wrap gap-4 text-center">
+                    <span className="text-2xl sm:text-3xl text-slate-200">請問與</span>
+                    <span className="text-yellow-400 drop-shadow-[0_0_10px_rgba(250,204,21,0.5)]">{renderMathValue(currentQ.questionValue, true)}</span>
+                    <span className="text-2xl sm:text-3xl text-slate-200">等值的數是多少？</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* 選項網格 */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 w-full px-2 sm:px-8">
+                {currentQ.options.map((option, idx) => {
+                  let btnStateClass = "bg-slate-800 border-blue-500 hover:bg-blue-800 text-white cursor-pointer";
+                  if (selectedOption === option && !revealStatus) btnStateClass = "bg-yellow-600 border-yellow-400 text-white shadow-[0_0_20px_rgba(202,138,4,0.6)] scale-105";
+                  else if (revealStatus) {
+                    if (option === currentQ.correctValue) btnStateClass = "bg-green-600 border-green-400 text-white shadow-[0_0_30px_rgba(22,163,74,0.8)] scale-105 animate-pulse z-10";
+                    else if (selectedOption === option && option !== currentQ.correctValue) btnStateClass = "bg-red-600 border-red-400 text-slate-300 opacity-80";
+                    else if (isTimeUp && option === currentQ.correctValue) btnStateClass = "bg-green-600 border-green-400 text-white shadow-[0_0_30px_rgba(22,163,74,0.8)] scale-105 animate-pulse z-10";
+                    else btnStateClass = "bg-slate-800 border-slate-700 text-slate-500 opacity-50";
+                  }
+
+                  return (
+                    <button key={idx} onClick={() => handleOptionClick(option)} disabled={selectedOption !== null || revealStatus} className={`relative flex items-center p-4 sm:p-6 rounded-full border-2 transition-all duration-300 w-full group ${btnStateClass}`}>
+                      <div className="absolute left-6 text-yellow-400 font-bold text-xl sm:text-2xl w-8">{optionLabels[idx]}:</div>
+                      <div className="flex-1 flex justify-center items-center h-[60px]">{renderMathValue(option)}</div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* 右側獎金階梯 */}
+          <div className="hidden sm:flex w-64 border-l border-slate-700 bg-slate-900/50 p-6 flex-col justify-end">
+            <div className="text-slate-400 font-bold text-center mb-6 uppercase tracking-widest border-b border-slate-700 pb-4">Prize Ladder</div>
+            <div className="flex flex-col-reverse gap-1">
+              {prizeLadder.map((prize, idx) => {
+                const isCurrent = idx === currentQIndex && gameState === 'playing_millionaire';
+                const isPassed = idx < currentQIndex;
+                let itemClass = "flex justify-between items-center px-3 py-1.5 rounded-lg font-bold transition-all duration-300 ";
+                if (isCurrent) itemClass += "bg-yellow-500 text-slate-900 shadow-[0_0_15px_rgba(234,179,8,0.8)] scale-105 transform z-10";
+                else if (isPassed) itemClass += "text-yellow-600 opacity-60";
+                else itemClass += (idx === 4 || idx === 9 || idx === 15) ? "text-slate-100" : "text-slate-400";
+                return (
+                  <div key={idx} className={itemClass}>
+                    <span className="text-xs w-6">{idx + 1}</span>
+                    <span className="text-sm tracking-wider">{prize}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // --- 畫面: 百萬賽失敗 ---
+  if (gameState === 'gameover_millionaire') {
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
+        <div className="text-center animate-fade-in-up bg-slate-800/80 p-12 rounded-3xl border-2 border-slate-700 shadow-2xl backdrop-blur-sm z-20">
+          <div className="text-red-500 text-8xl mb-6">{isTimeUp ? '⏰' : '❌'}</div>
+          <h2 className="text-4xl sm:text-5xl font-bold text-white mb-4">{isTimeUp ? '時間到！' : '挑戰失敗'}</h2>
+          <div className="text-xl text-slate-300 mb-8 leading-relaxed">
+            很可惜，正確答案是 {renderMathValue(questions[currentQIndex].correctValue)}。<br/>
+            你這次獲得的保底獎金是：
+            <span className="block text-4xl text-yellow-500 font-bold mt-4 drop-shadow-md">
+              {currentQIndex === 0 ? '$0' : prizeLadder[currentQIndex - 1]}
+            </span>
+          </div>
+          <div className="flex justify-center gap-4">
+            <button onClick={() => setGameState('menu')} className="px-8 py-3 bg-slate-600 hover:bg-slate-500 text-white text-xl font-bold rounded-full transition-all">回主選單</button>
+            <button onClick={startMillionaireMode} className="px-8 py-3 bg-blue-600 hover:bg-blue-500 text-white text-xl font-bold rounded-full shadow-lg transition-all hover:scale-105">再挑戰一次</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // --- 畫面: 百萬賽勝利 ---
+  if (gameState === 'victory_millionaire') {
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4 relative">
+        <div className="text-center animate-fade-in-up bg-yellow-900/40 p-8 sm:p-16 rounded-3xl border-4 border-yellow-500 shadow-[0_0_100px_rgba(234,179,8,0.3)] backdrop-blur-md z-20 w-full max-w-2xl relative">
+          <div className="absolute top-10 left-10 text-4xl animate-bounce">✨</div>
+          <div className="absolute top-20 right-10 text-5xl animate-pulse" style={{animationDelay: '0.5s'}}>💰</div>
+          <h2 className="text-5xl sm:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-b from-yellow-200 to-yellow-600 mb-6 drop-shadow-lg">恭喜成為百萬富翁！</h2>
+          <p className="text-2xl text-yellow-100 mb-8">你完美掌握了所有的分數與小數互換！</p>
+          <div className="text-6xl sm:text-8xl font-black text-yellow-400 drop-shadow-[0_0_30px_rgba(250,204,21,1)] mb-12">$1,000,000</div>
+          <button onClick={() => setGameState('menu')} className="px-10 py-4 bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-500 hover:to-orange-500 text-white text-2xl font-bold rounded-full shadow-xl transition-all hover:scale-110">帶走獎金回選單</button>
+        </div>
+      </div>
+    );
+  }
+
+  // --- 畫面: 練習模式勝利 ---
+  if (gameState === 'victory_practice') {
+    return (
+      <div className="min-h-screen bg-orange-50 flex items-center justify-center p-4 relative">
+        <div className="text-center animate-fade-in-up bg-white p-8 sm:p-16 rounded-[3rem] border-[4px] border-rose-200 shadow-[0_20px_60px_rgba(251,146,60,0.15)] z-20 w-full max-w-2xl">
+          <div className="text-8xl mb-6 animate-bounce">🏆</div>
+          <h2 className="text-5xl sm:text-6xl font-black text-rose-500 mb-6 drop-shadow-sm">練習完成！</h2>
+          <p className="text-2xl text-slate-600 mb-12 font-medium leading-relaxed">
+            桌上的牌已經被你清空了，你的基本功非常扎實！<br/>現在準備好挑戰百萬獎金了嗎？
+          </p>
+          <div className="flex flex-col sm:flex-row justify-center gap-4 sm:gap-6">
+            <button onClick={startPracticeMode} className="px-8 py-4 bg-rose-100 hover:bg-rose-200 text-rose-600 text-xl font-bold rounded-full transition-all shadow-sm">再練習一次</button>
+            <button onClick={startMillionaireMode} className="px-8 py-4 bg-gradient-to-r from-orange-400 to-rose-400 hover:from-orange-500 hover:to-rose-500 text-white text-xl font-bold rounded-full shadow-lg transition-all hover:scale-105 hover:shadow-orange-300/50">挑戰百萬獎金</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Tailwind 自訂動畫定義 (包含 shake 震動特效)
+  return (
+    <>
+      <style dangerouslySetInnerHTML={{__html: `
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes shake {
+          0%, 100% { transform: translateX(0); }
+          25% { transform: translateX(-8px) rotate(-3deg); }
+          50% { transform: translateX(8px) rotate(3deg); }
+          75% { transform: translateX(-8px) rotate(-3deg); }
+        }
+        .animate-fade-in-up { animation: fadeInUp 0.6s ease-out forwards; }
+        .animate-fade-in { animation: fadeIn 0.8s ease-out forwards; }
+        .animate-shake { animation: shake 0.4s ease-in-out; }
+      `}} />
+    </>
+  );
+}

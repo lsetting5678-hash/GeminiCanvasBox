@@ -1,0 +1,1576 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>時空切切樂：單位化聚大冒險</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&family=Noto+Sans+TC:wght@400;700&display=swap');
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Nunito', 'Noto Sans TC', sans-serif;
+            background-color: #f0f8ff;
+            /* 移除容易造成小螢幕跑位的 flex 屬性，改用 fixed 完全鎖定視窗 */
+            position: fixed;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            color: #333;
+        }
+
+        #game-container {
+            width: 800px;
+            height: 600px;
+            background: #fff;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%); /* 絕對置中基準點 */
+            overflow: hidden;
+        }
+
+        /* 選單介面 */
+        #menu-screen, #game-over-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start; /* 改為靠上對齊，避免內容過長時上下被切斷 */
+            align-items: center;
+            z-index: 10;
+            overflow-y: auto; /* 加入垂直滾動保護 */
+            padding-top: 30px;
+            padding-bottom: 30px;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            font-size: 32px; /* 稍微縮小 */
+            color: #ff6b6b;
+            text-shadow: 2px 2px 0px #fff;
+            margin-top: 0;
+            margin-bottom: 15px; /* 縮小邊距 */
+            flex-shrink: 0; /* 防止被擠壓 */
+        }
+
+        .form-group {
+            background: rgba(255,255,255,0.8);
+            padding: 10px 20px; /* 縮小內距，讓排版更緊湊 */
+            border-radius: 12px;
+            margin-bottom: 8px; /* 縮小間距 */
+            width: 80%;
+            max-width: 500px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        select, button {
+            font-size: 15px; /* 稍微縮小字體 */
+            padding: 6px 10px; /* 縮小按鈕內距 */
+            border-radius: 8px;
+            border: 2px solid #ff9f43;
+            font-family: inherit;
+            outline: none;
+            max-width: 65%; /* 避免選項文字太長破壞排版 */
+        }
+
+        button.start-btn, button.restart-btn {
+            margin-top: 15px;
+            margin-bottom: 10px;
+            background-color: #ff9f43;
+            color: white;
+            font-size: 22px; /* 稍微縮小 */
+            font-weight: bold;
+            padding: 10px 40px;
+            border: none;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            border-radius: 50px;
+            box-shadow: 0 5px 15px rgba(255, 159, 67, 0.4);
+            flex-shrink: 0;
+        }
+
+        /* 遊戲介面 */
+        #game-screen {
+            display: none;
+            width: 100%;
+            height: 100%;
+            position: relative;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100" height="100" fill="%23e0f7fa"/><circle cx="50" cy="50" r="2" fill="%23b2ebf2"/></svg>');
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* 頂部資訊列 */
+        #hud {
+            position: absolute;
+            top: 10px;
+            left: 20px;
+            right: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 20px;
+            font-weight: bold;
+            color: #00838f;
+            pointer-events: none; /* 讓點擊穿透到 Canvas */
+        }
+
+        #home-btn {
+            pointer-events: auto;
+            background-color: #ffeb3b;
+            border: 2px solid #fbc02d;
+            border-radius: 10px;
+            padding: 5px 15px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            cursor: pointer;
+            transition: transform 0.2s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        #home-btn:hover {
+            transform: scale(1.05);
+            background-color: #fdd835;
+        }
+
+        /* 操作面板區 */
+        #ui-panel {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 15px;
+            background: rgba(255,255,255,0.9);
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .input-box {
+            font-size: 28px;
+            width: 150px; /* 增加寬度以容納容積單位百萬等級的數字 */
+            text-align: center;
+            border: 3px solid #4dd0e1;
+            border-radius: 10px;
+            color: #006064;
+            font-weight: bold;
+        }
+
+        .unit-label {
+            font-size: 24px;
+            align-self: center;
+            font-weight: bold;
+            color: #00838f;
+        }
+
+        #submit-btn {
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 10px;
+            padding: 0 20px;
+        }
+        #submit-btn:hover { background-color: #45a049; }
+
+        /* 提示文字 */
+        #hint-text {
+            position: absolute;
+            bottom: 120px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 24px;
+            color: #d32f2f;
+            font-weight: bold;
+            background: rgba(255,255,255,0.8);
+            padding: 5px 15px;
+            border-radius: 10px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        /* 結算畫面 */
+        #game-over-screen > *:not(#fireworksCanvas) {
+            z-index: 1; /* 確保所有文字與按鈕都在煙花上方 */
+            position: relative;
+        }
+
+        .score-display {
+            font-size: 48px;
+            color: #2e7d32;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+
+        @keyframes bounceIn {
+            0% { transform: scale(0.1); opacity: 0; }
+            60% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(1); }
+        }
+
+        /* 數字鍵盤 */
+        #numpad-container {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 190px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 12px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            z-index: 5;
+        }
+
+        .numpad-btn {
+            font-size: 22px;
+            padding: 10px 0;
+            border-radius: 10px;
+            border: 2px solid #b2ebf2;
+            background: #e0f7fa;
+            color: #00838f;
+            font-weight: bold;
+            font-family: 'Nunito', sans-serif;
+            cursor: pointer;
+            transition: all 0.1s;
+        }
+
+        .numpad-btn:active {
+            transform: scale(0.95);
+            background: #b2ebf2;
+        }
+
+        .btn-del {
+            background: #ffebee;
+            border-color: #ffcdd2;
+            color: #d32f2f;
+        }
+
+        .btn-enter {
+            background: #e8f5e9;
+            border-color: #c8e6c9;
+            color: #2e7d32;
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <!-- 1. 設定選單 -->
+    <div id="menu-screen">
+        <h1>時空切切樂：單位化聚大冒險</h1>
+        
+        <div class="form-group">
+            <label>選擇小夥伴：</label>
+            <select id="sel-character">
+                <option value="capybara">水豚 (Capybara)</option>
+                <option value="chiikawa">吉伊卡哇風格 (Chiikawa)</option>
+                <option value="car">汽車 (Car)</option>
+                <option value="robot">機器人 (Robot)</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>年級：</label>
+            <select id="sel-grade" onchange="updateCategories()">
+                <option value="g2">二年級</option>
+                <option value="g3">三年級</option>
+                <option value="g4">四年級</option>
+                <option value="g5">五年級</option>
+                <option value="g6">六年級</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>關卡內容：</label>
+            <select id="sel-category">
+                <!-- 選項會透過 JavaScript 動態生成 -->
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>題數：</label>
+            <select id="sel-questions">
+                <option value="5">5 題</option>
+                <option value="10">10 題</option>
+                <option value="15">15 題</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>難易度 (鷹架)：</label>
+            <select id="sel-difficulty">
+                <option value="easy">簡單 (動畫 + 語音提示 + 輔助線)</option>
+                <option value="normal">普通 (僅語音提示)</option>
+                <option value="hard">困難 (無提示)</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>數字鍵盤：</label>
+            <select id="sel-numpad">
+                <option value="off">關閉 (使用實體鍵盤)</option>
+                <option value="on" selected>開啟 (顯示於右側)</option>
+            </select>
+        </div>
+
+        <button class="start-btn" onclick="startGame()">開始冒險！</button>
+    </div>
+
+    <!-- 2. 遊戲主畫面 -->
+    <div id="game-screen">
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        
+        <div id="hud">
+            <span id="hud-question">題號：1 / 5</span>
+            <button id="home-btn" onclick="showMenu()">🏠 回首頁</button>
+            <span id="hud-score">分數：0</span>
+        </div>
+
+        <div id="hint-text">點擊畫面讓小夥伴跳躍！</div>
+
+        <div id="ui-panel">
+            <!-- 動態生成輸入框 -->
+        </div>
+
+        <!-- 虛擬數字鍵盤 -->
+        <div id="numpad-container" style="display: none;">
+            <button class="numpad-btn" onclick="numpadPress(1)">1</button>
+            <button class="numpad-btn" onclick="numpadPress(2)">2</button>
+            <button class="numpad-btn" onclick="numpadPress(3)">3</button>
+            <button class="numpad-btn" onclick="numpadPress(4)">4</button>
+            <button class="numpad-btn" onclick="numpadPress(5)">5</button>
+            <button class="numpad-btn" onclick="numpadPress(6)">6</button>
+            <button class="numpad-btn" onclick="numpadPress(7)">7</button>
+            <button class="numpad-btn" onclick="numpadPress(8)">8</button>
+            <button class="numpad-btn" onclick="numpadPress(9)">9</button>
+            <button class="numpad-btn btn-del" onclick="numpadPress('del')">⌫</button>
+            <button class="numpad-btn" onclick="numpadPress(0)">0</button>
+            <button class="numpad-btn btn-enter" onclick="checkAnswer()">確認</button>
+        </div>
+    </div>
+
+    <!-- 3. 結算畫面 -->
+    <div id="game-over-screen" style="display: none;">
+        <canvas id="fireworksCanvas" width="800" height="600" style="position: absolute; top: 0; left: 0; pointer-events: none; z-index: 0;"></canvas>
+        <h1 id="game-over-title">冒險結束！</h1>
+        <div class="score-display" id="final-score">100 分</div>
+        <canvas id="resultCanvas" width="200" height="150" style="margin: 10px 0; display: none; z-index: 1;"></canvas>
+        <p id="commentary" style="font-size: 20px; color: #555; margin-bottom: 30px;"></p>
+        <button class="restart-btn" onclick="showMenu()">再玩一次</button>
+    </div>
+</div>
+
+<script>
+    /** * 遊戲狀態與全域變數
+     */
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    const state = {
+        character: 'capybara',
+        level: '',
+        totalQuestions: 5,
+        difficulty: 'easy',
+        useNumpad: true,
+        focusedInput: null, // 當前選中的輸入框
+        currentQuestionIndex: 0,
+        score: 0,
+        currentQ: null, // 目前題目資料
+        activeConfigs: [], // 目前關卡可用的所有單位設定 (用於混合出題)
+        timeoutId: null, // 計時器ID
+        fireworksActive: false, // 煙花狀態
+        fireworksParticles: [], // 煙花粒子陣列
+        anim: {
+            active: false,
+            type: '', // 'jumpCut', 'smokeBomb'
+            step: 0,
+            x: 0, y: 0, targetX: 0,
+            particles: [],
+            cutLine: 0, // 切線進度
+            awayStep: 0,
+            baseFontSize: 80 // 紀錄當下題目的字體大小
+        },
+        confetti: [], // 灑花粒子
+        feedback: null // 答題回饋圖示狀態
+    };
+
+    // 關卡單位定義 (步驟數, 大單位, 小單位, 轉換率)
+    const unitConfigs = {
+        // 2年級
+        'g2_length_m_cm': { steps: 2, uBig: '公尺', uSmall: '公分', ratio: 100 },
+        
+        // 3年級
+        'g3_length_m_cm': { steps: 2, uBig: '公尺', uSmall: '公分', ratio: 100 },
+        'g3_length_cm_mm': { steps: 1, uBig: '公分', uSmall: '毫米', ratio: 10 },
+        'g3_length_m_mm': { steps: 3, uBig: '公尺', uSmall: '毫米', ratio: 1000 },
+        'g3_capacity_L_mL': { steps: 3, uBig: '公升', uSmall: '毫升', ratio: 1000 },
+        'g3_weight_kg_g': { steps: 3, uBig: '公斤', uSmall: '公克', ratio: 1000 },
+        
+        // 4年級
+        'g4_length_km_m': { steps: 3, uBig: '公里', uSmall: '公尺', ratio: 1000 },
+        'g4_length_km_cm': { steps: 5, uBig: '公里', uSmall: '公分', ratio: 100000 },
+        
+        // 5年級
+        'g5_area_m2_cm2': { steps: 4, uBig: '平方公尺', uSmall: '平方公分', ratio: 10000 },
+        'g5_vol_m3_cm3': { steps: 6, uBig: '立方公尺', uSmall: '立方公分', ratio: 1000000 },
+        'g5_capacity_degree_L': { steps: 3, uBig: '度', uSmall: '公升', ratio: 1000 },
+        'g5_capacity_m3_L': { steps: 3, uBig: '立方公尺', uSmall: '公升', ratio: 1000 },
+        'g5_capacity_mL_cm3': { steps: 0, uBig: '毫升', uSmall: '立方公分', ratio: 1 },
+        'g5_weight_t_g': { steps: 6, uBig: '公噸', uSmall: '公克', ratio: 1000000 },
+        
+        // 6年級
+        'g6_weight_t_kg': { steps: 3, uBig: '公噸', uSmall: '公斤', ratio: 1000 },
+        'g6_weight_kg_g': { steps: 3, uBig: '公斤', uSmall: '公克', ratio: 1000 },
+        'g6_area_km2_ha': { steps: 2, uBig: '平方公里', uSmall: '公頃', ratio: 100 },
+        'g6_area_ha_a': { steps: 2, uBig: '公頃', uSmall: '公畝', ratio: 100 },
+        'g6_area_a_m2': { steps: 2, uBig: '公畝', uSmall: '平方公尺', ratio: 100 },
+        'g6_capacity_kL_L': { steps: 3, uBig: '公秉', uSmall: '公升', ratio: 1000 },
+        'g6_capacity_L_mL': { steps: 3, uBig: '公升', uSmall: '毫升', ratio: 1000 },
+        'g6_capacity_kL_mL': { steps: 6, uBig: '公秉', uSmall: '毫升', ratio: 1000000 }
+    };
+
+    // 年級與單元對應表 (支援混合出題)
+    const gradeCategoryMap = {
+        'g2': {
+            'length': { label: '長度混合練習', configs: ['g2_length_m_cm'] }
+        },
+        'g3': {
+            'length': { label: '長度混合練習', configs: ['g3_length_m_cm', 'g3_length_cm_mm', 'g3_length_m_mm'] },
+            'capacity': { label: '容量混合練習', configs: ['g3_capacity_L_mL'] },
+            'weight': { label: '重量混合練習', configs: ['g3_weight_kg_g'] }
+        },
+        'g4': {
+            'length': { label: '長度混合練習', configs: ['g4_length_km_m', 'g4_length_km_cm'] }
+        },
+        'g5': {
+            'area': { label: '面積混合練習', configs: ['g5_area_m2_cm2'] },
+            'volume': { label: '容積混合練習', configs: ['g5_vol_m3_cm3', 'g5_capacity_degree_L', 'g5_capacity_m3_L', 'g5_capacity_mL_cm3'] },
+            'weight': { label: '重量混合練習', configs: ['g5_weight_t_g'] }
+        },
+        'g6': {
+            'weight': { label: '重量混合練習', configs: ['g6_weight_t_kg', 'g6_weight_kg_g'] },
+            'area': { label: '面積混合練習', configs: ['g6_area_km2_ha', 'g6_area_ha_a', 'g6_area_a_m2'] },
+            'capacity': { label: '容量混合練習', configs: ['g6_capacity_kL_L', 'g6_capacity_L_mL', 'g6_capacity_kL_mL'] }
+        }
+    };
+
+    /**
+     * 動態更新單元選單
+     */
+    function updateCategories() {
+        const grade = document.getElementById('sel-grade').value;
+        const catSelect = document.getElementById('sel-category');
+        catSelect.innerHTML = '';
+        
+        const categories = gradeCategoryMap[grade];
+        for (const key in categories) {
+            const opt = document.createElement('option');
+            opt.value = key;
+            opt.innerText = categories[key].label;
+            catSelect.appendChild(opt);
+        }
+    }
+
+    /**
+     * 計算畫面的動態中心點 (如果鍵盤開啟，中心點向左偏移)
+     */
+    function getCenterX() {
+        return state.useNumpad ? 280 : 400; // 調整為 280 給予更寬裕的空間
+    }
+
+    /**
+     * 計算角色待機的起始 X 座標
+     */
+    function getCharStartX() {
+        return state.useNumpad ? 80 : 150;
+    }
+
+    /**
+     * UI 切換功能
+     */
+    function startGame() {
+        // 讀取設定
+        state.character = document.getElementById('sel-character').value;
+        const selectedGrade = document.getElementById('sel-grade').value;
+        const selectedCategory = document.getElementById('sel-category').value;
+        
+        // 取得該單元所有可用的題型組合
+        state.activeConfigs = gradeCategoryMap[selectedGrade][selectedCategory].configs;
+
+        state.totalQuestions = parseInt(document.getElementById('sel-questions').value);
+        state.difficulty = document.getElementById('sel-difficulty').value;
+        state.useNumpad = document.getElementById('sel-numpad').value === 'on';
+
+        // 初始化狀態
+        state.currentQuestionIndex = 0;
+        state.score = 0;
+
+        // 依據是否開啟鍵盤調整 UI 排版
+        document.getElementById('numpad-container').style.display = state.useNumpad ? 'grid' : 'none';
+        const centerPct = state.useNumpad ? '35%' : '50%'; // 280 / 800 = 35%
+        document.getElementById('ui-panel').style.left = centerPct;
+        document.getElementById('hint-text').style.left = centerPct;
+
+        // 切換畫面
+        document.getElementById('menu-screen').style.display = 'none';
+        document.getElementById('game-over-screen').style.display = 'none';
+        document.getElementById('game-screen').style.display = 'block';
+
+        // 啟動語音系統 (解除瀏覽器限制)
+        let utter = new SpeechSynthesisUtterance("遊戲開始");
+        utter.volume = 0;
+        window.speechSynthesis.speak(utter);
+
+        nextQuestion();
+        requestAnimationFrame(gameLoop);
+    }
+
+    function showMenu() {
+        // 清除可能正在進行的計時器與語音，避免回到首頁後發生干擾
+        if (state.timeoutId) {
+            clearTimeout(state.timeoutId);
+            state.timeoutId = null;
+        }
+        if (window.speechSynthesis) {
+            window.speechSynthesis.cancel();
+        }
+
+        // 停止煙花特效
+        state.fireworksActive = false;
+
+        document.getElementById('menu-screen').style.display = 'flex';
+        document.getElementById('game-over-screen').style.display = 'none';
+        document.getElementById('game-screen').style.display = 'none';
+    }
+
+    function gameOver() {
+        document.getElementById('game-screen').style.display = 'none';
+        document.getElementById('game-over-screen').style.display = 'flex';
+        
+        const scorePerQ = 100 / state.totalQuestions;
+        const finalScore = Math.round(state.score * scorePerQ);
+        document.getElementById('final-score').innerText = `${finalScore} 分`;
+        
+        let comment = "";
+        const resCanvas = document.getElementById('resultCanvas');
+        const resCtx = resCanvas.getContext('2d');
+        resCtx.clearRect(0, 0, resCanvas.width, resCanvas.height);
+        
+        // 重置動畫，確保每次結算都會重新跳出
+        resCanvas.style.animation = 'none';
+        resCanvas.offsetHeight; // 觸發 reflow
+        
+        if(finalScore === 100) {
+            document.getElementById('game-over-title').innerText = "🎉 恭喜完成！ 🎉";
+            comment = "太棒了！你是單位化聚大師！";
+            drawCharacterWithMedal(resCtx, 100, 75);
+            resCanvas.style.display = 'block';
+            resCanvas.style.animation = 'bounceIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards';
+            launchFireworks();
+        } else if(finalScore >= 80) {
+            document.getElementById('game-over-title').innerText = "🎉 恭喜完成！ 🎉";
+            comment = "很厲害喔！再稍微練習就完美了！";
+            drawCharacterWithMedal(resCtx, 100, 75);
+            resCanvas.style.display = 'block';
+            resCanvas.style.animation = 'bounceIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards';
+            launchFireworks();
+        } else {
+            document.getElementById('game-over-title').innerText = "冒險結束！";
+            comment = "繼續加油，多練習幾次就會變強囉！";
+            resCanvas.style.display = 'none';
+            state.fireworksActive = false;
+        }
+        
+        document.getElementById('commentary').innerText = comment;
+        speakText(comment);
+    }
+
+    /**
+     * 題目產生邏輯
+     */
+    function nextQuestion() {
+        if (state.currentQuestionIndex >= state.totalQuestions) {
+            gameOver();
+            return;
+        }
+
+        state.currentQuestionIndex++;
+        document.getElementById('hud-question').innerText = `題號：${state.currentQuestionIndex} / ${state.totalQuestions}`;
+        document.getElementById('hud-score').innerText = `分數：${state.score}`;
+        document.getElementById('hint-text').style.opacity = '0';
+
+        // 從該單元包含的混合題型中，隨機抽取一種題型
+        const configKey = state.activeConfigs[Math.floor(Math.random() * state.activeConfigs.length)];
+        const cfg = unitConfigs[configKey];
+
+        // 隨機決定題型：1=大轉小 (加空位), 2=小轉大 (切一刀)
+        const type = Math.random() > 0.5 ? 'largeToSmall' : 'smallToLarge';
+        
+        // 產生合理數值
+        let bigVal, smallVal, totalSmall, smallStr, displayStr;
+
+        if (cfg.ratio === 1) {
+            // 1:1 等值單位特殊處理 (如 毫升=立方公分)
+            bigVal = Math.floor(Math.random() * 900) + 100; // 產生三位數
+            smallVal = 0;
+            totalSmall = bigVal;
+            smallStr = '';
+            displayStr = type === 'smallToLarge' ? `${totalSmall}${cfg.uSmall} = ` : `${bigVal}${cfg.uBig} = `;
+        } else {
+            bigVal = Math.floor(Math.random() * 9) + 1; // 1~9
+            smallVal = Math.floor(Math.random() * (cfg.ratio - 1)) + 1; // 避免為0
+            totalSmall = bigVal * cfg.ratio + smallVal;
+            // 確保小轉大時，數字夠長好切 (補零處理)
+            smallStr = smallVal.toString().padStart(cfg.steps, '0');
+            displayStr = type === 'smallToLarge' ? `${totalSmall}${cfg.uSmall}` : `${bigVal}${cfg.uBig} ${smallVal}${cfg.uSmall} = `;
+        }
+
+        state.currentQ = {
+            config: cfg,
+            type: type,
+            bigVal: bigVal,
+            smallVal: smallVal, // 數字型態
+            smallStr: smallStr, // 字串型態 (有補零)
+            totalSmall: totalSmall, // 總和
+            displayStr: displayStr,
+            answered: false
+        };
+
+        // 重置動畫狀態
+        state.anim.active = false;
+        state.anim.cutLine = 0;
+        state.anim.awayStep = 0;
+        state.anim.particles = [];
+        state.confetti = [];
+        state.feedback = null;
+
+        setupUI();
+        playHint();
+    }
+
+    /**
+     * 建立輸入介面
+     */
+    function setupUI() {
+        const panel = document.getElementById('ui-panel');
+        panel.innerHTML = '';
+        const q = state.currentQ;
+
+        if (q.type === 'largeToSmall') {
+            // [ ] 毫秒
+            panel.innerHTML = `
+                <input type="number" id="input1" class="input-box" autocomplete="off">
+                <span class="unit-label">${q.config.uSmall}</span>
+                <button id="submit-btn" onclick="checkAnswer()">確認</button>
+            `;
+        } else {
+            if (q.config.ratio === 1) {
+                // 1比1的情境，只需一個框
+                panel.innerHTML = `
+                    <input type="number" id="input1" class="input-box" autocomplete="off">
+                    <span class="unit-label">${q.config.uBig}</span>
+                    <button id="submit-btn" onclick="checkAnswer()">確認</button>
+                `;
+            } else {
+                // [ ] 公尺 [ ] 公分
+                panel.innerHTML = `
+                    <input type="number" id="input1" class="input-box" autocomplete="off">
+                    <span class="unit-label">${q.config.uBig}</span>
+                    <input type="number" id="input2" class="input-box" autocomplete="off">
+                    <span class="unit-label">${q.config.uSmall}</span>
+                    <button id="submit-btn" onclick="checkAnswer()">確認</button>
+                `;
+            }
+        }
+
+        // 綁定 Enter 鍵與焦點追蹤
+        const inputs = document.querySelectorAll('.input-box');
+        inputs.forEach(inp => {
+            inp.addEventListener('focus', function() {
+                state.focusedInput = this; // 記住目前游標在哪個框框
+            });
+            inp.addEventListener('keypress', function(e) {
+                if(e.key === 'Enter') checkAnswer();
+            });
+        });
+
+        // 預設聚焦第一個輸入框
+        if(inputs.length > 0) {
+            inputs[0].focus();
+            state.focusedInput = inputs[0];
+        }
+    }
+
+    /**
+     * 處理虛擬數字鍵盤點擊
+     */
+    function numpadPress(val) {
+        if (!state.focusedInput) {
+            const inp = document.getElementById('input1');
+            if (inp) {
+                inp.focus();
+                state.focusedInput = inp;
+            } else return;
+        }
+
+        if (val === 'del') {
+            // 刪除最後一個字
+            state.focusedInput.value = state.focusedInput.value.slice(0, -1);
+        } else {
+            // 新增數字
+            state.focusedInput.value += val;
+        }
+        
+        // 點擊後保持輸入框焦點
+        state.focusedInput.focus();
+    }
+
+    /**
+     * 語音與視覺提示 (鷹架)
+     */
+    function playHint() {
+        const q = state.currentQ;
+        const cfg = q.config;
+        let hintText = "";
+        let questionSpeech = "";
+
+        if (cfg.ratio === 1) {
+            questionSpeech = `題目是：${q.type === 'largeToSmall' ? q.bigVal + cfg.uBig : q.totalSmall + cfg.uSmall}，等於多少${q.type === 'largeToSmall' ? cfg.uSmall : cfg.uBig}？`;
+            hintText = `${questionSpeech}這是相同容量的單位，數字是一樣的喔！`;
+        } else if (q.type === 'largeToSmall') {
+            questionSpeech = `題目是：${q.bigVal}${cfg.uBig}${q.smallVal}${cfg.uSmall}，等於多少${cfg.uSmall}？`;
+            hintText = `${questionSpeech}大單位換小單位，加${cfg.steps}個空位。`;
+            if (state.difficulty === 'easy') triggerSmokeBomb();
+        } else {
+            questionSpeech = `題目是：${q.totalSmall}${cfg.uSmall}，等於多少${cfg.uBig}多少${cfg.uSmall}？`;
+            hintText = `${questionSpeech}小單位換大單位，從右邊數來，走${cfg.steps}步切一刀。`;
+            if (state.difficulty === 'easy') {
+                document.getElementById('hint-text').style.opacity = '1';
+                document.getElementById('hint-text').innerText = '點擊畫面讓小夥伴切一刀！';
+            }
+        }
+
+        if (state.difficulty !== 'hard') {
+            speakText(hintText);
+        }
+    }
+
+    function speakText(text) {
+        if (!window.speechSynthesis) return;
+        window.speechSynthesis.cancel(); // 停止先前的語音
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'zh-TW';
+        utterance.rate = 0.9;
+        window.speechSynthesis.speak(utterance);
+    }
+
+    /**
+     * Canvas 互動：點擊觸發跳躍切刀 (小轉大, 簡單模式)
+     */
+    canvas.addEventListener('click', () => {
+        const q = state.currentQ;
+        if (!q || q.answered) return;
+        
+        if (q.type === 'smallToLarge' && state.difficulty === 'easy' && !state.anim.active && q.config.ratio !== 1) {
+            triggerJumpCut();
+            document.getElementById('hint-text').style.opacity = '0';
+        }
+    });
+
+    /**
+     * 動畫觸發邏輯
+     */
+    function triggerJumpCut() {
+        state.anim.active = true;
+        state.anim.type = 'jumpCut';
+        state.anim.step = 0;
+        state.anim.awayStep = 0;
+        
+        const fontInfo = getDynamicFont(state.currentQ.displayStr, 80);
+        state.anim.baseFontSize = fontInfo.size; // 紀錄字體大小供動畫使用
+        ctx.font = fontInfo.fontString; 
+        
+        const fullTextWidth = ctx.measureText(state.currentQ.displayStr).width;
+        const numStr = state.currentQ.totalSmall.toString();
+        const numWidth = ctx.measureText(numStr).width;
+        
+        // 數字的最右側 X 座標 (動態置中對齊時的計算)
+        const numRightX = getCenterX() - (fullTextWidth / 2) + numWidth;
+
+        // 設定初始位置 (數字最右側)
+        state.anim.x = numRightX + 20; 
+        state.anim.y = 200 + fontInfo.size * 0.5; // 依照字體大小動態調整起跳高度
+        
+        // 依照位數步數計算切割目標 (每位數的寬度)
+        const digitWidth = numWidth / numStr.length;
+        const moveDist = state.currentQ.config.steps * digitWidth; 
+        state.anim.targetX = state.anim.x - moveDist - 20; 
+
+        speakText(`跳！`);
+    }
+
+    function triggerSmokeBomb() {
+        state.anim.active = true;
+        state.anim.type = 'smokeBomb';
+        state.anim.step = 0;
+        state.anim.x = getCenterX();
+        state.anim.y = 200;
+        
+        // 產生煙霧粒子
+        state.anim.particles = [];
+        for(let i=0; i<30; i++){
+            state.anim.particles.push({
+                x: getCenterX(), y: 200,
+                vx: (Math.random()-0.5)*10,
+                vy: (Math.random()-0.5)*10,
+                life: 1.0,
+                color: `rgba(200, 200, 200, 1)`
+            });
+        }
+    }
+
+    /**
+     * 檢查答案
+     */
+    function checkAnswer() {
+        if(state.currentQ.answered) return;
+        
+        const q = state.currentQ;
+        let isCorrect = false;
+
+        if (q.type === 'largeToSmall') {
+            const ans = parseInt(document.getElementById('input1').value);
+            if (ans === q.totalSmall) isCorrect = true;
+        } else {
+            if (q.config.ratio === 1) {
+                const ans = parseInt(document.getElementById('input1').value);
+                if (ans === q.bigVal) isCorrect = true;
+            } else {
+                const ans1 = parseInt(document.getElementById('input1').value);
+                const ans2 = parseInt(document.getElementById('input2').value);
+                if (ans1 === q.bigVal && ans2 === q.smallVal) isCorrect = true;
+            }
+        }
+
+        q.answered = true;
+
+        if (isCorrect) {
+            state.score++;
+            const cheers = ["答對了！太棒了！", "正確！你好厲害！", "完美！完全命中！", "超棒的！就是這樣！"];
+            speakText(cheers[Math.floor(Math.random() * cheers.length)]);
+            triggerConfetti();
+            state.feedback = { isCorrect: true };
+        } else {
+            speakText("喔歐，再看仔細一點喔！");
+            state.feedback = { isCorrect: false };
+            
+            // 顯示正確答案在格子裡
+            if (q.type === 'largeToSmall') {
+                document.getElementById('input1').value = q.totalSmall;
+                document.getElementById('input1').style.color = 'red';
+            } else {
+                if (q.config.ratio === 1) {
+                    document.getElementById('input1').value = q.bigVal;
+                    document.getElementById('input1').style.color = 'red';
+                } else {
+                    document.getElementById('input1').value = q.bigVal;
+                    document.getElementById('input2').value = q.smallVal;
+                    document.getElementById('input1').style.color = 'red';
+                    document.getElementById('input2').style.color = 'red';
+                }
+            }
+        }
+
+        // 兩秒後下一題
+        state.timeoutId = setTimeout(nextQuestion, 2000);
+    }
+
+    /**
+     * 觸發灑花特效
+     */
+    function triggerConfetti() {
+        state.confetti = [];
+        const colors = ['#FFC107', '#FF9800', '#FF5722', '#F44336', '#E91e63', '#9C27B0', '#3F51B5', '#03A9F4', '#00BCD4', '#4CAF50', '#8BC34A'];
+        for(let i = 0; i < 80; i++) {
+            state.confetti.push({
+                x: getCenterX(), // 動態中心點
+                y: 350,
+                vx: (Math.random() - 0.5) * 25, // 往左右隨機噴射
+                vy: (Math.random() - 1) * 15 - 5, // 往上噴射
+                size: Math.random() * 10 + 6,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                rot: Math.random() * 360,
+                rotSpeed: (Math.random() - 0.5) * 15,
+                life: 1.0
+            });
+        }
+    }
+
+    /**
+     * Canvas 繪圖循環
+     */
+    function gameLoop() {
+        if(document.getElementById('game-screen').style.display === 'block'){
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            if (state.currentQ) {
+                drawQuestion();
+                drawAnimations();
+            }
+
+            // 繪製回饋與灑花
+            if (state.feedback) {
+                drawFeedback(state.feedback.isCorrect);
+            }
+            drawConfetti();
+        }
+        requestAnimationFrame(gameLoop);
+    }
+
+    /**
+     * 繪製灑花
+     */
+    function drawConfetti() {
+        if (!state.confetti || state.confetti.length === 0) return;
+        
+        for (let i = state.confetti.length - 1; i >= 0; i--) {
+            let p = state.confetti[i];
+            p.x += p.vx;
+            p.y += p.vy;
+            p.vy += 0.5; // 重力加速度
+            p.rot += p.rotSpeed;
+            p.life -= 0.01; // 慢慢淡出消失
+
+            if (p.life <= 0) {
+                state.confetti.splice(i, 1);
+                continue;
+            }
+
+            ctx.save();
+            ctx.translate(p.x, p.y);
+            ctx.rotate(p.rot * Math.PI / 180);
+            ctx.globalAlpha = p.life;
+            ctx.fillStyle = p.color;
+            ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+            ctx.restore();
+        }
+    }
+
+    /**
+     * 啟動與繪製全螢幕煙花 (結算畫面用)
+     */
+    function launchFireworks() {
+        if (!state.fireworksActive) {
+            state.fireworksActive = true;
+            state.fireworksParticles = [];
+            requestAnimationFrame(fireworksLoop);
+        }
+    }
+
+    function fireworksLoop() {
+        if (!state.fireworksActive) return;
+        
+        const fwCanvas = document.getElementById('fireworksCanvas');
+        const fwCtx = fwCanvas.getContext('2d');
+        
+        // 製造半透明殘影效果
+        fwCtx.fillStyle = 'rgba(255, 236, 210, 0.2)'; // 配合結算畫面背景的漸層色微調
+        fwCtx.fillRect(0, 0, fwCanvas.width, fwCanvas.height);
+
+        // 隨機發射新煙花 (約 5% 機率每幀產生一發)
+        if (Math.random() < 0.05) {
+            createExplosion(
+                100 + Math.random() * (fwCanvas.width - 200), // X: 避開太靠邊緣
+                50 + Math.random() * (fwCanvas.height / 2)    // Y: 集中在上半部
+            );
+        }
+
+        // 更新與繪製煙花粒子
+        for (let i = state.fireworksParticles.length - 1; i >= 0; i--) {
+            let p = state.fireworksParticles[i];
+            p.x += p.vx;
+            p.y += p.vy;
+            p.vy += 0.05; // 輕微重力
+            p.life -= 0.015; // 逐漸消失
+
+            if (p.life <= 0) {
+                state.fireworksParticles.splice(i, 1);
+                continue;
+            }
+
+            fwCtx.globalAlpha = p.life;
+            fwCtx.fillStyle = p.color;
+            fwCtx.beginPath();
+            fwCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            fwCtx.fill();
+        }
+        fwCtx.globalAlpha = 1.0; // 恢復透明度
+
+        requestAnimationFrame(fireworksLoop);
+    }
+
+    function createExplosion(x, y) {
+        const colors = ['#FF1461', '#18FF92', '#5A87FF', '#FBF38C', '#FFC107', '#9C27B0'];
+        const color = colors[Math.floor(Math.random() * colors.length)];
+        // 每朵煙花產生 40 個粒子
+        for (let i = 0; i < 40; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const speed = Math.random() * 4 + 2;
+            state.fireworksParticles.push({
+                x: x,
+                y: y,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed,
+                color: color,
+                life: 1.0,
+                size: Math.random() * 3 + 2
+            });
+        }
+    }
+
+    /**
+     * 動態計算合適的字體大小，避免文字過長被鍵盤遮擋
+     */
+    function getDynamicFont(text, baseSize) {
+        ctx.save();
+        ctx.font = `bold ${baseSize}px Nunito`;
+        let textWidth = ctx.measureText(text).width;
+        ctx.restore();
+        
+        // 如果開啟鍵盤，文字最大寬度允許至約 480px，關閉則可至 720px
+        let maxWidth = state.useNumpad ? 480 : 720; 
+        let finalSize = baseSize;
+        if (textWidth > maxWidth) {
+            // 等比例縮小字體
+            finalSize = Math.floor(baseSize * (maxWidth / textWidth));
+        }
+        return {
+            size: finalSize,
+            fontString: `bold ${finalSize}px Nunito`
+        };
+    }
+
+    /**
+     * 繪製題目與底線提示
+     */
+    function drawQuestion() {
+        const q = state.currentQ;
+        const fontInfo = getDynamicFont(q.displayStr, 80);
+
+        ctx.fillStyle = '#006064';
+        ctx.font = fontInfo.fontString;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+
+        ctx.fillText(q.displayStr, getCenterX(), 200);
+
+        // 如果是大轉小，且難度為簡單，畫出底線框框 (在動畫結束或進行中顯示)
+        if (q.type === 'largeToSmall' && state.difficulty === 'easy') {
+            let lineSize = Math.floor(fontInfo.size * 0.75);
+            ctx.font = `bold ${lineSize}px Nunito`;
+            ctx.fillStyle = '#ff9800';
+            
+            let lineStr = "";
+            for(let i=0; i<q.config.steps; i++) lineStr += "_ ";
+            
+            // 精準計算底線的繪製位置：緊跟在題目文字的右側
+            ctx.font = fontInfo.fontString;
+            let textWidth = ctx.measureText(q.displayStr).width;
+            
+            ctx.font = `bold ${lineSize}px Nunito`;
+            ctx.textAlign = 'left';
+            ctx.fillText(lineStr, getCenterX() + (textWidth / 2) + 10, 200 + fontInfo.size * 0.2);
+            ctx.textAlign = 'center'; // 恢復原本置中對齊
+        }
+    }
+
+    /**
+     * 處理與繪製動畫
+     */
+    function drawAnimations() {
+        const anim = state.anim;
+        
+        // 角色待機位置 (左下角，依照鍵盤狀態偏移)
+        let charX = getCharStartX();
+        let charY = 400;
+
+        if (anim.active) {
+            if (anim.type === 'jumpCut') {
+                anim.step++;
+                // 拋物線跳躍
+                let t = Math.min(anim.step / 60, 1.0); // 1秒(60frames)完成
+                charX = anim.x + (anim.targetX - anim.x) * t;
+                // 用 sin 做出跳躍的弧度
+                charY = anim.y - Math.sin(t * Math.PI) * 100;
+
+                // 到達目標後開始切刀
+                if (t >= 1.0) {
+                    anim.cutLine += 0.05;
+                    let currentCut = Math.min(anim.cutLine, 1);
+
+                    if (anim.cutLine > 1.5) { // 停留一下後跳走
+                        anim.awayStep = (anim.awayStep || 0) + 1;
+                        let awayT = Math.min(anim.awayStep / 30, 1.0); // 0.5秒跳回原位
+                        charX = anim.targetX + (getCharStartX() - anim.targetX) * awayT;
+                        charY = anim.y + (400 - anim.y) * awayT - Math.sin(awayT * Math.PI) * 50;
+                    }
+                    
+                    // 畫切線 (紅色雷射感，長度隨字體縮放)
+                    let cutH = anim.baseFontSize || 80;
+                    ctx.beginPath();
+                    ctx.moveTo(anim.targetX, anim.y - cutH);
+                    ctx.lineTo(anim.targetX, anim.y - cutH + (cutH * 2 * currentCut));
+                    ctx.strokeStyle = 'red';
+                    ctx.lineWidth = 5;
+                    ctx.stroke();
+                    
+                    // 繪製魔法棒
+                    drawWand(charX, charY, Math.PI/4 + currentCut);
+                }
+            } else if (anim.type === 'smokeBomb') {
+                anim.step++;
+                // 畫煙霧粒子
+                let activeParticles = 0;
+                anim.particles.forEach(p => {
+                    if(p.life > 0) {
+                        p.x += p.vx;
+                        p.y += p.vy;
+                        p.life -= 0.02;
+                        
+                        // 確保生命值大於 0 才繪製，避免 Canvas arc 半徑為負數引發錯誤
+                        if (p.life > 0) {
+                            ctx.fillStyle = `rgba(150, 150, 150, ${p.life})`;
+                            ctx.beginPath();
+                            ctx.arc(p.x, p.y, 15 * p.life, 0, Math.PI*2);
+                            ctx.fill();
+                            activeParticles++;
+                        }
+                    }
+                });
+                if(activeParticles === 0) anim.active = false;
+            }
+        }
+
+        // 畫角色
+        if (state.character === 'capybara') {
+            drawCapybara(charX, charY, ctx);
+        } else if (state.character === 'chiikawa') {
+            drawChiikawa(charX, charY, ctx);
+        } else if (state.character === 'car') {
+            drawCar(charX, charY, ctx);
+        } else if (state.character === 'robot') {
+            drawRobot(charX, charY, ctx);
+        }
+    }
+
+    function drawWand(x, y, angle) {
+        ctx.save();
+        ctx.translate(x + 20, y - 20);
+        ctx.rotate(angle);
+        ctx.fillStyle = '#8d6e63';
+        ctx.fillRect(-5, -40, 10, 80);
+        ctx.fillStyle = '#ffeb3b';
+        ctx.beginPath();
+        ctx.arc(0, -45, 15, 0, Math.PI*2);
+        ctx.fill();
+        ctx.restore();
+    }
+
+    /**
+     * 繪製結算畫面的掛獎牌特效
+     */
+    function drawCharacterWithMedal(targetCtx, x, y) {
+        // 先畫出角色
+        if (state.character === 'capybara') drawCapybara(x, y, targetCtx);
+        else if (state.character === 'chiikawa') drawChiikawa(x, y, targetCtx);
+        else if (state.character === 'car') drawCar(x, y, targetCtx);
+        else if (state.character === 'robot') drawRobot(x, y, targetCtx);
+
+        // 依據不同角色設定脖子/胸口高度
+        let mx = 0, my = 0;
+        let ribbonLeftX = -15, ribbonRightX = 15, ribbonY = -20;
+        
+        if (state.character === 'capybara') { 
+            mx = 25; my = 10; 
+            ribbonLeftX = 0; ribbonRightX = 40; ribbonY = -15; 
+        } else if (state.character === 'chiikawa') { 
+            mx = 0; my = 25; 
+            ribbonLeftX = -20; ribbonRightX = 20; ribbonY = -10; 
+        } else if (state.character === 'car') { 
+            mx = 25; my = 5; 
+            ribbonLeftX = 5; ribbonRightX = 40; ribbonY = -15; 
+        } else if (state.character === 'robot') { 
+            mx = 0; my = 15; 
+            ribbonLeftX = -15; ribbonRightX = 15; ribbonY = -25; 
+        }
+
+        targetCtx.save();
+        targetCtx.translate(x, y);
+        
+        // 畫緞帶 (V字型)
+        targetCtx.strokeStyle = '#D32F2F'; // 紅色緞帶
+        targetCtx.lineWidth = 4;
+        targetCtx.lineJoin = 'round';
+        targetCtx.beginPath();
+        targetCtx.moveTo(ribbonLeftX, ribbonY);
+        targetCtx.lineTo(mx, my - 8);
+        targetCtx.lineTo(ribbonRightX, ribbonY);
+        targetCtx.stroke();
+
+        // 畫獎牌本體
+        targetCtx.fillStyle = '#FFD700';
+        targetCtx.beginPath();
+        targetCtx.arc(mx, my, 12, 0, Math.PI * 2);
+        targetCtx.fill();
+        
+        targetCtx.strokeStyle = '#FBC02D';
+        targetCtx.lineWidth = 2;
+        targetCtx.stroke();
+
+        // 獎牌內圈
+        targetCtx.fillStyle = '#FFF8E1';
+        targetCtx.beginPath();
+        targetCtx.arc(mx, my, 7, 0, Math.PI * 2);
+        targetCtx.fill();
+
+        // 寫上代表冠軍的 1
+        targetCtx.fillStyle = '#F57F17';
+        targetCtx.font = 'bold 12px Nunito';
+        targetCtx.textAlign = 'center';
+        targetCtx.textBaseline = 'middle';
+        targetCtx.fillText('1', mx, my + 1);
+
+        targetCtx.restore();
+    }
+
+    /**
+     * 繪製水豚
+     */
+    function drawCapybara(x, y, targetCtx) {
+        let c = targetCtx || ctx;
+        c.save();
+        c.translate(x, y);
+        
+        // 身體 (馬鈴薯形狀)
+        c.fillStyle = '#A0522D';
+        c.beginPath();
+        c.ellipse(0, 0, 55, 45, 0, 0, Math.PI*2);
+        c.fill();
+        
+        // 鼻子區域
+        c.fillStyle = '#8B4513';
+        c.beginPath();
+        c.ellipse(40, 0, 20, 25, 0, 0, Math.PI*2);
+        c.fill();
+
+        // 耳朵
+        c.fillStyle = '#A0522D';
+        c.beginPath();
+        c.arc(10, -40, 12, 0, Math.PI*2);
+        c.fill();
+
+        // 眼睛 (閉著/瞇瞇眼)
+        c.strokeStyle = '#3e2723';
+        c.lineWidth = 3;
+        c.beginPath();
+        c.moveTo(25, -15);
+        c.lineTo(40, -15);
+        c.stroke();
+
+        // 鼻子
+        c.fillStyle = '#3e2723';
+        c.beginPath();
+        c.arc(55, 5, 5, 0, Math.PI*2);
+        c.fill();
+
+        // 腳
+        c.fillStyle = '#8B4513';
+        c.beginPath();
+        c.arc(-20, 40, 12, 0, Math.PI*2);
+        c.arc(20, 40, 12, 0, Math.PI*2);
+        c.fill();
+
+        c.restore();
+    }
+
+    /**
+     * 繪製吉伊卡哇風格 (Chiikawa)
+     */
+    function drawChiikawa(x, y, targetCtx) {
+        let c = targetCtx || ctx;
+        c.save();
+        c.translate(x, y);
+
+        // 身體 (圓潤白色)
+        c.fillStyle = '#FFFFFF';
+        c.beginPath();
+        c.arc(0, 0, 50, 0, Math.PI*2);
+        c.fill();
+        c.strokeStyle = '#EEEEEE';
+        c.lineWidth = 2;
+        c.stroke();
+
+        // 耳朵
+        c.beginPath();
+        c.arc(-30, -40, 15, 0, Math.PI*2);
+        c.arc(30, -40, 15, 0, Math.PI*2);
+        c.fill();
+        c.stroke();
+
+        // 腮紅
+        c.fillStyle = '#FFCDD2';
+        c.beginPath();
+        c.ellipse(-25, 10, 12, 8, 0, 0, Math.PI*2);
+        c.ellipse(25, 10, 12, 8, 0, 0, Math.PI*2);
+        c.fill();
+
+        // 眼睛 (大大的黑眼)
+        c.fillStyle = '#212121';
+        c.beginPath();
+        c.arc(-15, -5, 6, 0, Math.PI*2);
+        c.arc(15, -5, 6, 0, Math.PI*2);
+        c.fill();
+
+        // 嘴巴 (小小倒V)
+        c.strokeStyle = '#212121';
+        c.lineWidth = 2;
+        c.beginPath();
+        c.moveTo(-5, 5);
+        c.lineTo(0, 10);
+        c.lineTo(5, 5);
+        c.stroke();
+
+        // 腳
+        c.fillStyle = '#FFFFFF';
+        c.beginPath();
+        c.arc(-20, 45, 10, 0, Math.PI*2);
+        c.arc(20, 45, 10, 0, Math.PI*2);
+        c.fill();
+        c.stroke();
+
+        c.restore();
+    }
+
+    /**
+     * 繪製汽車 (Car)
+     */
+    function drawCar(x, y, targetCtx) {
+        let c = targetCtx || ctx;
+        c.save();
+        c.translate(x, y);
+
+        // 車身下半部
+        c.fillStyle = '#E53935'; // 紅色車身
+        c.beginPath();
+        if (c.roundRect) c.roundRect(-40, -15, 80, 30, 8);
+        else c.fillRect(-40, -15, 80, 30);
+        c.fill();
+
+        // 車頂
+        c.beginPath();
+        if (c.roundRect) c.roundRect(-25, -35, 50, 25, 10);
+        else c.fillRect(-25, -35, 50, 25);
+        c.fill();
+
+        // 窗戶
+        c.fillStyle = '#E0F7FA'; // 淺藍色玻璃
+        c.fillRect(-20, -30, 18, 15);
+        c.fillRect(2, -30, 18, 15);
+
+        // 輪胎
+        c.fillStyle = '#212121';
+        c.beginPath();
+        c.arc(-20, 15, 12, 0, Math.PI*2);
+        c.arc(20, 15, 12, 0, Math.PI*2);
+        c.fill();
+        
+        // 輪框
+        c.fillStyle = '#BDBDBD';
+        c.beginPath();
+        c.arc(-20, 15, 5, 0, Math.PI*2);
+        c.arc(20, 15, 5, 0, Math.PI*2);
+        c.fill();
+
+        c.restore();
+    }
+
+    /**
+     * 繪製機器人 (Robot)
+     */
+    function drawRobot(x, y, targetCtx) {
+        let c = targetCtx || ctx;
+        c.save();
+        c.translate(x, y);
+
+        // 天線
+        c.strokeStyle = '#757575';
+        c.lineWidth = 3;
+        c.beginPath();
+        c.moveTo(0, -50);
+        c.lineTo(0, -70);
+        c.stroke();
+        c.fillStyle = '#F44336'; // 紅色天線燈泡
+        c.beginPath();
+        c.arc(0, -70, 6, 0, Math.PI*2);
+        c.fill();
+
+        // 頭部
+        c.fillStyle = '#B0BEC5';
+        if (c.roundRect) {
+            c.beginPath();
+            c.roundRect(-25, -50, 50, 40, 8);
+            c.fill();
+        } else {
+            c.fillRect(-25, -50, 50, 40);
+        }
+
+        // 眼睛
+        c.fillStyle = '#00E676'; // 發光綠眼睛
+        c.fillRect(-15, -40, 10, 8);
+        c.fillRect(5, -40, 10, 8);
+
+        // 嘴巴 (發聲波紋)
+        c.strokeStyle = '#455A64';
+        c.lineWidth = 2;
+        c.beginPath();
+        c.moveTo(-10, -20);
+        c.lineTo(10, -20);
+        c.moveTo(-6, -15);
+        c.lineTo(6, -15);
+        c.stroke();
+
+        // 身體
+        c.fillStyle = '#90A4AE';
+        if (c.roundRect) {
+            c.beginPath();
+            c.roundRect(-20, -10, 40, 45, 5);
+            c.fill();
+        } else {
+            c.fillRect(-20, -10, 40, 45);
+        }
+
+        // 胸前螢幕與波形
+        c.fillStyle = '#263238';
+        c.fillRect(-12, -5, 24, 15);
+        c.fillStyle = '#00BCD4';
+        c.fillRect(-8, 0, 16, 5);
+
+        // 身體按鈕
+        c.fillStyle = '#FFEB3B';
+        c.beginPath();
+        c.arc(-8, 22, 5, 0, Math.PI*2);
+        c.fill();
+        c.fillStyle = '#FF9800';
+        c.beginPath();
+        c.arc(8, 22, 5, 0, Math.PI*2);
+        c.fill();
+
+        // 手臂
+        c.strokeStyle = '#B0BEC5';
+        c.lineWidth = 8;
+        c.lineCap = 'round';
+        c.beginPath();
+        c.moveTo(-20, 0);
+        c.lineTo(-35, 15);
+        c.moveTo(20, 0);
+        c.lineTo(35, 15);
+        c.stroke();
+
+        // 腳
+        c.beginPath();
+        c.moveTo(-10, 35);
+        c.lineTo(-10, 50);
+        c.moveTo(10, 35);
+        c.lineTo(10, 50);
+        c.stroke();
+
+        c.restore();
+    }
+
+    /**
+     * 繪製正確/錯誤回饋圖示
+     */
+    function drawFeedback(isCorrect) {
+        ctx.save();
+        ctx.translate(getCenterX(), 350);
+        ctx.lineWidth = 15;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        
+        if(isCorrect) {
+            ctx.strokeStyle = '#4CAF50';
+            ctx.beginPath();
+            ctx.arc(0, 0, 60, 0, Math.PI*2);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(-30, 0);
+            ctx.lineTo(-10, 20);
+            ctx.lineTo(30, -20);
+            ctx.stroke();
+        } else {
+            ctx.strokeStyle = '#F44336';
+            ctx.beginPath();
+            ctx.moveTo(-40, -40);
+            ctx.lineTo(40, 40);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(40, -40);
+            ctx.lineTo(-40, 40);
+            ctx.stroke();
+        }
+        ctx.restore();
+    }
+
+    /**
+     * 處理畫面縮放，讓遊戲在不同設備上都能完整顯示
+     */
+    function resizeGame() {
+        const container = document.getElementById('game-container');
+        const padding = 20; // 預留一點邊距，避免太貼齊邊緣
+        const scaleX = (window.innerWidth - padding) / 800;
+        const scaleY = (window.innerHeight - padding) / 600;
+        
+        // 取長寬比例中較小的那個來縮放，確保完整顯示
+        let scale = Math.min(scaleX, scaleY);
+        
+        // 限制最大放大倍率 (避免在大螢幕上過度放大導致模糊)
+        if (scale > 1.2) scale = 1.2; 
+        
+        // 結合 translate 絕對置中與 scale 縮放，徹底解決 Flexbox 裁切邊緣的問題
+        container.style.transform = `translate(-50%, -50%) scale(${scale})`;
+    }
+
+    // 監聽視窗大小改變事件
+    window.addEventListener('resize', resizeGame);
+    // 遊戲載入時先執行一次縮放
+    resizeGame();
+
+    // 初始化時先設定單元連動，並將選單顯示
+    updateCategories();
+    showMenu();
+</script>
+</body>
+</html>

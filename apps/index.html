@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🌟 雲端分組小幫手 🌟</title>
+<style>
+  body {
+    font-family: 'Helvetica Neue', Arial, 'Microsoft JhengHei', sans-serif;
+    background-color: #FFF9E6;
+    color: #5D4037;
+    line-height: 1.6;
+    padding: 20px;
+  }
+  .container {
+    max-width: 650px;
+    margin: 0 auto;
+    background: #ffffff;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    border: 2px solid #FFE0B2;
+  }
+  h1 { text-align: center; color: #FF9800; font-size: 28px; margin-bottom: 20px; }
+  .input-group { margin-bottom: 20px; }
+  label { display: block; font-weight: bold; font-size: 18px; margin-bottom: 8px; }
+  .hint-text { font-size: 14px; color: #8D6E63; margin-bottom: 8px; }
+  input[type="number"], textarea {
+    width: 100%; padding: 12px; border-radius: 8px; border: 2px solid #FFCC80;
+    box-sizing: border-box; font-size: 16px; background-color: #FFFDF8;
+  }
+  .btn {
+    background-color: #FFB74D; color: white; border: none; padding: 15px 20px;
+    border-radius: 8px; cursor: pointer; width: 100%; font-size: 20px; font-weight: bold;
+    transition: 0.3s; margin-top: 10px;
+  }
+  .btn:hover { background-color: #F57C00; }
+  .btn-student { background-color: #64B5F6; }
+  .btn-student:hover { background-color: #1E88E5; }
+  .btn-dashboard { background-color: #81C784; }
+  .btn-dashboard:hover { background-color: #43A047; }
+  
+  /* 區塊隱藏 */
+  #setupArea, #dashboardArea, #studentArea, #loadingArea { display: none; }
+  
+  /* 分組預覽卡片 */
+  .group-card {
+    background-color: #FAFAFA; padding: 15px 20px; margin-top: 15px;
+    border-radius: 10px; border-left: 6px solid #FF9800;
+  }
+  .group-title { font-size: 20px; font-weight: bold; color: #E65100; margin-bottom: 10px; }
+  .seat-tag {
+    display: inline-block; padding: 8px 15px; margin: 5px;
+    border-radius: 20px; font-size: 18px; font-weight: bold; transition: 0.3s;
+  }
+  .seat-revealed { background: white; border: 2px solid #4CAF50; color: #2E7D32; transform: scale(1.05); }
+  .seat-hidden { background: #EEEEEE; border: 2px dashed #BDBDBD; color: #9E9E9E; }
+  
+  /* 學生抽籤結果 */
+  .announce-box {
+    background-color: #FFF3E0; border: 3px dashed #FF9800; border-radius: 12px;
+    padding: 30px 20px; text-align: center; margin-top: 25px;
+    font-size: 28px; font-weight: bold; color: #E65100; display: none;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1>🌟 雲端分組小幫手 🌟</h1>
+  
+  <!-- 0. 首頁：選擇身分 -->
+  <div id="roleSelectionArea">
+    <h2 style="text-align: center; color: #5D4037;">請選擇您的身分</h2>
+    <button class="btn" onclick="showSection('setupArea')">👩‍🏫 1. 老師專用：設定分組條件</button>
+    <button class="btn btn-dashboard" onclick="startDashboard()">📺 2. 老師專用：開啟大螢幕儀表板</button>
+    <button class="btn btn-student" onclick="showSection('studentArea')">🧑‍🎓 3. 學生專用：輸入座號抽籤</button>
+  </div>
+
+  <!-- 1. 老師設定區 -->
+  <div id="setupArea">
+    <div class="input-group">
+      <label>👥 班級總人數：</label>
+      <input type="number" id="totalPeople" min="1" placeholder="例如：25" onchange="generateSeats()">
+    </div>
+    <div class="input-group">
+      <label>🧑‍🤝‍🧑 預計每組人數：</label>
+      <input type="number" id="groupSize" min="1" placeholder="例如：4">
+    </div>
+    <div class="input-group">
+      <label>🔢 參與的座號 (可刪除缺席者)：</label>
+      <textarea id="seatNumbers" rows="2"></textarea>
+    </div>
+    <div class="input-group">
+      <label>🚫 避開組合設定 (選填)：</label>
+      <div class="hint-text">每行一組，例如輸入 <code>3, 5</code> 代表兩人不同組。</div>
+      <textarea id="conflictRules" rows="2"></textarea>
+    </div>
+    <button class="btn" onclick="prepareAndUpload()">🚀 鎖定名單並上傳雲端</button>
+    <button class="btn" style="background-color: #ccc; margin-top: 10px;" onclick="showSection('roleSelectionArea')">返回首頁</button>
+  </div>
+
+  <!-- 2. 老師大螢幕監控區 -->
+  <div id="dashboardArea">
+    <h2 style="text-align: center; color: #43A047;">👀 抽籤同步監控中...</h2>
+    <div class="hint-text" style="text-align: center; margin-bottom: 20px;">
+      學生抽籤後，下方看板會自動亮起對應座號（每 3 秒自動更新）
+    </div>
+    <div id="dashboardContainer"></div>
+    <button class="btn" style="background-color: #ccc; margin-top: 20px;" onclick="stopDashboard()">返回首頁</button>
+  </div>
+
+  <!-- 3. 學生抽籤區 -->
+  <div id="studentArea">
+    <div class="input-group">
+      <label style="text-align: center; font-size: 22px;">👇 請輸入你的座號</label>
+      <input type="number" id="studentSeat" placeholder="例如：5" style="font-size: 24px; text-align: center; height: 60px;">
+    </div>
+    <button class="btn btn-student" id="drawBtn" onclick="studentDraw()">🎲 點我開獎</button>
+    
+    <div id="studentResult" class="announce-box"></div>
+    <button class="btn" style="background-color: #ccc; margin-top: 30px;" onclick="showSection('roleSelectionArea')">返回首頁</button>
+  </div>
+
+  <!-- 載入中畫面 -->
+  <div id="loadingArea">
+    <h2 style="text-align: center; color: #1976D2; padding: 40px 0;">⏳ 雲端處理中，請稍候...</h2>
+  </div>
+
+</div>
+
+<script>
+  let dashboardTimer = null;
+
+  // 切換畫面
+  function showSection(sectionId) {
+    document.getElementById('roleSelectionArea').style.display = 'none';
+    document.getElementById('setupArea').style.display = 'none';
+    document.getElementById('dashboardArea').style.display = 'none';
+    document.getElementById('studentArea').style.display = 'none';
+    document.getElementById('loadingArea').style.display = 'none';
+    document.getElementById(sectionId).style.display = 'block';
+  }
+
+  // --- 老師設定邏輯 ---
+  function generateSeats() {
+    const total = parseInt(document.getElementById('totalPeople').value);
+    if (!total || total < 1) return;
+    let seats = [];
+    for (let i = 1; i <= total; i++) seats.push(i.toString());
+    document.getElementById('seatNumbers').value = seats.join(', ');
+  }
+
+  function shuffle(array) {
+    let currentIndex = array.length, randomIndex;
+    while (currentIndex !== 0) {
+      randomIndex = Math.floor(Math.random() * currentIndex);
+      currentIndex--;
+      [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+    }
+    return array;
+  }
+
+  function hasConflict(groups, rules) {
+    for (let group of groups) {
+      for (let rule of rules) {
+        let matchCount = 0;
+        for (let seat of rule) { if (group.includes(seat)) matchCount++; }
+        if (matchCount > 1) return true;
+      }
+    }
+    return false;
+  }
+
+  function prepareAndUpload() {
+    const groupSizeInput = parseInt(document.getElementById('groupSize').value);
+    const seatsInput = document.getElementById('seatNumbers').value;
+    const conflictInput = document.getElementById('conflictRules').value;
+
+    if (!groupSizeInput || groupSizeInput < 1) { alert("請輸入每組人數！"); return; }
+    if (!seatsInput.trim()) { alert("請輸入座號！"); return; }
+
+    let seatsArray = seatsInput.split(/[,，、\s]+/).filter(item => item.trim() !== "");
+    let conflictRules = [];
+    if (conflictInput.trim()) {
+      const lines = conflictInput.split('\n');
+      for (let line of lines) {
+        let rule = line.split(/[,，、\s]+/).filter(item => item.trim() !== "");
+        if (rule.length > 1) conflictRules.push(rule);
+      }
+    }
+
+    let isValid = false;
+    let tempGroups = [];
+    for (let attempt = 0; attempt < 2000; attempt++) {
+      let tempSeats = shuffle([...seatsArray]);
+      tempGroups = [];
+      for (let i = 0; i < tempSeats.length; i += groupSizeInput) {
+        tempGroups.push(tempSeats.slice(i, i + groupSizeInput));
+      }
+      if (!hasConflict(tempGroups, conflictRules)) { isValid = true; break; }
+    }
+
+    if (!isValid) {
+      alert("避開條件太嚴苛，系統算不出來！請減少條件。");
+      return;
+    }
+
+    // 計算成功，上傳至 GAS 後台
+    showSection('loadingArea');
+    google.script.run
+      .withSuccessHandler(function() {
+        alert("✅ 名單已成功鎖定上傳！即將為您開啟大螢幕儀表板。");
+        startDashboard(); // 直接跳轉到儀表板
+      })
+      .withFailureHandler(function(error) {
+        alert("上傳失敗：" + error.message);
+        showSection('setupArea');
+      })
+      .setupGroups({ groups: tempGroups });
+  }
+
+  // --- 大螢幕儀表板邏輯 ---
+  function startDashboard() {
+    showSection('dashboardArea');
+    fetchDashboardData(); // 先抓一次
+    // 設定每 3 秒自動更新一次
+    dashboardTimer = setInterval(fetchDashboardData, 3000);
+  }
+
+  function stopDashboard() {
+    clearInterval(dashboardTimer);
+    showSection('roleSelectionArea');
+  }
+
+  function fetchDashboardData() {
+    google.script.run
+      .withSuccessHandler(renderDashboard)
+      .getDashboardData();
+  }
+
+  function renderDashboard(data) {
+    const container = document.getElementById('dashboardContainer');
+    container.innerHTML = '';
+    
+    if (data.groups.length === 0) {
+      container.innerHTML = '<h3 style="text-align:center; color:#9E9E9E;">目前試算表中沒有資料，請先至「老師設定」產生名單。</h3>';
+      return;
+    }
+
+    data.groups.forEach((group, index) => {
+      const card = document.createElement('div');
+      card.className = 'group-card';
+      const title = document.createElement('div');
+      title.className = 'group-title';
+      title.innerText = `第 ${index + 1} 組`;
+      card.appendChild(title);
+      
+      group.forEach(seat => {
+        const span = document.createElement('span');
+        if (data.drawnSeats.includes(seat)) {
+          span.className = 'seat-tag seat-revealed';
+          span.innerText = seat + " 號";
+        } else {
+          span.className = 'seat-tag seat-hidden';
+          span.innerText = "❓ 未知";
+        }
+        card.appendChild(span);
+      });
+      container.appendChild(card);
+    });
+  }
+
+  // --- 學生抽籤邏輯 ---
+  function studentDraw() {
+    const input = document.getElementById('studentSeat');
+    const seat = input.value.trim();
+    if (!seat) { alert("請輸入你的座號！"); return; }
+
+    // 禁用按鈕防止重複點擊
+    const btn = document.getElementById('drawBtn');
+    btn.innerText = "處理中...";
+    btn.disabled = true;
+
+    google.script.run
+      .withSuccessHandler(function(res) {
+        btn.innerText = "🎲 點我開獎";
+        btn.disabled = false;
+        
+        const resultBox = document.getElementById('studentResult');
+        if (res.success) {
+          resultBox.innerHTML = `🎉 恭喜 <b>${seat}</b> 號！<br>你被分配到 <b>第 ${res.group} 組</b>`;
+          resultBox.style.display = 'block';
+          input.value = ''; // 清空欄位給下一位
+        } else {
+          alert("⚠️ " + res.message);
+        }
+      })
+      .withFailureHandler(function(err) {
+        btn.innerText = "🎲 點我開獎";
+        btn.disabled = false;
+        alert("連線失敗，請檢查網路後再試一次！");
+      })
+      .drawSeat(seat);
+  }
+</script>
+
+</body>
+</html>

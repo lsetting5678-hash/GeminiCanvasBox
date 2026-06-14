@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>昨天、今天與明天：時間認知闖關大挑戰</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        body {
+            background-color: #f0fdf4;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            touch-action: manipulation;
+        }
+        /* 月曆畫布共用樣式 */
+        .calendar-canvas {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.15);
+            border-radius: 1rem;
+            background-color: #1e293b; 
+            border: 4px solid #64748b; 
+            cursor: pointer;
+            height: auto;
+            aspect-ratio: 550 / 480; /* 維持長寬比 */
+        }
+        .walk-transition {
+            transition: left 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .tilt-think {
+            transform: rotate(15deg) scale(1.1);
+        }
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-5px); }
+            100% { transform: translateY(0px); }
+        }
+        .pond-animate {
+            animation: float 3s ease-in-out infinite;
+        }
+        /* 自訂捲軸樣式 */
+        .custom-scrollbar::-webkit-scrollbar { height: 8px; width: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center min-h-screen p-2 md:p-4 relative">
+
+    <!-- 開始畫面 -->
+    <div id="startScreen" class="max-w-lg w-full bg-white rounded-2xl shadow-xl p-8 text-center transition-all duration-300 mx-auto">
+        <h1 class="text-3xl md:text-4xl font-bold text-green-600 mb-4">📅 時間認知闖關大挑戰</h1>
+        <p class="text-gray-600 mb-2">融入專屬生日與學校行事曆！</p>
+        <p class="text-gray-500 mb-8 text-sm">幫助方形水豚君回到池塘，請選擇題目數量：</p>
+        
+        <div class="grid grid-cols-2 gap-4 mb-4">
+            <button onclick="startGame(5)" class="bg-green-100 hover:bg-green-200 text-green-800 font-bold py-4 px-2 md:px-6 rounded-xl text-xl shadow-sm transition-transform active:scale-95">5 題</button>
+            <button onclick="startGame(10)" class="bg-green-100 hover:bg-green-200 text-green-800 font-bold py-4 px-2 md:px-6 rounded-xl text-xl shadow-sm transition-transform active:scale-95">10 題</button>
+            <button onclick="startGame(15)" class="bg-green-100 hover:bg-green-200 text-green-800 font-bold py-4 px-2 md:px-6 rounded-xl text-xl shadow-sm transition-transform active:scale-95">15 題</button>
+            <button onclick="startGame(20)" class="bg-green-100 hover:bg-green-200 text-green-800 font-bold py-4 px-2 md:px-6 rounded-xl text-xl shadow-sm transition-transform active:scale-95">20 題</button>
+        </div>
+
+        <div class="mt-6 border-t pt-6">
+            <button onclick="openSettings()" class="text-green-700 bg-green-50 hover:bg-green-100 font-semibold py-3 px-6 rounded-full shadow-sm transition-transform active:scale-95 text-sm md:text-base border border-green-200 w-full flex justify-center items-center gap-2">
+                <span>⚙️</span> 題庫小幫手 (上傳學生/名人生日與行事曆)
+            </button>
+        </div>
+    </div>
+
+    <!-- 設定/題庫編輯畫面 -->
+    <div id="settingsScreen" class="hidden max-w-2xl w-full bg-white rounded-2xl shadow-xl p-6 transition-all duration-300 mx-auto">
+        <div class="flex justify-between items-center mb-4 border-b pb-4">
+            <h2 class="text-2xl font-bold text-green-600">📝 自訂生日與學校行事曆</h2>
+            <button onclick="closeSettings()" class="text-gray-400 hover:text-gray-600 text-2xl font-bold">&times;</button>
+        </div>
+
+        <!-- 提升動機小提示 -->
+        <div class="mb-6 bg-green-50 text-green-800 p-4 rounded-xl border border-green-200 text-sm md:text-base shadow-sm">
+            💡 <strong>提升動機小撇步：</strong><br>
+            除了學校放假或活動，強烈建議您上傳<strong>「全班同學的生日」</strong>、<strong>「喜歡的偶像」</strong>或<strong>「動漫角色生日」</strong>（例如：周杰倫生日、柯南生日）。當題目出現熟悉的名字時，孩子會覺得超級驚喜，答題會更有動力喔！
+        </div>
+
+        <!-- CSV 上傳區 -->
+        <div class="mb-6 bg-blue-50 p-4 rounded-xl border-2 border-dashed border-blue-200">
+            <label class="block text-blue-800 font-bold mb-2">📁 批次上傳題庫 (CSV 檔案)</label>
+            <input type="file" id="csvUpload" accept=".csv" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-blue-500 file:text-white hover:file:bg-blue-600 cursor-pointer transition-colors" onchange="handleFileUpload(event)">
+            <p class="text-xs text-blue-600 mt-2">格式範例：<span class="font-mono bg-white px-1 rounded">月份,日期,活動名稱,是否放假</span> <br class="md:hidden">(例如: <span class="font-mono bg-white px-1 rounded">1,18,周杰倫生日,否</span> 或 <span class="font-mono bg-white px-1 rounded">4,4,兒童節,是</span>)</p>
+        </div>
+
+        <!-- 手動新增區 -->
+        <div class="mb-6 bg-yellow-50 p-4 rounded-xl border border-yellow-200">
+            <h3 class="text-yellow-800 font-bold mb-3">➕ 手動新增專屬生日或活動</h3>
+            <div class="flex flex-wrap gap-2 items-center">
+                <input type="number" id="addM" placeholder="月" class="p-2 border rounded-lg w-16 text-center" min="1" max="12">
+                <span class="text-gray-500">/</span>
+                <input type="number" id="addD" placeholder="日" class="p-2 border rounded-lg w-16 text-center" min="1" max="31">
+                <input type="text" id="addN" placeholder="名稱 (如: 戴資穎生日)" class="p-2 border rounded-lg flex-1 min-w-[150px]">
+                <label class="flex items-center gap-1 cursor-pointer select-none">
+                    <input type="checkbox" id="addH" class="w-5 h-5 text-green-600 rounded">
+                    <span class="text-sm font-bold text-red-500">放假?</span>
+                </label>
+                <button onclick="addEventManual()" class="bg-yellow-400 hover:bg-yellow-500 text-white font-bold py-2 px-4 rounded-lg shadow transition-transform active:scale-95 w-full sm:w-auto">新增</button>
+            </div>
+        </div>
+
+        <!-- 現有題庫列表 -->
+        <div class="bg-gray-50 rounded-xl border border-gray-200 overflow-hidden flex flex-col h-64">
+            <div class="bg-gray-200 px-4 py-2 font-bold text-gray-700 flex justify-between">
+                <span>目前題庫列表</span>
+                <span class="text-sm font-normal">共 <span id="eventCount">0</span> 筆</span>
+            </div>
+            <div class="overflow-y-auto overflow-x-auto custom-scrollbar flex-1 p-2">
+                <table class="w-full text-left border-collapse min-w-[300px]">
+                    <thead>
+                        <tr class="text-gray-500 text-sm border-b">
+                            <th class="p-2">日期</th>
+                            <th class="p-2">名稱</th>
+                            <th class="p-2 text-center">放假</th>
+                            <th class="p-2 text-right">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="eventTableBody">
+                        <!-- 動態生成 -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="mt-6">
+            <button onclick="closeSettings()" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-xl shadow-md transition-transform active:scale-95 text-lg">
+                完成設定並返回
+            </button>
+        </div>
+    </div>
+
+    <!-- 遊戲畫面 -->
+    <div id="gameScreen" class="hidden max-w-4xl w-full bg-white rounded-2xl shadow-xl p-3 md:p-6 transition-all duration-300 mx-auto">
+        
+        <!-- 頂部標題與進度 -->
+        <div class="flex justify-between items-center mb-4 px-1 md:px-2">
+            <div class="flex items-center gap-2 md:gap-3">
+                <button onclick="askReturnToMenu()" class="bg-gray-100 hover:bg-gray-200 text-xl md:text-2xl p-2 rounded-full shadow-sm transition-transform active:scale-90" title="返回首頁">🏠</button>
+                <h1 class="text-xl md:text-2xl font-bold text-green-600">📅 時間認知挑戰</h1>
+            </div>
+            <div class="text-xs md:text-sm font-bold text-gray-500 bg-gray-100 px-3 py-1 rounded-full whitespace-nowrap">
+                進度: <span id="progressDisplay" class="text-green-600">1 / 5</span>
+            </div>
+        </div>
+
+        <!-- 橫向：動物回池塘視覺回饋 -->
+        <div class="w-full bg-cyan-50 rounded-2xl border-2 border-cyan-200 p-4 mb-6 relative overflow-hidden">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-cyan-800 font-bold text-sm tracking-widest bg-cyan-100 px-3 py-1 rounded-full border border-cyan-300">目標：回到池塘！</h3>
+                <div class="text-xs md:text-sm text-cyan-600 font-semibold">答對一題前進一步，集滿五題大慶祝</div>
+            </div>
+            
+            <div class="relative w-full h-20 flex items-center">
+                <div class="absolute left-4 right-16 h-3 bg-amber-200 rounded-full z-0 border-b-2 border-amber-300 shadow-inner"></div>
+                
+                <div class="absolute right-0 text-[3.5rem] md:text-6xl z-0 pond-animate" style="right: 2%;">🌊</div>
+
+                <div id="ladderAnimal" class="absolute z-10 walk-transition drop-shadow-lg flex items-center justify-center rounded-2xl bg-[#A0795B] border-[3px] border-[#7F5A3F]" 
+                     style="left: 2%; width: 60px; height: 60px;">
+                    <span class="text-2xl text-[#4A3021] font-bold" style="filter: drop-shadow(0 1px 1px rgba(255,255,255,0.3));">• ω •</span>
+                    <div id="animal-dialog" class="hidden absolute bg-white px-4 py-2 rounded-2xl shadow-lg border-2 border-green-400 text-sm md:text-lg font-bold text-green-600 z-20 whitespace-nowrap animate-pulse" 
+                         style="bottom: 110%; left: 50%; transform: translateX(-50%);">
+                        我回來了！✨
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 狀態與分數區 -->
+        <div class="flex justify-between items-center bg-green-50 p-3 md:p-4 rounded-xl mb-4">
+            <div class="text-base md:text-lg font-semibold text-gray-700">
+                目前分數: <span id="scoreDisplay" class="text-green-600 text-xl md:text-2xl">0</span>
+            </div>
+            <div id="feedbackMsg" class="text-lg md:text-xl font-bold opacity-0 transition-opacity duration-300">
+                答對了！🎉
+            </div>
+        </div>
+
+        <!-- 題目區 -->
+        <div class="flex items-center bg-yellow-100 border-l-4 border-yellow-400 p-3 md:p-4 mb-4 rounded-r-xl shadow-sm relative">
+            <p id="questionText" class="text-base md:text-xl font-bold text-yellow-800 text-left flex-1 leading-snug whitespace-pre-line">
+                準備載入題目...
+            </p>
+            <button onclick="replayAudio()" class="ml-2 md:ml-4 bg-yellow-400 hover:bg-yellow-500 text-white p-2 md:p-3 rounded-full shadow-md transition-transform active:scale-90 flex-shrink-0" title="重新朗讀題目">
+                🔊
+            </button>
+        </div>
+
+        <!-- 遊戲互動區 (置中排版) -->
+        <div class="flex flex-col items-center justify-center w-full">
+            
+            <div id="answer-areas" class="w-full mb-4 flex justify-center min-h-[50px] md:min-h-[60px]">
+                <!-- Area 1: 星期幾下拉選單 -->
+                <div id="dropdownAnswerArea" class="hidden flex-col sm:flex-row items-center gap-2 md:gap-3 bg-blue-50 p-3 rounded-xl border-2 border-dashed border-blue-300 w-full max-w-[550px] justify-center">
+                    <label for="weekdaySelect" class="text-base md:text-lg font-bold text-blue-800 whitespace-nowrap">答案是：</label>
+                    <select id="weekdaySelect" class="p-2 border-2 border-blue-400 rounded-xl text-base md:text-lg font-bold text-gray-700 bg-white">
+                        <option value="" disabled selected>請選擇星期</option>
+                        <option value="0">星期日</option><option value="1">星期一</option><option value="2">星期二</option>
+                        <option value="3">星期三</option><option value="4">星期四</option><option value="5">星期五</option><option value="6">星期六</option>
+                    </select>
+                    <button onclick="checkDropdownAnswer()" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-xl shadow transition-transform active:scale-95 whitespace-nowrap">確定</button>
+                </div>
+
+                <!-- Area 2: 數量下拉選單 (算幾個星期幾) -->
+                <div id="numberAnswerArea" class="hidden flex-col sm:flex-row items-center gap-2 md:gap-3 bg-purple-50 p-3 rounded-xl border-2 border-dashed border-purple-300 w-full max-w-[550px] justify-center">
+                    <label for="numberSelect" class="text-base md:text-lg font-bold text-purple-800 whitespace-nowrap">總共有：</label>
+                    <select id="numberSelect" class="p-2 border-2 border-purple-400 rounded-xl text-base md:text-lg font-bold text-gray-700 bg-white">
+                        <option value="" disabled selected>請選擇數量</option>
+                        <option value="3">3 個</option><option value="4">4 個</option><option value="5">5 個</option>
+                    </select>
+                    <button onclick="checkNumberAnswer()" class="bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-6 rounded-xl shadow transition-transform active:scale-95 whitespace-nowrap">確定</button>
+                </div>
+
+                <!-- Area 3: 多選按鈕區 (跨月、比較日期) -->
+                <div id="mcAnswerArea" class="hidden flex-wrap gap-2 md:gap-3 justify-center w-full max-w-[550px]">
+                    <!-- 動態生成 -->
+                </div>
+            </div>
+
+            <!-- 月曆容器區 (支援單月曆或雙月曆並排) -->
+            <div id="calendarContainer" class="flex flex-row justify-center items-start gap-2 md:gap-4 w-full px-2">
+                <canvas id="gameCanvas" width="550" height="480" class="calendar-canvas w-full max-w-[550px]"></canvas>
+                <!-- 第二個月曆，預設隱藏，跨月題型時自動顯示並縮小 -->
+                <canvas id="gameCanvas2" width="550" height="480" class="calendar-canvas hidden w-full"></canvas>
+            </div>
+            
+            <div id="hintText" class="mt-3 text-xs md:text-sm font-bold text-gray-500">
+                <!-- 動態提示文字 -->
+            </div>
+        </div>
+
+    </div>
+
+    <!-- 結算畫面 -->
+    <div id="endScreen" class="hidden max-w-lg w-full bg-white rounded-2xl shadow-xl p-8 text-center transition-all duration-300 mx-auto">
+        <h1 class="text-4xl font-bold text-green-600 mb-6">🎉 闖關大成功！</h1>
+        <p class="text-gray-600 text-xl mb-4">你的總得分是：</p>
+        <div class="text-6xl font-bold text-yellow-500 mb-8" id="finalScore">0</div>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center w-full">
+            <button onclick="restartGame()" class="flex-1 bg-green-500 hover:bg-green-600 text-white font-bold py-4 px-6 rounded-xl text-xl shadow-lg transition-transform active:scale-95">
+                再玩一次
+            </button>
+            <button onclick="returnToMenu()" class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-4 px-6 rounded-xl text-xl shadow-md transition-transform active:scale-95">
+                返回首頁
+            </button>
+        </div>
+    </div>
+
+    <!-- 離開確認彈窗 (客製化 Modal) -->
+    <div id="confirmModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl p-6 md:p-8 max-w-sm w-full text-center transform transition-all">
+            <div class="text-5xl mb-4">🤔</div>
+            <h3 class="text-xl md:text-2xl font-bold text-gray-800 mb-2">確定要放棄挑戰嗎？</h3>
+            <p class="text-gray-600 mb-6">現在回去的話，進度會消失喔！</p>
+            <div class="flex justify-center gap-3">
+                <button onclick="closeConfirmModal()" class="flex-1 bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-xl transition-transform active:scale-95 shadow-md">繼續挑戰</button>
+                <button onclick="forceReturnToMenu()" class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-3 px-4 rounded-xl transition-transform active:scale-95 shadow-sm">回到首頁</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 可自訂題庫資料 (加入名人生日與節慶範例) ---
+        let eventList = [
+            // 名人/偶像生日範例
+            { month: 1, date: 18, name: "周杰倫生日", isHoliday: false },
+            { month: 6, date: 20, name: "戴資穎生日", isHoliday: false },
+            { month: 5, date: 4, name: "柯南生日", isHoliday: false },
+            // 專屬好朋友生日
+            { month: 11, date: 7, name: "恩恩生日", isHoliday: false },
+            { month: 4, date: 11, name: "小語生日", isHoliday: false },
+            { month: 5, date: 20, name: "小衛星生日", isHoliday: false },
+            // 學校行事曆與節慶
+            { month: 4, date: 4, name: "兒童節", isHoliday: true },
+            { month: 5, date: 1, name: "勞動節", isHoliday: true },
+            { month: 10, date: 10, name: "國慶日", isHoliday: true },
+            { month: 12, date: 25, name: "耶誕節", isHoliday: false },
+            { month: 9, date: 10, name: "班親會", isHoliday: false },
+            { month: 11, date: 8, name: "運動會", isHoliday: false }
+        ];
+
+        // --- 遊戲狀態 ---
+        let maxQuestions = 5;
+        let currentQuestionCount = 0;
+        let score = 0;
+        let currentQuestionStr = "";
+        let currentLadderStep = 0; 
+
+        let gameData = {
+            currentYear: 2025,
+            currentMonth: 9,
+            targetDate: null,       
+            targetWeekday: null,    
+            targetCount: null,      
+            mcCorrectIndex: null,   
+            inputType: "",          
+            isDualCalendar: false,  
+            cal1: {}, 
+            cal2: {}  
+        };
+
+        // --- 排版常數 ---
+        let dayBoxes = []; 
+        let isWaiting = false; 
+
+        const cellSize = 60; 
+        const gap = 8;
+        const startX = 40; 
+        const startY = 70;
+
+        // --- DOM ---
+        const screens = { 
+            start: document.getElementById('startScreen'), 
+            settings: document.getElementById('settingsScreen'),
+            game: document.getElementById('gameScreen'), 
+            end: document.getElementById('endScreen') 
+        };
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const canvas2 = document.getElementById('gameCanvas2');
+        const ctx2 = canvas2.getContext('2d');
+        const ui = {
+            score: document.getElementById('scoreDisplay'),
+            question: document.getElementById('questionText'),
+            feedback: document.getElementById('feedbackMsg'),
+            progress: document.getElementById('progressDisplay'),
+            finalScore: document.getElementById('finalScore'),
+            hint: document.getElementById('hintText'),
+            ladderAnimal: document.getElementById('ladderAnimal'),
+            ladderFace: document.querySelector('#ladderAnimal span'), 
+            ladderDialog: document.getElementById('animal-dialog')
+        };
+
+        // ================= 輔助功能 =================
+        function getCalendarLayout(year, month) {
+            return {
+                startOffset: new Date(year, month - 1, 1).getDay(),
+                daysInMonth: new Date(year, month, 0).getDate()
+            };
+        }
+
+        // ================= 設定/自訂題庫功能 =================
+        function openSettings() {
+            screens.start.classList.add('hidden');
+            screens.settings.classList.remove('hidden');
+            renderEventList();
+        }
+
+        function closeSettings() {
+            screens.settings.classList.add('hidden');
+            screens.start.classList.remove('hidden');
+        }
+
+        function renderEventList() {
+            const tbody = document.getElementById('eventTableBody');
+            document.getElementById('eventCount').innerText = eventList.length;
+            tbody.innerHTML = '';
+            
+            if (eventList.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-gray-400">目前沒有活動，請手動新增或上傳 CSV 檔案</td></tr>`;
+                return;
+            }
+
+            eventList.forEach((ev, idx) => {
+                const isHol = ev.isHoliday ? '<span class="bg-red-100 text-red-600 px-2 py-1 rounded text-xs font-bold">是</span>' : '<span class="text-gray-400 text-xs">否</span>';
+                tbody.innerHTML += `
+                <tr class="border-b hover:bg-gray-100 transition-colors">
+                    <td class="p-2 font-semibold text-gray-700">${ev.month} / ${ev.date}</td>
+                    <td class="p-2 text-gray-800">${ev.name}</td>
+                    <td class="p-2 text-center">${isHol}</td>
+                    <td class="p-2 text-right">
+                        <button onclick="removeEvent(${idx})" class="text-red-500 hover:text-white hover:bg-red-500 px-2 py-1 rounded text-sm transition-colors">刪除</button>
+                    </td>
+                </tr>`;
+            });
+        }
+
+        function removeEvent(idx) {
+            eventList.splice(idx, 1);
+            renderEventList();
+        }
+
+        function addEventManual() {
+            const m = parseInt(document.getElementById('addM').value);
+            const d = parseInt(document.getElementById('addD').value);
+            const n = document.getElementById('addN').value.trim();
+            const h = document.getElementById('addH').checked;
+            
+            if(!m || m < 1 || m > 12) return alert("月份請輸入 1~12 之間的數字");
+            if(!d || d < 1 || d > 31) return alert("日期請輸入 1~31 之間的數字");
+            if(!n) return alert("請填寫名稱");
+
+            eventList.push({ month: m, date: d, name: n, isHoliday: h });
+            renderEventList();
+            
+            document.getElementById('addM').value = '';
+            document.getElementById('addD').value = '';
+            document.getElementById('addN').value = '';
+            document.getElementById('addH').checked = false;
+        }
+
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            
+            reader.onload = (e) => {
+                const lines = e.target.result.split(/\r?\n/);
+                let addedCount = 0;
+                
+                lines.forEach((line, index) => {
+                    if (line.trim() === "") return;
+                    if (index === 0 && line.includes("月") && line.includes("日")) return;
+
+                    const parts = line.split(',').map(p => p.trim());
+                    if (parts.length >= 3) {
+                        const m = parseInt(parts[0]);
+                        const d = parseInt(parts[1]);
+                        const n = parts[2];
+                        const hStr = parts[3] ? parts[3].toLowerCase() : "";
+                        const h = (hStr === '是' || hStr === 'y' || hStr === 'true' || hStr === '1');
+                        
+                        if (!isNaN(m) && m >= 1 && m <= 12 && !isNaN(d) && d >= 1 && d <= 31 && n) {
+                            eventList.push({ month: m, date: d, name: n, isHoliday: h });
+                            addedCount++;
+                        }
+                    }
+                });
+                
+                if(addedCount > 0) alert(`成功匯入 ${addedCount} 筆活動/生日！`);
+                else alert("沒有匯入任何資料，請檢查 CSV 格式是否正確。\n格式：月份,日期,活動名稱,是否放假");
+                
+                renderEventList();
+                event.target.value = '';
+            };
+            reader.readAsText(file);
+        }
+
+        // ================= 流程控制 =================
+        function startGame(questions) {
+            if(eventList.length === 0) return alert("題庫不能為空喔！請先新增活動或生日。");
+            
+            maxQuestions = questions;
+            currentQuestionCount = 0;
+            score = 0;
+            currentLadderStep = 0;
+            ui.score.innerText = score;
+            updateLadderUI();
+            
+            screens.start.classList.add('hidden');
+            screens.end.classList.add('hidden');
+            screens.game.classList.remove('hidden');
+
+            nextQuestion();
+        }
+
+        function restartGame() {
+            // 直接以目前的題數重新開始遊戲
+            startGame(maxQuestions);
+        }
+
+        function returnToMenu() {
+            screens.game.classList.add('hidden'); // 確保遊戲畫面也被隱藏
+            screens.end.classList.add('hidden');
+            screens.start.classList.remove('hidden');
+        }
+
+        // --- 新增：返回首頁確認邏輯 ---
+        function askReturnToMenu() {
+            document.getElementById('confirmModal').classList.remove('hidden');
+        }
+
+        function closeConfirmModal() {
+            document.getElementById('confirmModal').classList.add('hidden');
+        }
+
+        function forceReturnToMenu() {
+            closeConfirmModal();
+            // 中斷可能還在播放的語音與等待狀態
+            if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+            isWaiting = false; 
+            returnToMenu();
+        }
+
+        function nextQuestion() {
+            if (currentQuestionCount >= maxQuestions) {
+                setTimeout(() => {
+                    screens.game.classList.add('hidden');
+                    screens.end.classList.remove('hidden');
+                    ui.finalScore.innerText = score;
+                    if(score >= maxQuestions * 8) triggerConfetti(3);
+                }, 1000);
+                return;
+            }
+            currentQuestionCount++;
+            ui.progress.innerText = `${currentQuestionCount} / ${maxQuestions}`;
+            
+            document.getElementById('weekdaySelect').value = "";
+            document.getElementById('numberSelect').value = "";
+            
+            generateTimeQuestion();
+        }
+
+        // ================= 語音與特效 =================
+        function speak(text) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const cleanText = text.replace(/【|】|！|？|\n/g, ' ').replace('👉', '');
+                const msg = new SpeechSynthesisUtterance(cleanText);
+                msg.lang = 'zh-TW';
+                msg.rate = 0.9;
+                window.speechSynthesis.speak(msg);
+            }
+        }
+
+        function replayAudio() { speak(currentQuestionStr); }
+
+        function triggerConfetti(times = 1) {
+            let count = 0;
+            const interval = setInterval(() => {
+                confetti({ particleCount: 80, spread: 80, origin: { y: 0.6 }, colors: ['#22c55e', '#eab308', '#ef4444', '#3b82f6'] });
+                count++;
+                if (count >= times) clearInterval(interval);
+            }, 300);
+        }
+
+        function setInputUI(type) {
+            gameData.inputType = type;
+            document.getElementById('dropdownAnswerArea').classList.add('hidden');
+            document.getElementById('dropdownAnswerArea').classList.remove('flex');
+            document.getElementById('numberAnswerArea').classList.add('hidden');
+            document.getElementById('numberAnswerArea').classList.remove('flex');
+            document.getElementById('mcAnswerArea').classList.add('hidden');
+            document.getElementById('mcAnswerArea').classList.remove('flex');
+            
+            if (type === 'canvas') {
+                ui.hint.innerText = "👉 請直接點擊上方月曆中正確的日期數字";
+            } else if (type === 'weekday_dropdown') {
+                document.getElementById('dropdownAnswerArea').classList.remove('hidden');
+                document.getElementById('dropdownAnswerArea').classList.add('flex');
+                ui.hint.innerText = "👉 請查閱月曆，並使用上方的選單回答星期幾";
+            } else if (type === 'number_dropdown') {
+                document.getElementById('numberAnswerArea').classList.remove('hidden');
+                document.getElementById('numberAnswerArea').classList.add('flex');
+                ui.hint.innerText = "👉 請算算看有幾天，並使用上方選單回答";
+            } else if (type === 'multiple_choice') {
+                document.getElementById('mcAnswerArea').classList.remove('hidden');
+                document.getElementById('mcAnswerArea').classList.add('flex');
+                ui.hint.innerText = "👉 請點擊上方的按鈕選擇正確答案";
+            }
+        }
+
+        function setupMCButtons(options, correctIndex) {
+            const container = document.getElementById('mcAnswerArea');
+            container.innerHTML = ''; 
+            gameData.mcCorrectIndex = correctIndex;
+
+            options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = "bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 md:py-3 md:px-6 rounded-xl text-sm md:text-lg shadow-md transition-transform active:scale-95";
+                btn.innerText = opt;
+                btn.onclick = () => checkMCAnswer(idx);
+                container.appendChild(btn);
+            });
+        }
+
+        // ================= 1. 生成題目 (雙月曆支援版) =================
+        function generateTimeQuestion() {
+            gameData.targetDate = null;
+            let currentYear = 2025;
+
+            const weightedModes = [
+                "cross_month", "cross_month", 
+                "compare_dates", "compare_dates",
+                "count_weekday", "count_weekday",
+                "standard_relative", "event_relative", "weekday_lookup"
+            ];
+            const mode = weightedModes[Math.floor(Math.random() * weightedModes.length)];
+
+            if (mode === "cross_month") {
+                gameData.isDualCalendar = true;
+                let cMonth = Math.floor(Math.random() * 12) + 1;
+                let cLayout = getCalendarLayout(currentYear, cMonth);
+                const askTomorrow = Math.random() > 0.5; 
+
+                let options = [], correctIdx = 0;
+
+                if (askTomorrow) {
+                    let nextY = cMonth === 12 ? currentYear + 1 : currentYear;
+                    let nextM = cMonth === 12 ? 1 : cMonth + 1;
+                    let nextLayout = getCalendarLayout(nextY, nextM);
+
+                    gameData.cal1 = { year: currentYear, month: cMonth, todayDate: cLayout.daysInMonth, startOffset: cLayout.startOffset, daysInMonth: cLayout.daysInMonth };
+                    gameData.cal2 = { year: nextY, month: nextM, todayDate: null, startOffset: nextLayout.startOffset, daysInMonth: nextLayout.daysInMonth };
+                    
+                    currentQuestionStr = `如果今天是 ${cMonth}月${cLayout.daysInMonth}日，\n那【明天】是幾月幾日？`;
+                    options = [`${cMonth}月${cLayout.daysInMonth + 1}日`, `${nextM}月1日`, `${nextM}月2日`];
+                    correctIdx = 1;
+                } else {
+                    let prevY = cMonth === 1 ? currentYear - 1 : currentYear;
+                    let prevM = cMonth === 1 ? 12 : cMonth - 1;
+                    let prevLayout = getCalendarLayout(prevY, prevM);
+
+                    gameData.cal1 = { year: prevY, month: prevM, todayDate: null, startOffset: prevLayout.startOffset, daysInMonth: prevLayout.daysInMonth };
+                    gameData.cal2 = { year: currentYear, month: cMonth, todayDate: 1, startOffset: cLayout.startOffset, daysInMonth: cLayout.daysInMonth };
+                    
+                    currentQuestionStr = `如果今天是 ${cMonth}月1日，\n那【昨天】是幾月幾日？`;
+                    options = [`${cMonth}月0日`, `${prevM}月${prevLayout.daysInMonth}日`, `${prevM}月1日`];
+                    correctIdx = 1;
+                }
+
+                const shuffled = options.map((v, i) => ({v, i})).sort(() => Math.random() - 0.5);
+                const finalOptions = shuffled.map(o => o.v);
+                const finalCorrectIdx = shuffled.findIndex(o => o.i === correctIdx);
+
+                setInputUI('multiple_choice');
+                setupMCButtons(finalOptions, finalCorrectIdx);
+
+            } else {
+                gameData.isDualCalendar = false;
+
+                if (mode === "compare_dates" && eventList.length >= 2) {
+                    let ev1, ev2, attempts = 0;
+                    do {
+                        ev1 = eventList[Math.floor(Math.random() * eventList.length)];
+                        ev2 = eventList[Math.floor(Math.random() * eventList.length)];
+                        attempts++;
+                    } while((ev1.name === ev2.name || (ev1.month === ev2.month && ev1.date === ev2.date)) && attempts < 10);
+
+                    const val1 = ev1.month * 100 + ev1.date;
+                    const val2 = ev2.month * 100 + ev2.date;
+                    const askEarliest = Math.random() > 0.5;
+                    let correctEv = askEarliest ? (val1 < val2 ? ev1 : ev2) : (val1 > val2 ? ev1 : ev2);
+                    
+                    const pre1 = ev1.isHoliday ? "放假的" : "";
+                    const pre2 = ev2.isHoliday ? "放假的" : "";
+
+                    currentQuestionStr = `【${pre1}${ev1.name}】是 ${ev1.month}月${ev1.date}日，\n【${pre2}${ev2.name}】是 ${ev2.month}月${ev2.date}日。\n請問哪一個比較【${askEarliest ? '早' : '晚'}】到呢？`;
+                    
+                    let layout = getCalendarLayout(currentYear, correctEv.month);
+                    gameData.cal1 = { year: currentYear, month: correctEv.month, todayDate: correctEv.date, startOffset: layout.startOffset, daysInMonth: layout.daysInMonth };
+
+                    const options = Math.random() > 0.5 ? [ev1.name, ev2.name] : [ev2.name, ev1.name];
+                    const correctIdx = options.indexOf(correctEv.name);
+                    
+                    setInputUI('multiple_choice');
+                    setupMCButtons(options, correctIdx);
+
+                } else if (mode === "count_weekday") {
+                    let cMonth = Math.floor(Math.random() * 12) + 1;
+                    let layout = getCalendarLayout(currentYear, cMonth);
+                    const targetWeekday = Math.floor(Math.random() * 7);
+                    const weekdaysStr = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+                    
+                    let count = 0;
+                    for (let i = 1; i <= layout.daysInMonth; i++) {
+                        if ((i - 1 + layout.startOffset) % 7 === targetWeekday) count++;
+                    }
+                    gameData.targetCount = count;
+                    gameData.cal1 = { year: currentYear, month: cMonth, todayDate: null, startOffset: layout.startOffset, daysInMonth: layout.daysInMonth };
+                    currentQuestionStr = `請查閱日曆算一算，\n${cMonth}月 總共有幾個【${weekdaysStr[targetWeekday]}】？`;
+                    setInputUI('number_dropdown');
+
+                } else if (mode === "weekday_lookup") {
+                    const useEvent = (Math.random() > 0.5 && eventList.length > 0);
+                    let cMonth, targetDay, prefix = "";
+
+                    if (useEvent) {
+                        const event = eventList[Math.floor(Math.random() * eventList.length)];
+                        cMonth = event.month;
+                        targetDay = event.date;
+                        prefix = event.isHoliday ? "放假的" : "";
+                        currentQuestionStr = `這個月有${prefix}【${event.name}】！\n請查查看，${cMonth}月${targetDay}日是星期幾？`;
+                    } else {
+                        cMonth = Math.floor(Math.random() * 12) + 1;
+                        let layout = getCalendarLayout(currentYear, cMonth);
+                        targetDay = Math.floor(Math.random() * layout.daysInMonth) + 1;
+                        currentQuestionStr = `請看月曆，${cMonth}月${targetDay}日是星期幾？\n請從選單選擇。`;
+                    }
+                    let layout = getCalendarLayout(currentYear, cMonth);
+                    gameData.targetWeekday = (targetDay - 1 + layout.startOffset) % 7;
+                    gameData.cal1 = { year: currentYear, month: cMonth, todayDate: null, startOffset: layout.startOffset, daysInMonth: layout.daysInMonth };
+                    setInputUI('weekday_dropdown');
+
+                } else {
+                    const isEvent = (mode === "event_relative" && eventList.length > 0);
+                    let cMonth, today, prefix = "", eventName = "";
+
+                    if (isEvent) {
+                        const event = eventList[Math.floor(Math.random() * eventList.length)];
+                        cMonth = event.month;
+                        today = event.date;
+                        prefix = event.isHoliday ? "放假的" : "";
+                        eventName = event.name;
+                    } else {
+                        cMonth = Math.floor(Math.random() * 12) + 1;
+                        today = Math.floor(Math.random() * 21) + 5; 
+                    }
+                    
+                    let layout = getCalendarLayout(currentYear, cMonth);
+                    gameData.cal1 = { year: currentYear, month: cMonth, todayDate: today, startOffset: layout.startOffset, daysInMonth: layout.daysInMonth };
+
+                    const subModes = ['tomorrow'];
+                    if (today > 1) subModes.push('yesterday'); 
+                    const subMode = subModes[Math.floor(Math.random() * subModes.length)];
+
+                    if (subMode === "yesterday") {
+                        gameData.targetDate = today - 1;
+                        currentQuestionStr = isEvent 
+                            ? `${prefix}【${eventName}】在 ${today} 號。\n如果【今天】是${eventName}，請點擊【昨天】。`
+                            : `如果【今天】是 ${today} 號，請點擊【昨天】。`;
+                    } else {
+                        gameData.targetDate = today + 1;
+                        currentQuestionStr = isEvent 
+                            ? `${prefix}【${eventName}】在 ${today} 號。\n如果【今天】是${eventName}，請點擊【明天】。`
+                            : `如果【今天】是 ${today} 號，請點擊【明天】。`;
+                    }
+                    setInputUI('canvas');
+                }
+            }
+            
+            ui.question.innerText = currentQuestionStr;
+            drawCalendar();
+            isWaiting = false;
+            speak(currentQuestionStr);
+        }
+
+        // ================= 2. 繪製月曆介面 (雙月曆切換) =================
+        function drawCalendar(highlightDate = null, highlightColor = null) {
+            if (gameData.isDualCalendar) {
+                canvas2.classList.remove('hidden');
+                canvas.classList.remove('max-w-[550px]');
+                canvas.classList.add('w-1/2');
+                canvas2.classList.add('w-1/2');
+
+                _drawSpecificCalendar(ctx, canvas, gameData.cal1, false);
+                _drawSpecificCalendar(ctx2, canvas2, gameData.cal2, false);
+            } else {
+                canvas2.classList.add('hidden');
+                canvas.classList.add('max-w-[550px]');
+                canvas.classList.remove('w-1/2');
+                canvas2.classList.remove('w-1/2');
+
+                _drawSpecificCalendar(ctx, canvas, gameData.cal1, true, highlightDate, highlightColor);
+            }
+        }
+
+        function _drawSpecificCalendar(context, canvasEl, calData, isMainCanvas, highlightDate = null, highlightColor = null) {
+            context.clearRect(0, 0, canvasEl.width, canvasEl.height);
+            if (isMainCanvas) dayBoxes = []; 
+
+            context.fillStyle = '#ffffff'; 
+            context.font = 'bold 24px Arial';
+            context.textAlign = 'center';
+            context.textBaseline = 'middle';
+            context.fillText(`${calData.year}年 ${calData.month}月`, canvasEl.width / 2, 30);
+
+            const daysOfWeek = ['日', '一', '二', '三', '四', '五', '六'];
+            context.font = 'bold 18px Arial';
+            for(let i = 0; i < 7; i++) {
+                context.fillStyle = (i === 0 || i === 6) ? '#f87171' : '#e2e8f0'; 
+                let cx = startX + i * (cellSize + gap) + cellSize / 2;
+                context.fillText(daysOfWeek[i], cx, startY - 20);
+            }
+
+            for(let i = 1; i <= calData.daysInMonth; i++) {
+                let col = (i - 1 + calData.startOffset) % 7;
+                let row = Math.floor((i - 1 + calData.startOffset) / 7);
+
+                let x = startX + col * (cellSize + gap);
+                let y = startY + row * (cellSize + gap);
+
+                if (isMainCanvas) {
+                    dayBoxes.push({ date: i, x: x, y: y, w: cellSize, h: cellSize });
+                }
+
+                let bgColor = "white";
+                let label = "";
+
+                if (highlightDate === i && isMainCanvas) {
+                    bgColor = highlightColor;
+                } else if(i === calData.todayDate) {
+                    bgColor = "#fef08a"; 
+                    label = "今天";
+                }
+
+                _drawBox(context, x, y, cellSize, cellSize, i, bgColor, label, col === 0 || col === 6);
+            }
+        }
+
+        function _drawBox(context, x, y, w, h, date, bgColor, label, isWeekend) {
+            context.fillStyle = bgColor;
+            context.beginPath();
+            context.roundRect(x, y, w, h, 8);
+            context.fill();
+            
+            context.strokeStyle = '#94a3b8'; 
+            context.lineWidth = 2;
+            context.stroke();
+
+            context.fillStyle = isWeekend ? '#ef4444' : '#0f172a'; 
+            context.font = 'bold 24px Arial';
+            context.textAlign = 'center';
+            context.textBaseline = 'middle';
+            context.fillText(date, x + w / 2, y + h / 2 - (label ? 8 : 0));
+
+            if (label) {
+                context.fillStyle = '#b45309'; 
+                context.font = 'bold 14px Arial';
+                context.fillText(label, x + w / 2, y + h / 2 + 16);
+            }
+        }
+
+        // ================= 3. 判定與橫向進度邏輯 =================
+        function updateLadderUI() {
+            const positions = ['2%', '17%', '32%', '47%', '62%', '78%'];
+            ui.ladderAnimal.style.left = positions[currentLadderStep];
+
+            if (currentLadderStep === 5) {
+                isWaiting = true; 
+                ui.ladderDialog.classList.remove('hidden');
+                speak("太棒了！水豚君回到池塘了！");
+                triggerConfetti(2);
+                
+                setTimeout(() => {
+                    ui.ladderDialog.classList.add('hidden');
+                    if (currentQuestionCount < maxQuestions) {
+                        currentLadderStep = 0;
+                        updateLadderUI();
+                        nextQuestion(); 
+                    } else {
+                        nextQuestion(); 
+                    }
+                }, 3000);
+            }
+        }
+
+        function playEffect(isCorrect, clickedDate = null) {
+            ui.feedback.style.opacity = 1;
+            
+            if (isCorrect) {
+                speak("答對了！");
+                ui.feedback.innerText = "答對了！🎉";
+                ui.feedback.className = "text-lg md:text-xl font-bold text-green-500 transition-opacity duration-300";
+                if(clickedDate && !gameData.isDualCalendar) drawCalendar(clickedDate, "#bbf7d0"); 
+                
+                currentLadderStep++;
+                updateLadderUI();
+
+                if (currentLadderStep < 5) {
+                    setTimeout(() => {
+                        ui.feedback.style.opacity = 0;
+                        nextQuestion();
+                    }, 1500);
+                } else {
+                    setTimeout(() => { ui.feedback.style.opacity = 0; }, 1500);
+                }
+
+            } else {
+                speak("哎呀，再想想看！");
+                ui.feedback.innerText = "哎呀，再想想看！❌";
+                ui.feedback.className = "text-lg md:text-xl font-bold text-red-500 transition-opacity duration-300";
+                if(clickedDate && !gameData.isDualCalendar) drawCalendar(clickedDate, "#fecaca"); 
+
+                ui.ladderFace.innerText = "• ヘ •❓";
+                ui.ladderAnimal.classList.add('tilt-think');
+
+                setTimeout(() => {
+                    ui.feedback.style.opacity = 0;
+                    ui.ladderFace.innerText = "• ω •";
+                    ui.ladderAnimal.classList.remove('tilt-think');
+                    if(clickedDate && !gameData.isDualCalendar) drawCalendar(); 
+                    isWaiting = false;
+                }, 1500);
+            }
+        }
+
+        // 答題入口
+        canvas.addEventListener('mousedown', (e) => handleCanvasClick(e.clientX, e.clientY));
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault(); 
+            if(e.touches.length > 0) handleCanvasClick(e.touches[0].clientX, e.touches[0].clientY);
+        }, { passive: false });
+
+        function handleCanvasClick(clientX, clientY) {
+            if (isWaiting) return;
+            if (gameData.inputType !== 'canvas') {
+                speak("請使用下方的按鈕或選單作答喔！");
+                return;
+            }
+
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            const x = (clientX - rect.left) * scaleX;
+            const y = (clientY - rect.top) * scaleY;
+
+            let clickedDate = null;
+            for (let box of dayBoxes) {
+                if (x >= box.x && x <= box.x + box.w && y >= box.y && y <= box.y + box.h) {
+                    clickedDate = box.date; break;
+                }
+            }
+            
+            if (clickedDate !== null) {
+                isWaiting = true;
+                if (clickedDate === gameData.targetDate) {
+                    score += 10; ui.score.innerText = score;
+                    playEffect(true, clickedDate);
+                } else {
+                    score = Math.max(0, score - 5); ui.score.innerText = score;
+                    playEffect(false, clickedDate);
+                }
+            }
+        }
+
+        function checkDropdownAnswer() {
+            if (isWaiting) return;
+            const sel = document.getElementById('weekdaySelect').value;
+            if (sel === "") { speak("請先選擇一個星期"); return; }
+
+            isWaiting = true;
+            if (parseInt(sel) === gameData.targetWeekday) {
+                score += 10; ui.score.innerText = score; playEffect(true);
+            } else {
+                score = Math.max(0, score - 5); ui.score.innerText = score; playEffect(false);
+            }
+        }
+
+        function checkNumberAnswer() {
+            if (isWaiting) return;
+            const sel = document.getElementById('numberSelect').value;
+            if (sel === "") { speak("請先選擇數量"); return; }
+
+            isWaiting = true;
+            if (parseInt(sel) === gameData.targetCount) {
+                score += 10; ui.score.innerText = score; playEffect(true);
+            } else {
+                score = Math.max(0, score - 5); ui.score.innerText = score; playEffect(false);
+            }
+        }
+
+        function checkMCAnswer(idx) {
+            if (isWaiting) return;
+            isWaiting = true;
+            if (idx === gameData.mcCorrectIndex) {
+                score += 10; ui.score.innerText = score; playEffect(true);
+            } else {
+                score = Math.max(0, score - 5); ui.score.innerText = score; playEffect(false);
+            }
+        }
+
+    </script>
+</body>
+</html>
