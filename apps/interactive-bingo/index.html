@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta name="category" content="班經小工具">
+    <meta name="description" content="課堂專用互動連線賓果遊戲，自訂格數，營造熱烈學習氣氛！">
+    <meta name="icon" content="🎉">
+    <meta name="tags" content="賓果,互動遊戲,班級經營">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>互動連線賓果 (Multiplayer Interactive Bingo)</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- MQTT.js client library -->
+  <script src="https://unpkg.com/mqtt@4.3.7/dist/mqtt.min.js"></script>
+  <!-- Tesseract.js for client-side OCR -->
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
+</head>
+<body>
+
+  <!-- Background decorations -->
+  <div class="bg-glow-1"></div>
+  <div class="bg-glow-2"></div>
+
+  <!-- Confetti Canvas -->
+  <canvas id="confetti-canvas"></canvas>
+
+  <div class="container">
+    
+    <!-- CARD CONTROLLER -->
+    <div class="card">
+
+      <!-- ================= SCREEN 1: WELCOME ================= -->
+      <div id="screen-welcome" class="screen active">
+        <h1 class="title">互動連線賓果</h1>
+        <p class="subtitle">課堂互動連線遊戲・平板掃碼即玩</p>
+        <div class="btn-group">
+          <button class="btn btn-teacher" onclick="navigateTo('screen-teacher-setup')">
+            👑 建立房間 (老師)
+          </button>
+          <button class="btn btn-student" onclick="navigateTo('screen-student-join')">
+            🎒 加入遊戲 (學生)
+          </button>
+        </div>
+      </div>
+
+      <!-- ================= SCREEN 2: TEACHER SETUP ================= -->
+      <div id="screen-teacher-setup" class="screen">
+        <h1 class="title">建立賓果房間</h1>
+        
+        <!-- 1. 選擇賓果內容類型 -->
+        <div class="form-group">
+          <label class="form-label">1. 選擇賓果內容類型：</label>
+          <div class="selector-row" id="setup-content-type">
+            <button class="selector-btn" data-value="numbers">🔢 數字</button>
+            <button class="selector-btn selected" data-value="words">📝 語詞</button>
+            <button class="selector-btn" data-value="patterns">🎨 圖案</button>
+            <button class="selector-btn" data-value="alphabet">🔤 字母</button>
+            <button class="selector-btn" data-value="zhuyin">🗣️ 注音</button>
+          </div>
+          
+          <!-- 🔢 數字設定 -->
+          <div id="numbers-input-container" class="setup-sub-container mt-4" style="display: none;">
+            <label class="form-label">設定數字範圍：</label>
+            <div class="range-input-row">
+              <input type="number" id="setup-number-min" class="form-input text-center bold" value="1" min="1">
+              <span class="range-separator">~</span>
+              <input type="number" id="setup-number-max" class="form-input text-center bold" value="25" min="1">
+            </div>
+            <div class="warning-text" id="numbers-range-warning" style="color: #627d98; font-weight: normal; margin-top: 6px;">* 建議範圍至少包含 25 個數字</div>
+          </div>
+
+          <!-- 📝 語詞設定 -->
+          <div id="words-input-container" class="setup-sub-container mt-4">
+            <!-- 教材範本快速載入 -->
+            <div class="form-group mb-3">
+              <label class="form-label">📋 選擇課本與教學範本詞彙 (快速載入)：</label>
+              <select class="form-select" id="setup-preset-words" onchange="loadPresetWords(this.value)">
+                <option value="" selected>-- 點選自動填入詞彙範本 --</option>
+                <option value="math_terms">📐 國小數學名詞 (因數、倍數、長方體、百分率、對稱軸等)</option>
+                <option value="mandarin_l1">📖 國語課本：第一課生字 (手, 足, 口, 耳, 目, 語, 言, 自, 由)</option>
+                <option value="mandarin_l2">📖 國語課本：第二課生字 (春, 夏, 秋, 冬, 花, 草, 山, 石, 田, 水)</option>
+                <option value="english_fruits">🍎 英語常用單字 (Apple, Banana, Orange, Watermelon, Grape, Cherry)</option>
+                <option value="english_animals">🦁 英語常用單字 (Lion, Tiger, Bear, Rabbit, Monkey, Elephant, Zebra)</option>
+                <option value="special_edu_cognitive">🧸 特教生活認知 (杯子, 牙刷, 衣服, 書包, 鞋子, 椅子, 桌子, 湯匙)</option>
+              </select>
+            </div>
+
+            <!-- 課本圖片 OCR 辨識生字 -->
+            <div class="form-group mb-3">
+              <label class="form-label">📸 上傳課本圖片自動辨識生字 (無須手打)：</label>
+              <div class="ocr-upload-area" onclick="triggerOcrUpload()">
+                <div class="ocr-upload-placeholder">
+                  <span>📂 點擊選擇課本照片或開啟相機拍照</span>
+                </div>
+                <input type="file" id="ocr-file-input" accept="image/*" style="display: none;" onchange="handleOcrFile(event)">
+              </div>
+              
+              <!-- OCR Progress & Status -->
+              <div id="ocr-status-container" class="ocr-status-box" style="display: none;">
+                <div class="ocr-status-header">
+                  <span id="ocr-status-text">載入辨識引擎中...</span>
+                  <span id="ocr-percentage">0%</span>
+                </div>
+                <div class="ocr-progress-bar">
+                  <div id="ocr-progress-fill" class="ocr-progress-fill" style="width: 0%;"></div>
+                </div>
+              </div>
+            </div>
+
+            <label class="form-label">自訂語詞內容 (用逗號隔開)：</label>
+            <textarea class="custom-word-input" id="setup-custom-words" placeholder="例如：蘋果, 香蕉, 橘子, 西瓜..."></textarea>
+          </div>
+
+          <!-- 🎨 圖案設定 -->
+          <div id="patterns-input-container" class="setup-sub-container mt-4" style="display: none;">
+            <label class="form-label">選擇圖案主題 (可多選)：</label>
+            <div class="checkbox-group-row">
+              <div class="checkbox-container">
+                <input type="checkbox" class="checkbox-input pattern-theme-checkbox" id="pattern-theme-animals" checked>
+                <div class="checkbox-label">🐶 可愛動物</div>
+              </div>
+              <div class="checkbox-container">
+                <input type="checkbox" class="checkbox-input pattern-theme-checkbox" id="pattern-theme-fruits">
+                <div class="checkbox-label">🍎 新鮮水果</div>
+              </div>
+              <div class="checkbox-container">
+                <input type="checkbox" class="checkbox-input pattern-theme-checkbox" id="pattern-theme-weather">
+                <div class="checkbox-label">☀️ 天氣變化</div>
+              </div>
+              <div class="checkbox-container">
+                <input type="checkbox" class="checkbox-input pattern-theme-checkbox" id="pattern-theme-vehicles">
+                <div class="checkbox-label">🚗 交通工具</div>
+              </div>
+            </div>
+            <div class="emoji-preview-container mt-3">
+              <span id="patterns-preview-list" class="emoji-preview-list">🐶 🐱 🦁 🐯 🐼 🐨 🐻 ...</span>
+            </div>
+          </div>
+
+          <!-- 🔤 字母設定 -->
+          <div id="alphabet-input-container" class="setup-sub-container mt-4" style="display: none;">
+            <label class="form-label">選擇字母大小寫：</label>
+            <select class="form-select" id="setup-alphabet-case">
+              <option value="uppercase" selected>大寫 (A-Z)</option>
+              <option value="lowercase">小寫 (a-z)</option>
+            </select>
+          </div>
+
+          <!-- 🗣️ 注音設定 -->
+          <div id="zhuyin-input-container" class="setup-sub-container mt-4" style="display: none;">
+            <div class="zhuyin-info-box">
+              <p class="zhuyin-info-title bold text-center">系統將自動打亂 37 個注音符號</p>
+              <p id="zhuyin-preview-list" class="zhuyin-preview-text text-center mt-2">ㄅ ㄆ ㄇ ㄈ ㄉ ㄊ ㄋ ㄌ ㄍ ㄎ ㄏ ...</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. 選擇賓果盤大小 -->
+        <div class="form-group">
+          <label class="form-label">2. 選擇賓果盤大小：</label>
+          <div class="selector-row" id="setup-grid-size-new">
+            <button class="selector-btn" data-value="3">3 x 3</button>
+            <button class="selector-btn selected" data-value="4">4 x 4</button>
+            <button class="selector-btn" data-value="5">5 x 5</button>
+          </div>
+          
+          <div class="checkbox-container" id="free-space-container">
+            <input type="checkbox" class="checkbox-input" id="setup-free-space" disabled>
+            <div class="checkbox-label" id="free-space-label-div">
+              中央包含 Free 格 (免費送一格)
+              <div class="warning-text" id="free-space-warning">※ 4x4 沒有正中央，此選項僅適用於 3x3 與 5x5</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. 學生人數 -->
+        <div class="form-group">
+          <label class="form-label">3. 學生人數：</label>
+          <input type="number" class="student-count-input bold" id="setup-student-count-input" value="28" min="1">
+        </div>
+
+        <!-- 連線目標 (幾條線獲勝) -->
+        <div class="form-group">
+          <label class="form-label">選擇連線目標 (幾條線獲勝)：</label>
+          <select class="form-select" id="setup-win-lines">
+            <option value="1">1 條線 (最快)</option>
+            <option value="2" selected>2 條線 (推薦)</option>
+            <option value="3">3 條線 (挑戰)</option>
+          </select>
+        </div>
+
+        <button class="btn btn-success" onclick="createRoom()">🚀 建立遊戲房間</button>
+        <div class="text-center">
+          <span class="back-link" onclick="navigateTo('screen-welcome')">返回首頁</span>
+        </div>
+      </div>
+
+      <!-- ================= SCREEN 3: TEACHER LOBBY ================= -->
+      <div id="screen-teacher-lobby" class="screen">
+        <h1 class="title">等待學生加入</h1>
+        
+        <div class="lobby-info">
+          <div class="room-badge">房號：<span id="lobby-room-id">----</span></div>
+          <div class="qr-container">
+            <img id="lobby-qr" src="" alt="Lobby QR Code" width="180" height="180">
+          </div>
+          <p class="bold" style="color: var(--border-color)">請學生使用平板掃描上方 QR Code 加入！</p>
+          <div class="join-url" id="lobby-join-url">https://...</div>
+        </div>
+
+        <div class="student-list-container">
+          <div class="student-list-title">
+            <span>已加入學生</span>
+            <span class="badge" id="lobby-student-count">0 人</span>
+          </div>
+          <div class="student-list" id="lobby-student-list">
+            <!-- Joined students badges dynamically added here -->
+            <p style="color: #a0aec0; font-size: 0.9rem;" id="no-students-placeholder">尚未有學生加入...</p>
+          </div>
+        </div>
+
+        <button class="btn btn-success" id="btn-start-game" onclick="startBingoGame()" disabled>🎮 開始賓果遊戲</button>
+        <div class="text-center">
+          <span class="back-link" onclick="closeRoomAndExit()">關閉房間並返回</span>
+        </div>
+      </div>
+
+      <!-- ================= SCREEN 4: TEACHER GAME ================= -->
+      <div id="screen-teacher-game" class="screen">
+        <div class="flex-between mb-4">
+          <div class="room-badge" style="font-size:1.2rem; padding: 4px 14px;">房號：<span id="game-room-id-t">----</span></div>
+          <span class="badge" id="game-student-count-t" style="font-size: 0.9rem; padding: 6px 12px;">學生人數: 0人</span>
+        </div>
+
+        <div class="last-drawn-display">
+          <div>最新抽出的詞彙/數字</div>
+          <div class="last-drawn-word" id="last-drawn-word">---</div>
+        </div>
+
+        <div class="btn-group mb-4">
+          <button class="btn btn-accent" onclick="drawWordRandomly()">🎲 隨機抽一個詞</button>
+        </div>
+
+        <div class="board-ranking">
+          <div class="form-label" style="margin-bottom: 8px;">📊 學生即時連線排行與 Bingo 狀態</div>
+          <div id="ranking-list">
+            <!-- Student ranking dynamically updated -->
+          </div>
+        </div>
+
+        <div class="text-center mt-4">
+          <span class="back-link" onclick="closeRoomAndExit()">結束遊戲並返回</span>
+        </div>
+      </div>
+
+      <!-- ================= SCREEN 5: STUDENT JOIN ================= -->
+      <div id="screen-student-join" class="screen">
+        <h1 class="title" id="student-join-title" style="display: none;">加入賓果遊戲</h1>
+        
+        <div class="form-group" id="student-room-group" style="display: none;">
+          <label class="form-label">輸入 4 位數房號</label>
+          <input type="number" class="form-input text-center bold" id="student-room-input" placeholder="例如：1234" oninput="if(value.length>4)value=value.slice(0,4)">
+        </div>
+
+        <div class="form-group" id="student-name-group">
+          <label class="form-label" id="student-name-label">輸入座號</label>
+          <input type="number" class="form-input text-center bold" id="student-name-input" placeholder="例如：12" min="1" max="99" oninput="if(value.length>2)value=value.slice(0,2)">
+        </div>
+
+        <button class="btn btn-student" id="btn-student-join-game" onclick="joinRoom()">開始遊戲</button>
+        
+        <div class="text-center" id="student-back-btn-container" style="display: none;">
+          <span class="back-link" onclick="navigateTo('screen-welcome')">返回首頁</span>
+        </div>
+      </div>
+
+      <!-- ================= SCREEN 6: STUDENT LOBBY ================= -->
+      <div id="screen-student-lobby" class="screen">
+        <h1 class="title">準備大廳</h1>
+        
+        <div class="text-center mb-4">
+          <div class="room-badge">房號：<span id="lobby-room-id-s">----</span></div>
+          <p class="bold mt-4" style="font-size: 1.2rem; color: var(--primary-accent);">哈囉，<span id="student-name-badge">---</span>！</p>
+          <p style="color: #627d98; margin-top: 8px;">已成功加入！請等待老師點擊「開始遊戲」...</p>
+        </div>
+
+        <!-- Waiting Spinner -->
+        <div style="text-align: center; margin: 30px 0;">
+          <div style="display: inline-block; width: 50px; height: 50px; border: 6px solid #e1f5fe; border-top: 6px solid var(--primary-accent); border-radius: 50%; animation: spin 1s linear infinite;"></div>
+        </div>
+
+        <div class="text-center">
+          <span class="back-link" onclick="exitLobbyAndDisconnect()">退出房間</span>
+        </div>
+      </div>
+
+      <!-- ================= SCREEN 7: STUDENT GAME ================= -->
+      <div id="screen-student-game" class="screen">
+        <div class="status-bar">
+          <div>🙋 <span id="game-student-name">學生</span></div>
+          <div>目標：<span id="game-target-lines">2</span> 條線</div>
+          <div>目前：<span id="game-current-lines" style="color: var(--primary-accent); font-weight:800;">0</span> 條線</div>
+        </div>
+
+        <div class="last-drawn-display" style="padding: 10px; margin-bottom: 12px; border-width: 3px;">
+          <div style="font-size: 0.85rem;">老師剛抽出的詞彙：</div>
+          <div class="last-drawn-word" id="student-last-drawn" style="font-size: 1.5rem; color:#d97706;">(等待老師抽詞)</div>
+        </div>
+
+        <div class="bingo-board-container mb-4">
+          <div class="bingo-board" id="bingo-board-grid">
+            <!-- Bingo Grid cells -->
+          </div>
+        </div>
+
+        <div class="form-label text-center" style="color: #627d98; font-size:0.85rem;">
+          💡 當看到老師抽出的詞在您的盤面上時，點擊該格子即可進行標記！
+        </div>
+
+        <div class="text-center mt-4">
+          <span class="back-link" onclick="exitLobbyAndDisconnect()">退出遊戲</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- BINGO SUCCESS MODAL OVERLAY -->
+  <div class="modal-overlay" id="bingo-modal">
+    <div class="modal-content">
+      <h2 style="font-size: 2.2rem; color: var(--success-color); margin-bottom: 12px; animation: bounce 0.6s infinite alternate;">🎉 BINGO! 🎉</h2>
+      <p class="bold" style="font-size: 1.1rem; margin-bottom: 20px;">恭喜您！成功連線！</p>
+      <button class="btn btn-success" onclick="closeBingoModal()">繼續遊戲</button>
+    </div>
+  </div>
+
+  <!-- Animation styles -->
+  <style>
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    @keyframes bounce {
+      from { transform: scale(1); }
+      to { transform: scale(1.1); }
+    }
+  </style>
+
+  <script src="app.js"></script>
+</body>
+</html>

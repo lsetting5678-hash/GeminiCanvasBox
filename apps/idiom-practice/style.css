@@ -1,0 +1,79 @@
+/* i:\AntiGravity0606\idiom-practice\style.css */
+@import url('https://cdn.jsdelivr.net/gh/ButTaiwan/iansui@master/webfont/iansui.css');
+@import url('https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&display=swap');
+
+body {
+  font-family: 'Iansui', '芫荽', 'Klee One', 'Segoe UI', '微軟正黑體', sans-serif;
+  background-color: #fffaf0; /* Warm orange-white background */
+}
+
+/* Animations */
+.animate-car-bounce {
+  animation: carBounce 1.5s infinite ease-in-out;
+}
+
+@keyframes carBounce {
+  0%, 100% {
+    transform: translateY(-50%) translateY(0);
+  }
+  50% {
+    transform: translateY(-50%) translateY(-6px);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-pulse-slow {
+  animation: pulseSlow 3s infinite ease-in-out;
+}
+
+@keyframes pulseSlow {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1.02);
+  }
+}
+
+/* Custom button hover active states */
+.active-scale:active {
+  transform: scale(0.95);
+}
+
+/* Confetti particles */
+.confetti {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background-color: #ff4500;
+  border-radius: 50%;
+  animation: fall 3s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes fall {
+  0% {
+    transform: translateY(-10px) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh) rotate(360deg);
+    opacity: 0;
+  }
+}

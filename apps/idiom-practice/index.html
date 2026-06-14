@@ -1,0 +1,159 @@
+<!-- i:\AntiGravity0606\idiom-practice\index.html -->
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta name="category" content="國語文">
+    <meta name="description" content="國小三年級成語閱讀與練習小工具，配合趣味圖卡與例句學習。">
+    <meta name="icon" content="📝">
+    <meta name="tags" content="成語練習,國語文,三年級">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>翰林版三下國語 1-12 課成語練習</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Custom Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="min-h-screen bg-amber-50/40 p-4 md:p-6 flex flex-col items-center justify-center transition-colors duration-300">
+  
+  <div id="app" class="w-full max-w-2xl mx-auto">
+    
+    <!-- 1. 主選單畫面 (Menu View) -->
+    <div id="menu-view" class="flex flex-col items-center justify-center space-y-6 text-center w-full animate-fade-in">
+      <div class="text-6xl mb-2 animate-bounce">🏆</div>
+      <h1 class="text-3xl md:text-4xl font-extrabold text-orange-600 tracking-wide drop-shadow-sm">翰林版三下國語 1-12 課成語</h1>
+      <p class="text-gray-600 text-base md:text-lg">請先設定測驗方式，再來測試你的國語文實力吧！</p>
+      
+      <!-- Step 1: 選擇題型 -->
+      <div class="bg-white p-6 rounded-2xl shadow-md border-2 border-orange-100/70 w-full max-w-md">
+        <h2 class="text-lg font-bold text-gray-700 mb-4 text-left border-b border-orange-50 pb-2 flex items-center">
+          <span class="bg-orange-100 text-orange-600 rounded-full w-6 h-6 inline-flex items-center justify-center text-xs mr-2 font-black">1</span>
+          選擇題型
+        </h2>
+        <div class="grid grid-cols-2 gap-4">
+          <button id="btn-mode-meaning" class="p-4 rounded-xl font-bold text-base md:text-lg flex flex-col items-center transition-all border border-blue-200 bg-blue-500 text-white shadow-md active-scale">
+            <span class="text-3xl mb-2">📖</span>
+            看解釋猜成語
+          </button>
+          <button id="btn-mode-sentence" class="p-4 rounded-xl font-bold text-base md:text-lg flex flex-col items-center transition-all border border-green-200 bg-green-50 text-green-500 hover:bg-green-100/50 active-scale">
+            <span class="text-3xl mb-2">✍️</span>
+            情境填空挑戰
+          </button>
+        </div>
+      </div>
+
+      <!-- Step 2: 選擇範圍 -->
+      <div class="bg-white p-6 rounded-2xl shadow-md border-2 border-orange-100/70 w-full max-w-md">
+        <h2 class="text-lg font-bold text-gray-700 mb-3 text-left border-b border-orange-50 pb-2 flex items-center">
+          <span class="bg-orange-100 text-orange-600 rounded-full w-6 h-6 inline-flex items-center justify-center text-xs mr-2 font-black">2</span>
+          選擇範圍 (1-12課)
+        </h2>
+        <div class="grid grid-cols-3 md:grid-cols-4 gap-2 mb-4" id="lesson-selector-grid">
+          <!-- Dynamically populated by JS -->
+        </div>
+        <div class="flex justify-between items-center mt-2 px-1">
+          <button id="btn-select-all" class="text-xs text-blue-500 hover:text-blue-600 font-bold active-scale">全選</button>
+          <span id="selected-info" class="text-xs text-gray-400 font-bold">已選 12 課 (共 86 題)</span>
+          <button id="btn-select-none" class="text-xs text-red-400 hover:text-red-500 font-bold active-scale">清除</button>
+        </div>
+      </div>
+
+      <!-- Step 3: 選擇題數 -->
+      <div id="qcount-selector-container" class="bg-white p-5 rounded-2xl shadow-md border-2 border-orange-100/70 w-full max-w-md">
+        <h2 class="text-lg font-bold text-gray-700 mb-3 text-left border-b border-orange-50 pb-2 flex items-center">
+          <span class="bg-orange-100 text-orange-600 rounded-full w-6 h-6 inline-flex items-center justify-center text-xs mr-2 font-black">3</span>
+          選擇測驗題數
+        </h2>
+        <div class="flex justify-center space-x-3">
+          <button id="btn-qcount-all" class="py-2 px-6 rounded-xl font-bold bg-orange-500 text-white shadow-md active-scale">全部</button>
+          <button id="btn-qcount-10" class="py-2 px-6 rounded-xl font-bold bg-gray-100 text-gray-500 hover:bg-gray-200 active-scale">10 題</button>
+          <button id="btn-qcount-20" class="py-2 px-6 rounded-xl font-bold bg-gray-100 text-gray-500 hover:bg-gray-200 active-scale">20 題</button>
+        </div>
+      </div>
+
+      <!-- 開始測驗按鈕 -->
+      <button id="btn-start-game" class="w-full max-w-md p-4 rounded-2xl shadow-lg transition-all font-bold text-xl md:text-2xl flex justify-center items-center bg-red-500 hover:bg-red-600 text-white hover:scale-105 active-scale animate-pulse-slow">
+        🚀 開始測驗
+      </button>
+    </div>
+
+    <!-- 2. 遊戲中畫面 (Playing View) -->
+    <div id="playing-view" class="hidden w-full max-w-2xl mx-auto flex flex-col items-center animate-fade-in">
+      
+      <!-- 進度與得分欄 -->
+      <div class="w-full flex flex-col mb-6 bg-white p-5 rounded-2xl shadow-md border-2 border-gray-100">
+        <div class="flex justify-between items-center mb-6 px-1">
+          <div class="text-gray-500 font-bold text-base md:text-lg">
+            題數：<span id="playing-progress-text" class="text-orange-500 text-xl font-black">1</span> / <span id="playing-total-text">86</span>
+          </div>
+          <div class="text-gray-500 font-bold text-base md:text-lg">
+            分數：<span id="playing-score-text" class="text-orange-500 text-xl font-black">0</span> 分
+          </div>
+        </div>
+
+        <!-- 小汽車進度條 -->
+        <div class="relative w-[calc(100%-40px)] h-4 bg-orange-100 rounded-full mx-auto mb-2">
+          <!-- 填滿的進度 -->
+          <div id="playing-progress-bar" class="absolute left-0 top-0 h-full bg-orange-400 rounded-full transition-all duration-500 ease-out" style="width: 0%;"></div>
+          
+          <!-- 移動的圖案 (小汽車) -->
+          <div id="playing-progress-car" class="absolute top-1/2 transform -translate-y-1/2 -translate-x-1/2 transition-all duration-500 ease-out text-3xl z-10 drop-shadow-md animate-car-bounce" style="left: 0%;">
+            <div class="transform scale-x-[-1]">🚗</div>
+          </div>
+          
+          <!-- 終點圖案 (家) -->
+          <div class="absolute -right-10 top-1/2 transform -translate-y-1/2 text-4xl z-0 drop-shadow-sm">
+            🏠
+          </div>
+        </div>
+      </div>
+
+      <!-- 題目區 -->
+      <div class="w-full bg-white p-8 rounded-3xl shadow-lg border-b-8 border-orange-200/80 mb-8 min-h-[160px] flex flex-col items-center justify-center text-center relative">
+        <button id="btn-speak-question" class="absolute top-4 right-4 p-3 bg-blue-50 hover:bg-blue-100 border border-blue-200 text-2xl rounded-full shadow-sm transition-transform hover:scale-110 active-scale flex items-center justify-center" title="點擊播放語音">
+          🔊
+        </button>
+        <h2 id="playing-question-text" class="text-2xl md:text-3xl font-bold text-gray-800 leading-relaxed mt-4 px-6">
+          載入中...
+        </h2>
+      </div>
+
+      <!-- 選項區 -->
+      <div id="playing-options-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+        <!-- Dynamically populated by JS -->
+      </div>
+    </div>
+
+    <!-- 3. 結算畫面 (Result View) -->
+    <div id="result-view" class="hidden flex flex-col items-center justify-center space-y-6 text-center w-full max-w-md mx-auto animate-fade-in">
+      <div class="text-7xl mb-2 animate-pulse drop-shadow-lg">🏠🚗💨</div>
+      
+      <h2 class="text-3xl md:text-4xl font-extrabold text-orange-600 bg-white px-8 py-3 rounded-full shadow-md border border-orange-100">
+        恭喜你，成功了！
+      </h2>
+      
+      <div class="bg-white p-8 rounded-3xl shadow-lg border-2 border-orange-100 w-full">
+        <p class="text-xl text-gray-600 mb-4 font-bold">您的總得分是</p>
+        <p class="text-6xl font-black text-orange-500 mb-4"><span id="result-score-text">0</span> <span class="text-2xl text-gray-500 font-bold">/ <span id="result-total-text">86</span></span></p>
+        
+        <p id="result-feedback-text" class="text-green-600 font-bold text-lg px-2 leading-relaxed">
+          太厲害了！您是真正的成語大師！🏆
+        </p>
+      </div>
+      
+      <button id="btn-restart-game" class="w-full p-4 bg-orange-500 hover:bg-orange-600 text-white rounded-2xl shadow-md transition-transform hover:scale-105 active-scale font-bold text-xl">
+        返回主選單再玩一次
+      </button>
+    </div>
+    
+  </div>
+
+  <!-- 4. 全螢幕答題回饋遮罩 (Feedback Overlay) -->
+  <div id="feedback-overlay" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/10 transition-opacity pointer-events-none">
+    <div id="feedback-emoji" class="text-[150px] md:text-[200px] drop-shadow-2xl opacity-90 select-none">⭕</div>
+  </div>
+
+  <!-- Javascript File -->
+  <script src="app.js"></script>
+</body>
+</html>
