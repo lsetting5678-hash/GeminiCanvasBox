@@ -33,8 +33,7 @@ else:
 if not os.path.exists(APPS_DIR):
     os.makedirs(APPS_DIR)
 
-# 掃描 apps 資料夾
-app_files = [f for f in os.listdir(APPS_DIR) if f.endswith(".html")]
+# 遞迴掃描 apps 資料夾與子資料夾中的所有 .html 檔案
 scanned_apps = []
 
 # 正則表達式匹配
@@ -44,46 +43,53 @@ meta_cat_re = re.compile(r'<meta\s+name=["\']category["\']\s+content=["\'](.*?)[
 meta_icon_re = re.compile(r'<meta\s+name=["\']icon["\']\s+content=["\'](.*?)["\']', re.IGNORECASE)
 meta_tags_re = re.compile(r'<meta\s+name=["\']tags["\']\s+content=["\'](.*?)["\']', re.IGNORECASE)
 
-for app_file in app_files:
-    path = os.path.join(APPS_DIR, app_file)
-    try:
-        with open(path, "r", encoding="utf-8") as f:
-            # 只讀取前 8192 位元組，加速解析
-            content = f.read(8192)
+for root, dirs, files in os.walk(APPS_DIR):
+    # 排除 Git 與 Python 暫存資料夾
+    if any(x in root for x in [".git", "__pycache__"]):
+        continue
+    for file in files:
+        if file.endswith(".html"):
+            path = os.path.join(root, file)
+            # 計算相對於主目錄 (d:\GeminiCanvasBox) 的相對路徑，並統一使用正斜線 / 以相容網頁
+            rel_path = os.path.relpath(path, ".").replace("\\", "/")
             
-            # 解析 Title
-            title_match = title_re.search(content)
-            title = title_match.group(1).strip() if title_match else app_file
-            title = html.escape(title)
-            
-            # 解析 Meta 元數據
-            desc_match = meta_desc_re.search(content)
-            desc = desc_match.group(1).strip() if desc_match else "點擊開啟此工具。"
-            desc = html.escape(desc)
-            
-            cat_match = meta_cat_re.search(content)
-            category = cat_match.group(1).strip() if cat_match else "學生專區"
-            category = html.escape(category)
-            
-            icon_match = meta_icon_re.search(content)
-            icon = icon_match.group(1).strip() if icon_match else "✨"
-            icon = html.escape(icon)
-            
-            tags_match = meta_tags_re.search(content)
-            tags = [t.strip() for t in tags_match.group(1).split(",")] if tags_match else []
-            tags = [html.escape(t) for t in tags]
-            
-            scanned_apps.append({
-                "filename": app_file,
-                "title": title,
-                "description": desc,
-                "category": category,
-                "icon": icon,
-                "tags": tags,
-                "path": f"apps/{app_file}"
-            })
-    except Exception as e:
-        print(f"解析 {app_file} 失敗: {e}")
+            try:
+                with open(path, "r", encoding="utf-8") as f:
+                    content = f.read(8192)
+                    
+                    # 解析 Title
+                    title_match = title_re.search(content)
+                    title = title_match.group(1).strip() if title_match else file
+                    title = html.escape(title)
+                    
+                    # 解析 Meta 元數據
+                    desc_match = meta_desc_re.search(content)
+                    desc = desc_match.group(1).strip() if desc_match else "點擊開啟此工具。"
+                    desc = html.escape(desc)
+                    
+                    cat_match = meta_cat_re.search(content)
+                    category = cat_match.group(1).strip() if cat_match else "學生專區"
+                    category = html.escape(category)
+                    
+                    icon_match = meta_icon_re.search(content)
+                    icon = icon_match.group(1).strip() if icon_match else "✨"
+                    icon = html.escape(icon)
+                    
+                    tags_match = meta_tags_re.search(content)
+                    tags = [t.strip() for t in tags_match.group(1).split(",")] if tags_match else []
+                    tags = [html.escape(t) for t in tags]
+                    
+                    scanned_apps.append({
+                        "filename": file,
+                        "title": title,
+                        "description": desc,
+                        "category": category,
+                        "icon": icon,
+                        "tags": tags,
+                        "path": rel_path
+                    })
+            except Exception as e:
+                print(f"解析 {file} 失敗: {e}")
 
 # 生成 HTML 模板
 html_template = """<!DOCTYPE html>
