@@ -62,7 +62,11 @@ if (-not $hasRemote) {
     Write-Host "預設專案名稱: $folderName" -ForegroundColor Gray
     
     # 建立 GitHub Repo
-    gh repo create $folderName --public --source=. --push --description "我的 Gemini Canvas 互動工具箱目錄"
+    gh repo create $folderName --public --description "我的 Gemini Canvas 互動工具箱目錄"
+    
+    # 取得當前登入的使用者名稱，以建立正確的 remote URL
+    $username = (gh api user | ConvertFrom-Json).login
+    git remote add origin "https://github.com/$username/$folderName.git"
     
     Write-Host "GitHub 倉庫建立成功並已建立連結！" -ForegroundColor Green
 } else {
@@ -76,22 +80,27 @@ git add .
 $gitStatus = git status --porcelain
 if ($gitStatus) {
     git commit -m "自動更新：部署 Gemini Canvas 網頁與導覽目錄"
+}
+
+# 強制推送並設定 upstream
+try {
     git push -u origin main
     Write-Host "程式碼已成功推送到 GitHub！" -ForegroundColor Green
-} else {
-    Write-Host "無任何變更，跳過 Commit 與 Push。" -ForegroundColor Gray
+} catch {
+    Write-Warning "推送失敗，請檢查網路連線或 Git 權限。"
 }
 
 # 5. 設定並顯示 GitHub Pages 連結
 Write-Host "設定 GitHub Pages 中..." -ForegroundColor Yellow
 try {
-    # 開啟 GitHub Pages (預設為 main 分支 / 根目錄)
-    gh repo edit --enable-pages --pages-branch main --pages-path /
-    
-    # 取得使用者名稱與專案名稱以產生 URL
+    # 取得使用者名稱與專案名稱
     $repoInfo = gh repo view --json owner,name | ConvertFrom-Json
     $username = $repoInfo.owner.login
     $reponame = $repoInfo.name
+    
+    # 使用 gh api 啟用 Pages 服務 (main 分支, / 根目錄)
+    $null = gh api /repos/$username/$reponame/pages -f "source[branch]=main" -f "source[path]=/"
+    
     $pagesUrl = "https://$username.github.io/$reponame/"
     
     Write-Host "`n🎉 部署完成！" -ForegroundColor Green
