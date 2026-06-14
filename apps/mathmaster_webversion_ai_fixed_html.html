@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>數學運算大師 AI 版</title>
+    
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Fix for lucide-react UMD global dependency -->
+    <script>window.react = window.React;</script>
+    
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Lucide Icons React (Stable UMD Version) -->
+    <script src="https://unpkg.com/lucide-react@0.292.0/dist/umd/lucide-react.min.js"></script>
+
+    <style>
+        /* 自定義樣式 */
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap');
+        
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #eff6ff; /* blue-50 */
+            touch-action: manipulation;
+        }
+
+        @keyframes bounce-sm {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+        
+        .animate-bounce-custom {
+            animation: bounce-sm 1s infinite;
+        }
+
+        .strike-through {
+            position: relative;
+            color: #94a3b8; /* Slate-400 */
+        }
+        .strike-through::after {
+            content: '';
+            position: absolute;
+            left: 10%;
+            top: 50%;
+            width: 80%;
+            height: 2px;
+            background-color: #ef4444;
+            transform: rotate(-20deg);
+            opacity: 0.7;
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
+            20%, 40%, 60%, 80% { transform: translateX(4px); }
+        }
+        .shake {
+            animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        /* Helper Input Styles */
+        .helper-input {
+            width: 1.5rem;
+            height: 1.5rem;
+            text-align: center;
+            font-size: 0.85rem;
+            border-radius: 0.25rem;
+            border: 1px solid #cbd5e1;
+            background-color: #fff;
+            color: #64748b;
+            font-weight: bold;
+            transition: all 0.2s;
+            z-index: 10;
+        }
+        .helper-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.4);
+        }
+        .helper-input.correct {
+            border-color: #22c55e;
+            background-color: #f0fdf4;
+            color: #15803d;
+        }
+        .helper-input.wrong {
+            border-color: #ef4444;
+            background-color: #fef2f2;
+            color: #b91c1c;
+        }
+        
+        /* Digit Answer Input Styles */
+        .digit-input {
+            width: 3rem;
+            height: 3rem;
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            border-radius: 0.5rem;
+            border: 2px solid #e2e8f0;
+            color: #334155;
+            transition: all 0.2s;
+        }
+        .digit-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            background-color: #eff6ff;
+        }
+        .digit-input:disabled {
+            background-color: #f8fafc;
+            color: #e2e8f0;
+            border-color: #f1f5f9;
+            cursor: not-allowed;
+        }
+        .digit-input.correct {
+            border-color: #22c55e;
+            background-color: #f0fdf4;
+            color: #15803d;
+        }
+        .digit-input.wrong {
+            border-color: #ef4444;
+            background-color: #fef2f2;
+            color: #b91c1c;
+            animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        /* AI Message Bubble */
+        .ai-bubble {
+            position: relative;
+            background: #fff;
+            border: 2px solid #a78bfa;
+            border-radius: 1rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .ai-bubble::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 20px;
+            border-width: 10px 10px 0;
+            border-style: solid;
+            border-color: #a78bfa transparent transparent transparent;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef, useMemo } = React;
+        
+        // Safety check for Lucide Icons
+        const icons = window.lucideReact || {};
+        
+        // Fallback component if icon is missing
+        const IconFallback = ({ size = 24, ...props }) => (
+            <span style={{ width: size, height: size, display: 'inline-block', backgroundColor: '#ccc', borderRadius: '50%' }} {...props} />
+        );
+
+        // Destructure with fallbacks
+        const { 
+            Volume2 = IconFallback, 
+            VolumeX = IconFallback, 
+            Clock = IconFallback, 
+            Trophy = IconFallback, 
+            ArrowRight = IconFallback, 
+            RotateCcw = IconFallback, 
+            CheckCircle = IconFallback, 
+            XCircle = IconFallback, 
+            Brain = IconFallback, 
+            Calculator = IconFallback, 
+            Plus = IconFallback, 
+            Minus = IconFallback, 
+            Shuffle = IconFallback, 
+            Settings = IconFallback, 
+            Sparkles = IconFallback, 
+            MessageCircle = IconFallback, 
+            Key = IconFallback, 
+            Loader2 = IconFallback, 
+            Bot = IconFallback
+        } = icons;
+
+        // --- Gemini API Helper ---
+        const callGeminiAPI = async (apiKey, prompt) => {
+            if (!apiKey) throw new Error("請先設定 API Key");
+            
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+            
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: prompt }] }]
+                })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error?.message || "API 呼叫失敗");
+            }
+
+            const data = await response.json();
+            return data.candidates?.[0]?.content?.parts?.[0]?.text || "無法產生回應";
+        };
+
+        // --- Confetti Component ---
+        const Confetti = () => {
+            const canvasRef = useRef(null);
+
+            useEffect(() => {
+                const canvas = canvasRef.current;
+                const ctx = canvas.getContext('2d');
+                let animationFrameId;
+                let particles = [];
+                
+                const colors = ['#ff9a9e', '#fad0c4', '#fad0c4', '#a18cd1', '#fbc2eb', '#ef4444', '#22c55e', '#3b82f6'];
+                const emojis = ['🌟', '✨', '🐶', '💯', '🎉', '🎈', '🌸'];
+
+                const resize = () => {
+                    if (canvas) {
+                        canvas.width = window.innerWidth;
+                        canvas.height = window.innerHeight;
+                    }
+                };
+
+                window.addEventListener('resize', resize);
+                resize();
+
+                const createParticle = (initOnScreen = false) => {
+                    const isEmoji = Math.random() > 0.6; 
+                    return {
+                        x: Math.random() * canvas.width,
+                        y: initOnScreen ? Math.random() * canvas.height : -Math.random() * canvas.height * 0.2, 
+                        vx: Math.random() * 4 - 2,
+                        vy: Math.random() * 4 + 2,
+                        type: isEmoji ? 'emoji' : 'shape',
+                        content: isEmoji ? emojis[Math.floor(Math.random() * emojis.length)] : null,
+                        color: colors[Math.floor(Math.random() * colors.length)],
+                        size: isEmoji ? Math.random() * 24 + 16 : Math.random() * 8 + 5,
+                        rotation: Math.random() * 360,
+                        rotationSpeed: Math.random() * 6 - 3,
+                        opacity: 1
+                    };
+                };
+
+                for(let i=0; i<60; i++) particles.push(createParticle(true));
+                for(let i=0; i<80; i++) particles.push(createParticle(false));
+
+                const render = () => {
+                    if (!canvas) return;
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    
+                    particles.forEach((p, i) => {
+                        p.x += p.vx;
+                        p.y += p.vy;
+                        p.rotation += p.rotationSpeed;
+                        p.vx += Math.random() * 0.1 - 0.05;
+
+                        if (p.y > canvas.height + 40) {
+                             p.y = -40;
+                             p.x = Math.random() * canvas.width;
+                             p.vy = Math.random() * 4 + 2;
+                        }
+
+                        ctx.save();
+                        ctx.translate(p.x, p.y);
+                        ctx.rotate((p.rotation * Math.PI) / 180);
+                        ctx.globalAlpha = p.opacity;
+                        
+                        if (p.type === 'emoji') {
+                            ctx.font = `${p.size}px serif`;
+                            ctx.textAlign = 'center';
+                            ctx.textBaseline = 'middle';
+                            ctx.fillText(p.content, 0, 0);
+                        } else {
+                            ctx.fillStyle = p.color;
+                            if (i % 3 === 0) {
+                                ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 1.2);
+                            } else if (i % 3 === 1) {
+                                ctx.beginPath();
+                                ctx.arc(0, 0, p.size / 2, 0, Math.PI * 2);
+                                ctx.fill();
+                            } else {
+                                ctx.beginPath();
+                                ctx.moveTo(0, -p.size/2);
+                                ctx.lineTo(p.size/2, p.size/2);
+                                ctx.lineTo(-p.size/2, p.size/2);
+                                ctx.closePath();
+                                ctx.fill();
+                            }
+                        }
+                        
+                        ctx.restore();
+                    });
+
+                    animationFrameId = requestAnimationFrame(render);
+                };
+
+                render();
+
+                return () => {
+                    window.removeEventListener('resize', resize);
+                    cancelAnimationFrame(animationFrameId);
+                };
+            }, []);
+
+            return (
+                <canvas 
+                    ref={canvasRef} 
+                    className="fixed top-0 left-0 w-full h-full pointer-events-none z-50"
+                />
+            );
+        };
+
+        // --- Utility Functions ---
+
+        const speak = (text) => {
+            if (!window.speechSynthesis) return;
+            window.speechSynthesis.cancel(); 
+            const utterance = new SpeechSynthesisUtterance(text);
+            const voices = window.speechSynthesis.getVoices();
+            const zhVoice = voices.find(v => v.lang.includes('zh') || v.lang.includes('TW'));
+            if (zhVoice) utterance.voice = zhVoice;
+            utterance.lang = 'zh-TW';
+            utterance.rate = 1.0;
+            utterance.pitch = 1.1; 
+            window.speechSynthesis.speak(utterance);
+        };
+
+        const DIGIT_OPTIONS = [
+            { value: 1, label: "個位數" },
+            { value: 2, label: "兩位數" },
+            { value: 3, label: "三位數" },
+            { value: 4, label: "四位數" },
+        ];
+
+        const QUESTION_COUNTS = [5, 10, 15, 20, 25, 30];
+
+        // Question Generator
+        const generateQuestion = (num1Digits, num2Digits, operationMode = 'mixed') => {
+            let num1, num2, operator, answer;
+            
+            let isAdd;
+            if (operationMode === 'addition') isAdd = true;
+            else if (operationMode === 'subtraction') isAdd = false;
+            else isAdd = Math.random() > 0.5;
+
+            operator = isAdd ? '+' : '-';
+            
+            const getRandomByDigits = (digits) => {
+                const min = digits === 1 ? 1 : Math.pow(10, digits - 1);
+                const max = Math.pow(10, digits) - 1;
+                return Math.floor(Math.random() * (max - min + 1)) + min;
+            };
+
+            let attempts = 0;
+            let valid = false;
+
+            while (!valid && attempts < 100) {
+                attempts++;
+                num1 = getRandomByDigits(num1Digits);
+                num2 = getRandomByDigits(num2Digits);
+
+                if (!isAdd) {
+                    if (num1 < num2) {
+                        [num1, num2] = [num2, num1];
+                    }
+                }
+
+                answer = isAdd ? num1 + num2 : num1 - num2;
+                valid = true;
+            }
+
+            return { num1, num2, operator, answer };
+        };
+
+        // --- Smart Vertical Math Component ---
+        const VerticalMath = ({ num1, num2, operator, mode, onComplete }) => {
+            const sNum1 = num1.toString();
+            const sNum2 = num2.toString();
+            const maxLen = Math.max(sNum1.length, sNum2.length);
+            const pNum1 = sNum1.padStart(maxLen, '0');
+            const pNum2 = sNum2.padStart(maxLen, '0');
+            
+            const columnLogic = useMemo(() => {
+                const logic = [];
+                let carry = 0;
+                let borrow = 0;
+                
+                for (let i = 0; i < maxLen; i++) {
+                    const digit1 = parseInt(pNum1[pNum1.length - 1 - i]);
+                    const digit2 = parseInt(pNum2[pNum2.length - 1 - i]);
+                    
+                    if (operator === '+') {
+                        const sum = digit1 + digit2 + carry;
+                        const nextCarry = Math.floor(sum / 10);
+                        logic.push({
+                            colIndex: i, 
+                            digitAnswer: sum % 10,
+                            needsCarryToNext: nextCarry > 0, 
+                            requiredCarryFromPrev: carry > 0 
+                        });
+                        carry = nextCarry;
+                    } else {
+                        let effectiveD1 = digit1 - borrow;
+                        let needsBorrowFromNext = false;
+                        if (effectiveD1 < digit2) {
+                            needsBorrowFromNext = true;
+                            effectiveD1 += 10;
+                        }
+                        const diff = effectiveD1 - digit2;
+                        logic.push({
+                            colIndex: i,
+                            digitAnswer: diff,
+                            needsBorrowFromNext: needsBorrowFromNext, 
+                            isBorrowedByPrev: borrow > 0 
+                        });
+                        borrow = needsBorrowFromNext ? 1 : 0;
+                    }
+                }
+                if (operator === '+' && carry > 0) {
+                    logic.push({
+                        colIndex: maxLen,
+                        digitAnswer: carry,
+                        needsCarryToNext: false,
+                        requiredCarryFromPrev: true
+                    });
+                }
+                return logic;
+            }, [num1, num2, operator, maxLen, pNum1, pNum2]);
+
+            const totalCols = columnLogic.length;
+            
+            const [userDigits, setUserDigits] = useState({}); 
+            const [userHelpers, setUserHelpers] = useState({}); 
+            const inputRefs = useRef({});
+
+            const focusElement = (key) => {
+                setTimeout(() => {
+                    if (inputRefs.current[key]) {
+                        inputRefs.current[key].focus();
+                    }
+                }, 50);
+            };
+
+            const handleDigitChange = (colIndex, val) => {
+                if (!/^\d?$/.test(val)) return; 
+                
+                setUserDigits(prev => {
+                    const newState = { ...prev, [colIndex]: val };
+                    const logic = columnLogic.find(l => l.colIndex === colIndex);
+                    if (parseInt(val) === logic.digitAnswer) {
+                        if (mode === 'practice' && operator === '+' && logic.needsCarryToNext) {
+                            focusElement(`carry-${colIndex + 1}`);
+                        } 
+                        else if (mode === 'practice' && operator === '-' && columnLogic[colIndex + 1]?.needsBorrowFromNext) {
+                             if (!inputRefs.current[`borrow-${colIndex + 2}`]) {
+                                 focusElement(`borrow-${colIndex + 1}`);
+                             } else {
+                                 focusElement(`borrow-${colIndex + 2}`);
+                             }
+                        } 
+                        else {
+                            if (colIndex + 1 < totalCols) {
+                                focusElement(`digit-${colIndex + 1}`);
+                            }
+                        }
+                    }
+                    return newState;
+                });
+            };
+
+            const handleHelperChange = (id, val, expected) => {
+                if (!/^\d?$/.test(val)) return;
+                setUserHelpers(prev => {
+                    const newState = { ...prev, [id]: val };
+                    if (parseInt(val) === expected) {
+                        if (id.startsWith('carry-')) {
+                            const colIdx = parseInt(id.split('-')[1]);
+                            focusElement(`digit-${colIdx}`);
+                        }
+                        if (id.startsWith('borrow-')) {
+                            const colIdx = parseInt(id.split('-')[1]);
+                            focusElement(`digit-${colIdx - 1}`);
+                        }
+                    }
+                    return newState;
+                });
+            };
+
+            useEffect(() => {
+                const allCorrect = columnLogic.every(l => parseInt(userDigits[l.colIndex]) === l.digitAnswer);
+                if (allCorrect) {
+                     let finalAns = "";
+                     for(let i=totalCols-1; i>=0; i--) {
+                         finalAns += userDigits[i];
+                     }
+                     if (finalAns.length > 1 && finalAns.startsWith('0')) finalAns = finalAns.replace(/^0+/, '');
+                     setTimeout(() => onComplete(parseInt(finalAns)), 500);
+                }
+            }, [userDigits, columnLogic, onComplete, totalCols]);
+
+            const renderColumns = [];
+            
+            for (let i = totalCols - 1; i >= 0; i--) {
+                const logic = columnLogic.find(l => l.colIndex === i) || {};
+                const colIndex = i;
+                const idxInStr = maxLen - 1 - colIndex;
+                const d1 = idxInStr >= 0 ? pNum1[idxInStr] : '';
+                const d2 = idxInStr >= 0 ? pNum2[idxInStr] : '';
+                
+                const prevColCorrect = colIndex === 0 ? true : (parseInt(userDigits[colIndex - 1]) === columnLogic[colIndex - 1]?.digitAnswer);
+                
+                let helperRequirementMet = true;
+                if (mode === 'practice') {
+                    if (operator === '+' && logic.requiredCarryFromPrev) {
+                        if (userHelpers[`carry-${colIndex}`] !== '1') helperRequirementMet = false;
+                    }
+                    if (operator === '-' && logic.needsBorrowFromNext) {
+                        const helperKey = `borrow-${colIndex + 1}`;
+                        const nextD = parseInt(pNum1[pNum1.length - 1 - (colIndex + 1)] || '0');
+                        let expectedBorrowVal = nextD - 1;
+                        if (columnLogic[colIndex + 1]?.needsBorrowFromNext) {
+                            expectedBorrowVal = (nextD + 10) - 1;
+                        }
+                        if (parseInt(userHelpers[helperKey]) !== expectedBorrowVal) helperRequirementMet = false;
+                    }
+                }
+                const isAnswerEnabled = prevColCorrect && helperRequirementMet;
+
+                const showCarryHelper = mode === 'practice' && operator === '+' && logic.requiredCarryFromPrev;
+                const showBorrowHelper = mode === 'practice' && operator === '-' && logic.isBorrowedByPrev;
+                const showSelfBorrowHint = mode === 'practice' && operator === '-' && logic.needsBorrowFromNext;
+
+                let expectedBorrowHelperVal = parseInt(d1) - 1;
+                if (logic.needsBorrowFromNext) {
+                     expectedBorrowHelperVal = (parseInt(d1) + 10) - 1;
+                }
+
+                renderColumns.push(
+                    <div key={colIndex} className="flex flex-col items-center justify-end w-14 relative px-0">
+                        <div className="absolute -top-12 w-full flex justify-center h-8">
+                             {showCarryHelper && (
+                                <input 
+                                    name={`carry-${colIndex}`}
+                                    ref={el => inputRefs.current[`carry-${colIndex}`] = el}
+                                    type="tel" 
+                                    maxLength={1}
+                                    className={`helper-input animate-bounce-custom ${parseInt(userHelpers[`carry-${colIndex}`]) === 1 ? 'correct' : userHelpers[`carry-${colIndex}`] ? 'wrong' : ''}`}
+                                    value={userHelpers[`carry-${colIndex}`] || ''}
+                                    disabled={!prevColCorrect}
+                                    onChange={(e) => handleHelperChange(`carry-${colIndex}`, e.target.value, 1)}
+                                />
+                            )}
+                            {showBorrowHelper && (
+                                <input 
+                                    name={`borrow-${colIndex}`}
+                                    ref={el => inputRefs.current[`borrow-${colIndex}`] = el}
+                                    type="tel"
+                                    maxLength={1}
+                                    className={`helper-input animate-bounce-custom ${parseInt(userHelpers[`borrow-${colIndex}`]) === expectedBorrowHelperVal ? 'correct' : userHelpers[`borrow-${colIndex}`] ? 'wrong' : ''}`}
+                                    value={userHelpers[`borrow-${colIndex}`] || ''}
+                                    disabled={colIndex > 0 && !((parseInt(userDigits[colIndex - 2]) === columnLogic[colIndex - 2]?.digitAnswer) || (colIndex===1 && true))}
+                                    onChange={(e) => handleHelperChange(`borrow-${colIndex}`, e.target.value, expectedBorrowHelperVal)}
+                                />
+                            )}
+                        </div>
+                        
+                        {showSelfBorrowHint && (
+                             <span className="absolute -top-6 -left-3 text-xs text-red-500 font-bold pointer-events-none bg-white px-1 rounded shadow-sm border border-red-100">+10</span>
+                        )}
+
+                        <div className={`text-4xl font-bold text-slate-700 h-12 flex items-center justify-center w-full ${showBorrowHelper ? 'strike-through' : ''}`}>
+                            {d1 || (colIndex < maxLen ? '0' : '')}
+                        </div>
+                        
+                        <div className="text-4xl font-bold text-slate-700 h-12 flex items-center justify-center w-full border-b-4 border-slate-700">
+                            {d2}
+                        </div>
+                        
+                        <div className="pt-4 h-16 flex items-center justify-center w-full">
+                            <input 
+                                name={`digit-${colIndex}`}
+                                ref={el => inputRefs.current[`digit-${colIndex}`] = el}
+                                type="tel"
+                                maxLength={1}
+                                disabled={!isAnswerEnabled}
+                                value={userDigits[colIndex] || ''}
+                                onChange={(e) => handleDigitChange(colIndex, e.target.value)}
+                                className={`digit-input ${parseInt(userDigits[colIndex]) === logic.digitAnswer ? 'correct' : (userDigits[colIndex] ? 'wrong' : '')}`}
+                            />
+                        </div>
+                    </div>
+                );
+            }
+
+            return (
+                <div className="flex flex-col items-center mt-12">
+                    <div className="relative">
+                        <div className="absolute -left-8 top-[3.5rem] text-4xl font-bold text-slate-500">{operator}</div>
+                        <div className="flex flex-row">
+                            {renderColumns}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // --- Main App ---
+        const App = () => {
+            const [gameState, setGameState] = useState('menu');
+            const [settings, setSettings] = useState({ 
+                num1Digits: 2, 
+                num2Digits: 2, 
+                count: 5, 
+                mode: 'practice', 
+                operation: 'mixed' 
+            });
+            const [questions, setQuestions] = useState([]);
+            const [currentQIdx, setCurrentQIdx] = useState(0);
+            const [score, setScore] = useState(0);
+            const [timer, setTimer] = useState(0);
+            const [history, setHistory] = useState([]);
+            const [feedback, setFeedback] = useState(null);
+            const [audioEnabled, setAudioEnabled] = useState(true);
+            const timerRef = useRef(null);
+            
+            // --- AI Feature States ---
+            const [apiKey, setApiKey] = useState(() => localStorage.getItem('gemini_api_key') || '');
+            const [showApiKeyModal, setShowApiKeyModal] = useState(false);
+            const [aiContent, setAiContent] = useState(null); // { type: 'word_problem' | 'tutor', text: '' }
+            const [isAiLoading, setIsAiLoading] = useState(false);
+
+            useEffect(() => {
+                if (window.speechSynthesis) window.speechSynthesis.getVoices();
+            }, []);
+
+            useEffect(() => {
+                if (gameState === 'playing' && settings.mode === 'challenge') {
+                    timerRef.current = setInterval(() => setTimer(t => t + 1), 1000);
+                } else {
+                    clearInterval(timerRef.current);
+                }
+                return () => clearInterval(timerRef.current);
+            }, [gameState, settings.mode]);
+
+            // Save API Key
+            const handleSaveApiKey = (key) => {
+                setApiKey(key);
+                localStorage.setItem('gemini_api_key', key);
+                setShowApiKeyModal(false);
+            };
+
+            // Call AI
+            const handleAiCall = async (type) => {
+                if (!apiKey) {
+                    setShowApiKeyModal(true);
+                    return;
+                }
+                
+                setIsAiLoading(true);
+                setAiContent(null);
+                
+                const q = questions[currentQIdx];
+                const opStr = q.operator === '+' ? '加' : '減';
+                
+                try {
+                    let prompt = "";
+                    if (type === 'word_problem') {
+                        prompt = `請為小學生出導致這道算式的應用題：${q.num1} ${q.operator} ${q.num2}。情境要生活化（例如：糖果、文具、玩具），請用繁體中文，題目要簡短有趣，不要直接給我答案，只要題目。`;
+                    } else if (type === 'tutor') {
+                        prompt = `請像溫柔的小學老師一樣，教我如何計算 ${q.num1} ${q.operator} ${q.num2}。如果有進位或借位請特別說明。請用繁體中文，語氣要鼓勵學生，重點在觀念引導。`;
+                    }
+
+                    const text = await callGeminiAPI(apiKey, prompt);
+                    setAiContent({ type, text });
+                } catch (error) {
+                    alert("AI 連線錯誤: " + error.message);
+                } finally {
+                    setIsAiLoading(false);
+                }
+            };
+
+            const startGame = () => {
+                const newQuestions = Array.from({ length: settings.count }, () => 
+                    generateQuestion(settings.num1Digits, settings.num2Digits, settings.operation)
+                );
+                setQuestions(newQuestions);
+                setCurrentQIdx(0);
+                setScore(0);
+                setHistory([]);
+                setTimer(0);
+                setGameState('playing');
+                setFeedback(null);
+                setAiContent(null); // Reset AI content
+                let opText = settings.operation === 'addition' ? "加法" : settings.operation === 'subtraction' ? "減法" : "混合";
+                speak(settings.mode === 'practice' ? `${opText}練習開始` : `挑戰開始`);
+            };
+
+            const handleAnswerComplete = (userAnswerVal) => {
+                if (feedback) return; 
+
+                const currentQ = questions[currentQIdx];
+                const isCorrect = userAnswerVal === currentQ.answer;
+
+                const record = {
+                    ...currentQ,
+                    userAns: userAnswerVal,
+                    isCorrect,
+                    time: settings.mode === 'challenge' ? timer : null
+                };
+
+                if (isCorrect) {
+                    setScore(s => s + 1);
+                    setFeedback('correct');
+                    if(audioEnabled) speak("答對了！太棒了！");
+                } else {
+                    setFeedback('wrong'); 
+                    if(audioEnabled) speak("計算錯誤");
+                }
+
+                setTimeout(() => {
+                    setHistory(prev => [...prev, record]);
+                    if (currentQIdx + 1 < questions.length) {
+                        setCurrentQIdx(idx => idx + 1);
+                        setFeedback(null);
+                        setAiContent(null); // Reset AI on next question
+                    } else {
+                        setGameState('result');
+                        clearInterval(timerRef.current);
+                        speak("練習結束");
+                    }
+                }, 1500);
+            };
+
+            if (gameState === 'menu') {
+                return (
+                    <div className="min-h-screen flex flex-col items-center justify-center p-4 max-w-md mx-auto">
+                        <div className="bg-white rounded-3xl shadow-xl p-8 w-full border-4 border-blue-100 relative">
+                            {/* API Key Settings Button */}
+                            <button 
+                                onClick={() => setShowApiKeyModal(true)}
+                                className="absolute top-4 right-4 p-2 text-slate-400 hover:text-blue-500 transition-colors"
+                                title="設定 AI API Key"
+                            >
+                                <Key size={20} />
+                            </button>
+
+                            <div className="flex justify-center mb-6 text-blue-500"><Calculator size={64} /></div>
+                            <h1 className="text-3xl font-black text-center text-slate-800 mb-8">數學運算大師 <span className="text-sm text-purple-500 align-top">AI版</span></h1>
+                            
+                            {/* API Key Modal */}
+                            {showApiKeyModal && (
+                                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                                    <div className="bg-white p-6 rounded-xl w-full max-w-sm shadow-2xl">
+                                        <h3 className="text-lg font-bold mb-4 flex items-center gap-2"><Key size={20}/> 設定 Google Gemini API Key</h3>
+                                        <p className="text-sm text-slate-500 mb-4">輸入您的 API Key 以啟用「AI 應用題」與「AI 小老師」功能。</p>
+                                        <input 
+                                            type="password" 
+                                            placeholder="貼上您的 API Key"
+                                            className="w-full p-2 border rounded mb-4"
+                                            defaultValue={apiKey}
+                                            id="apiKeyInput"
+                                        />
+                                        <div className="flex justify-end gap-2">
+                                            <button onClick={() => setShowApiKeyModal(false)} className="px-4 py-2 text-slate-500">取消</button>
+                                            <button 
+                                                onClick={() => handleSaveApiKey(document.getElementById('apiKeyInput').value)}
+                                                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                                            >
+                                                儲存
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            <div className="space-y-6">
+                                <div>
+                                    <label className="block text-sm font-bold text-slate-500 mb-2">運算類型</label>
+                                    <div className="grid grid-cols-3 gap-2">
+                                        <button onClick={() => setSettings({...settings, operation: 'mixed'})} className={`flex flex-col items-center p-2 rounded-xl border-2 ${settings.operation === 'mixed' ? 'border-purple-500 bg-purple-50 text-purple-700' : 'border-slate-200 text-slate-400'}`}><Shuffle size={20}/><span className="text-sm font-bold">混合</span></button>
+                                        <button onClick={() => setSettings({...settings, operation: 'addition'})} className={`flex flex-col items-center p-2 rounded-xl border-2 ${settings.operation === 'addition' ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-slate-200 text-slate-400'}`}><Plus size={20}/><span className="text-sm font-bold">加法</span></button>
+                                        <button onClick={() => setSettings({...settings, operation: 'subtraction'})} className={`flex flex-col items-center p-2 rounded-xl border-2 ${settings.operation === 'subtraction' ? 'border-orange-500 bg-orange-50 text-orange-700' : 'border-slate-200 text-slate-400'}`}><Minus size={20}/><span className="text-sm font-bold">減法</span></button>
+                                    </div>
+                                </div>
+
+                                <div className="bg-slate-50 p-4 rounded-xl border-2 border-slate-100">
+                                     <div className="flex items-center gap-2 mb-3">
+                                         <Settings size={18} className="text-slate-400"/>
+                                         <span className="text-sm font-bold text-slate-500">位數設定</span>
+                                     </div>
+                                     
+                                     <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-xs font-bold text-slate-400 mb-1">被加/減數 (上)</label>
+                                            <select 
+                                                className="w-full p-2 rounded-lg border-2 border-blue-200 text-blue-900 font-bold focus:outline-none"
+                                                value={settings.num1Digits}
+                                                onChange={(e) => setSettings({...settings, num1Digits: parseInt(e.target.value)})}
+                                            >
+                                                {DIGIT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-bold text-slate-400 mb-1">加/減數 (下)</label>
+                                            <select 
+                                                className="w-full p-2 rounded-lg border-2 border-blue-200 text-blue-900 font-bold focus:outline-none"
+                                                value={settings.num2Digits}
+                                                onChange={(e) => setSettings({...settings, num2Digits: parseInt(e.target.value)})}
+                                            >
+                                                {DIGIT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                                            </select>
+                                        </div>
+                                     </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-bold text-slate-500 mb-2">題目數量</label>
+                                    <div className="grid grid-cols-3 gap-2">
+                                        {QUESTION_COUNTS.map(c => (
+                                            <button key={c} onClick={() => setSettings({...settings, count: c})} className={`p-2 rounded-lg font-bold ${settings.count === c ? 'bg-blue-500 text-white' : 'bg-slate-100 text-slate-600'}`}>{c}題</button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-bold text-slate-500 mb-2">模式</label>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <button onClick={() => setSettings({...settings, mode: 'practice'})} className={`flex flex-col items-center p-4 rounded-xl border-2 ${settings.mode === 'practice' ? 'border-green-500 bg-green-50 text-green-700' : 'border-slate-200 text-slate-400'}`}><Brain size={24}/><span className="font-bold">練習模式</span><span className="text-xs">步驟引導</span></button>
+                                        <button onClick={() => setSettings({...settings, mode: 'challenge'})} className={`flex flex-col items-center p-4 rounded-xl border-2 ${settings.mode === 'challenge' ? 'border-orange-500 bg-orange-50 text-orange-700' : 'border-slate-200 text-slate-400'}`}><Clock size={24}/><span className="font-bold">挑戰模式</span><span className="text-xs">計時測驗</span></button>
+                                    </div>
+                                </div>
+
+                                <button onClick={startGame} className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xl font-bold py-4 rounded-xl shadow-lg mt-4 flex justify-center items-center gap-2">開始 <ArrowRight /></button>
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            if (gameState === 'playing') {
+                const q = questions[currentQIdx];
+                return (
+                    <div className="min-h-screen flex flex-col items-center p-4">
+                        {feedback === 'correct' && <Confetti />}
+
+                        {/* API Key Modal (Access from playing screen too if needed, or just check before call) */}
+                        {showApiKeyModal && (
+                            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                                <div className="bg-white p-6 rounded-xl w-full max-w-sm shadow-2xl">
+                                    <h3 className="text-lg font-bold mb-4 flex items-center gap-2"><Key size={20}/> 設定 Google Gemini API Key</h3>
+                                    <input 
+                                        type="password" 
+                                        placeholder="貼上您的 API Key"
+                                        className="w-full p-2 border rounded mb-4"
+                                        defaultValue={apiKey}
+                                        id="apiKeyInputPlaying"
+                                    />
+                                    <div className="flex justify-end gap-2">
+                                        <button onClick={() => setShowApiKeyModal(false)} className="px-4 py-2 text-slate-500">取消</button>
+                                        <button 
+                                            onClick={() => handleSaveApiKey(document.getElementById('apiKeyInputPlaying').value)}
+                                            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                                        >
+                                            儲存
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="w-full max-w-lg flex justify-between items-center bg-white p-4 rounded-2xl shadow-sm mb-4">
+                            <button onClick={() => setGameState('menu')} className="p-2 text-slate-500"><RotateCcw size={20} /></button>
+                            <div className="flex gap-4">
+                                <div className="text-center"><span className="text-xs text-slate-400 font-bold">進度</span><div className="font-bold text-blue-600">{currentQIdx + 1} / {settings.count}</div></div>
+                                {settings.mode === 'challenge' && <div className="text-center"><span className="text-xs text-slate-400 font-bold">時間</span><div className="font-bold text-orange-500">{Math.floor(timer/60)}:{(timer%60).toString().padStart(2,'0')}</div></div>}
+                            </div>
+                            <button onClick={() => setAudioEnabled(!audioEnabled)} className={`p-2 rounded-full ${audioEnabled ? 'text-blue-500' : 'text-slate-400'}`}>{audioEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}</button>
+                        </div>
+
+                        <div className="flex-1 flex flex-col items-center justify-center w-full max-w-lg relative">
+                            <div className={`bg-white p-6 pb-8 rounded-3xl shadow-lg w-full flex flex-col items-center transition-all duration-300 relative ${feedback === 'correct' ? 'border-4 border-green-200' : ''}`}>
+                                
+                                {/* AI Content Display */}
+                                {aiContent && (
+                                    <div className="w-full mb-4 animate-bounce-custom">
+                                        <div className="ai-bubble text-slate-700 text-sm leading-relaxed text-left">
+                                            <div className="flex items-center gap-2 mb-1 font-bold text-purple-600">
+                                                {aiContent.type === 'word_problem' ? <Sparkles size={16}/> : <Bot size={16}/>}
+                                                {aiContent.type === 'word_problem' ? 'AI 應用題' : 'AI 小老師'}
+                                            </div>
+                                            {aiContent.text}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {settings.mode === 'practice' && !feedback && !aiContent && (
+                                    <div className="absolute top-4 text-blue-400 text-sm font-bold flex items-center gap-1">
+                                        <Brain size={16}/> 請依照步驟由右至左計算
+                                    </div>
+                                )}
+                                
+                                <div className="mt-2">
+                                    <VerticalMath 
+                                        key={currentQIdx} 
+                                        num1={q.num1} 
+                                        num2={q.num2} 
+                                        operator={q.operator} 
+                                        mode={settings.mode}
+                                        onComplete={handleAnswerComplete}
+                                    />
+                                </div>
+
+                                {/* AI Buttons */}
+                                {!feedback && (
+                                    <div className="flex gap-2 mt-6 w-full justify-center">
+                                        <button 
+                                            onClick={() => handleAiCall('word_problem')}
+                                            disabled={isAiLoading}
+                                            className="flex items-center gap-1 px-3 py-2 bg-purple-50 text-purple-600 rounded-lg text-sm font-bold hover:bg-purple-100 transition-colors border border-purple-200"
+                                        >
+                                            {isAiLoading ? <Loader2 size={16} className="animate-spin"/> : <Sparkles size={16}/>}
+                                            AI 應用題
+                                        </button>
+                                        <button 
+                                            onClick={() => handleAiCall('tutor')}
+                                            disabled={isAiLoading}
+                                            className="flex items-center gap-1 px-3 py-2 bg-blue-50 text-blue-600 rounded-lg text-sm font-bold hover:bg-blue-100 transition-colors border border-blue-200"
+                                        >
+                                            {isAiLoading ? <Loader2 size={16} className="animate-spin"/> : <Bot size={16}/>}
+                                            AI 小老師
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+
+                            {feedback && (
+                                <div className={`mt-8 flex items-center gap-2 text-2xl font-black ${feedback === 'correct' ? 'text-green-500' : 'text-red-500'}`}>
+                                    {feedback === 'correct' ? <CheckCircle size={32} /> : <XCircle size={32} />}
+                                    <span>{feedback === 'correct' ? "完成！" : "計算中..."}</span>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                );
+            }
+
+            if (gameState === 'result') {
+                const percentage = (score / settings.count) * 100;
+                const stars = percentage === 100 ? 3 : percentage >= 80 ? 2 : 1;
+                
+                return (
+                    <div className="min-h-screen flex flex-col items-center justify-center p-4">
+                        <div className="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-md text-center">
+                            <div className="flex justify-center gap-2 mb-6">
+                                {[1,2,3].map(i => <Trophy key={i} size={48} className={i <= stars ? 'text-yellow-400 fill-yellow-400' : 'text-slate-200'} />)}
+                            </div>
+                            <h2 className="text-3xl font-black text-slate-800 mb-2">{stars === 3 ? "太棒了！" : "做得很好！"}</h2>
+                            <p className="text-slate-500 mb-8">分數: {score} / {settings.count}</p>
+                            <button onClick={() => setGameState('menu')} className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xl font-bold py-4 rounded-xl shadow-lg flex justify-center items-center gap-2"><RotateCcw /> 再玩一次</button>
+                        </div>
+                    </div>
+                );
+            }
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
