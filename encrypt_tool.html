@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔒 簡報網頁密碼打包工具 🔒</title>
+    <!-- Google Fonts & Tailwind -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300..700&family=Noto+Sans+TC:wght@300..900&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- CryptoJS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <style>
+        body {
+            font-family: 'Fredoka', 'Noto Sans TC', sans-serif;
+            background: linear-gradient(135deg, #fff3f3 0%, #f0f8ff 50%, #f2fff9 100%);
+            min-height: 100vh;
+        }
+        .cute-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 3px solid rgba(255, 255, 255, 0.9);
+            box-shadow: 0 10px 30px rgba(168, 218, 220, 0.25);
+            border-radius: 32px;
+        }
+        .drag-area {
+            border: 3px dashed #a8dadc;
+            border-radius: 24px;
+            transition: all 0.3s ease;
+        }
+        .drag-area.hover {
+            border-color: #ffb7b2;
+            background-color: rgba(255, 183, 178, 0.1);
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center p-4">
+
+    <div class="w-full max-w-lg cute-card p-8 space-y-6">
+        <div class="text-center">
+            <h1 class="text-3xl font-black text-slate-700 tracking-wider">🔒 簡報密碼打包工具</h1>
+            <p class="text-sm text-slate-500 mt-2">將簡報 PDF 用密碼加密並包裝成能在 GitHub Pages 運行的安全網頁 🎈</p>
+        </div>
+
+        <!-- 拖曳區 -->
+        <div id="dropZone" class="drag-area p-8 text-center cursor-pointer hover:bg-slate-50/50">
+            <div class="text-5xl mb-3">📄</div>
+            <p class="text-slate-600 font-bold" id="fileInfo">拖曳簡報 PDF 檔案至此，或點擊選擇檔案</p>
+            <p class="text-xs text-slate-400 mt-1">支援 .pdf 格式</p>
+            <input type="file" id="fileInput" accept=".pdf" class="hidden">
+        </div>
+
+        <div class="space-y-4">
+            <!-- 密碼輸入 -->
+            <div>
+                <label class="block text-sm font-bold text-slate-600 mb-1">🔑 設定開啟密碼：</label>
+                <input type="password" id="passwordInput" placeholder="請輸入家長或學生開啟時的密碼" 
+                       class="w-full px-4 py-3 rounded-full border-2 border-cyan-200 outline-none focus:border-pink-300 transition-all font-sans text-center">
+            </div>
+
+            <!-- 標題輸入 -->
+            <div>
+                <label class="block text-sm font-bold text-slate-600 mb-1">🏷️ 簡報名稱：</label>
+                <input type="text" id="titleInput" placeholder="例：第一課生字與課文簡報" 
+                       class="w-full px-4 py-3 rounded-full border-2 border-cyan-200 outline-none focus:border-pink-300 transition-all">
+            </div>
+
+            <!-- 說明輸入 -->
+            <div>
+                <label class="block text-sm font-bold text-slate-600 mb-1">📝 說明文字（顯示於目錄卡片上）：</label>
+                <input type="text" id="descInput" placeholder="例：請輸入班級密碼以開啟本週教學簡報。" 
+                       class="w-full px-4 py-3 rounded-full border-2 border-cyan-200 outline-none focus:border-pink-300 transition-all">
+            </div>
+        </div>
+
+        <button id="packBtn" class="w-full py-4 bg-gradient-to-r from-pink-300 to-amber-200 hover:from-pink-400 hover:to-amber-300 text-slate-700 font-black text-lg rounded-full shadow-lg transition-all transform hover:scale-[1.02]">
+            🚀 開始打包並下載網頁
+        </button>
+
+        <div class="text-xs text-slate-400 border-t border-slate-200/50 pt-4 leading-relaxed">
+            💡 <strong>使用說明</strong>：<br>
+            1. 上傳 PDF 並設定密碼打包，會自動下載一個 <code>.html</code> 檔案。<br>
+            2. 將下載的 <code>.html</code> 檔案放入您工作區的 <code>apps/</code> 資料夾中。<br>
+            3. 在終端機執行目錄編譯與部署，家長即可透過加密卡片安全地輸入密碼觀看簡報。
+        </div>
+    </div>
+
+    <script>
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const fileInfo = document.getElementById('fileInfo');
+        const passwordInput = document.getElementById('passwordInput');
+        const titleInput = document.getElementById('titleInput');
+        const descInput = document.getElementById('descInput');
+        const packBtn = document.getElementById('packBtn');
+
+        let selectedFile = null;
+
+        // 拖曳事件
+        dropZone.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', (e) => handleFile(e.target.files[0]));
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('hover');
+        });
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('hover'));
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('hover');
+            handleFile(e.dataTransfer.files[0]);
+        });
+
+        function handleFile(file) {
+            if (!file) return;
+            if (file.type !== 'application/pdf' && !file.name.endsWith('.pdf')) {
+                alert('請上傳 PDF 格式的檔案！');
+                return;
+            }
+            selectedFile = file;
+            fileInfo.textContent = `已選取：${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+            
+            // 自動帶入預設標題與描述
+            const defaultTitle = file.name.replace(/\.[^/.]+$/, "");
+            if (!titleInput.value) titleInput.value = defaultTitle;
+            if (!descInput.value) descInput.value = "本教學簡報已受密碼保護，請輸入密碼以檢視。";
+        }
+
+        // 轉換 ArrayBuffer 到 Base64
+        function arrayBufferToBase64(buffer) {
+            let binary = '';
+            const bytes = new Uint8Array(buffer);
+            const len = bytes.byteLength;
+            for (let i = 0; i < len; i++) {
+                binary += String.fromCharCode(bytes[i]);
+            }
+            return window.btoa(binary);
+        }
+
+        // 打包加密
+        packBtn.addEventListener('click', () => {
+            if (!selectedFile) {
+                alert('請先上傳 PDF 檔案！');
+                return;
+            }
+            if (!passwordInput.value.trim()) {
+                alert('請設定開啟密碼！');
+                return;
+            }
+            if (!titleInput.value.trim()) {
+                alert('請填寫簡報名稱！');
+                return;
+            }
+
+            packBtn.disabled = true;
+            packBtn.textContent = '🔒 正在進行 AES-256 加密打包...';
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const arrayBuffer = e.target.result;
+                const base64Data = arrayBufferToBase64(arrayBuffer);
+                
+                // 加密
+                const password = passwordInput.value.trim();
+                const encrypted = CryptoJS.AES.encrypt(base64Data, password).toString();
+                
+                const title = titleInput.value.trim();
+                const desc = descInput.value.trim() || '本教學簡報已受密碼保護，請輸入密碼以檢視。';
+
+                // 生成解密網頁代碼
+                const outputHtml = `<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="category" content="學生專區">
+    <meta name="description" content="${desc}">
+    <meta name="icon" content="🔒">
+    <meta name="tags" content="簡報,密碼保護,親師溝通">
+    <title>${title}</title>
+    <!-- Google Fonts & Tailwind -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300..700&family=Noto+Sans+TC:wght@300..900&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- CryptoJS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <style>
+        body {
+            font-family: 'Fredoka', 'Noto Sans TC', sans-serif;
+            background: linear-gradient(135deg, #fff3f3 0%, #f0f8ff 50%, #f2fff9 100%);
+            min-height: 100vh;
+            margin: 0;
+        }
+        .cute-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 3px solid rgba(255, 255, 255, 0.9);
+            box-shadow: 0 10px 30px rgba(168, 218, 220, 0.25);
+            border-radius: 32px;
+        }
+        .viewer-container {
+            display: none;
+            width: 100vw;
+            height: 100vh;
+            flex-direction: column;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center">
+
+    <!-- 密碼輸入介面 -->
+    <div id="lockScreen" class="w-full max-w-md cute-card p-8 space-y-6 mx-4">
+        <div class="text-center">
+            <div class="text-6xl mb-3">🔒</div>
+            <h1 class="text-2xl font-black text-slate-700">${title}</h1>
+            <p class="text-sm text-slate-500 mt-2">${desc}</p>
+        </div>
+
+        <div class="space-y-4">
+            <input type="password" id="pwdInput" placeholder="請輸入開啟密碼" 
+                   class="w-full px-5 py-3 rounded-full border-2 border-cyan-200 outline-none focus:border-pink-300 transition-all font-sans text-center text-lg">
+            <p id="errorMsg" class="text-red-500 text-sm font-bold text-center hidden">❌ 密碼錯誤，請重新輸入！</p>
+        </div>
+
+        <button onclick="verifyAndDecrypt()" class="w-full py-3.5 bg-gradient-to-r from-pink-300 to-amber-200 hover:from-pink-400 hover:to-amber-300 text-slate-700 font-black text-lg rounded-full shadow-lg transition-all transform hover:scale-[1.02]">
+            🔑 驗證並解密閱讀
+        </button>
+    </div>
+
+    <!-- 簡報解密檢視器 -->
+    <div id="viewerScreen" class="viewer-container">
+        <!-- 頂部導覽列 -->
+        <header class="bg-white/80 backdrop-blur-md border-b border-slate-200 px-6 py-3 flex justify-between items-center z-10 shadow-sm">
+            <div class="flex items-center gap-3">
+                <span class="text-2xl">📖</span>
+                <h2 class="text-lg font-black text-slate-700">${title}</h2>
+            </div>
+            <div class="flex gap-2">
+                <button onclick="downloadPdf()" class="px-4 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-600 border border-emerald-200 font-bold rounded-full text-sm transition-all shadow-sm">
+                    📥 下載簡報 PDF
+                </button>
+                <button onclick="goBack()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-full text-sm transition-all">
+                    🏠 回主選單
+                </button>
+            </div>
+        </header>
+
+        <!-- PDF 嵌入 iframe -->
+        <div class="flex-1 w-full bg-slate-800">
+            <iframe id="pdfIframe" class="w-full h-full border-none" src=""></iframe>
+        </div>
+    </div>
+
+    <script>
+        const encryptedData = "${encrypted}";
+        let decryptedBlobUrl = null;
+
+        // 綁定 Enter 鍵送出
+        document.getElementById('pwdInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') verifyAndDecrypt();
+        });
+
+        function verifyAndDecrypt() {
+            const pwd = document.getElementById('pwdInput').value.trim();
+            const errorMsg = document.getElementById('errorMsg');
+            
+            if (!pwd) {
+                alert('請輸入密碼！');
+                return;
+            }
+
+            try {
+                // 解密
+                const decryptedBytes = CryptoJS.AES.decrypt(encryptedData, pwd);
+                const base64Data = decryptedBytes.toString(CryptoJS.enc.Utf8);
+                
+                if (!base64Data || !base64Data.startsWith('JVBERi')) { // PDF 檔案的 Base64 常以 JVBERi 開頭
+                    throw new Error('解密失敗');
+                }
+
+                // 轉為 Blob 并創建 URL
+                const byteCharacters = atob(base64Data);
+                const byteNumbers = new Array(byteCharacters.length);
+                for (let i = 0; i < byteCharacters.length; i++) {
+                    byteNumbers[i] = byteCharacters.charCodeAt(i);
+                }
+                const byteArray = new Uint8Array(byteNumbers);
+                const blob = new Blob([byteArray], { type: 'application/pdf' });
+                
+                decryptedBlobUrl = URL.createObjectURL(blob);
+
+                // 載入檢視器
+                document.getElementById('pdfIframe').src = decryptedBlobUrl;
+                document.getElementById('lockScreen').style.display = 'none';
+                document.getElementById('viewerScreen').style.display = 'flex';
+                
+                // 清理 Body 佈局樣式使其全螢幕
+                document.body.classList.remove('flex', 'items-center', 'justify-center');
+            } catch (err) {
+                errorMsg.classList.remove('hidden');
+                document.getElementById('pwdInput').value = '';
+                document.getElementById('pwdInput').focus();
+            }
+        }
+
+        function downloadPdf() {
+            if (!decryptedBlobUrl) return;
+            const a = document.createElement('a');
+            a.href = decryptedBlobUrl;
+            a.download = "${title}.pdf";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        function goBack() {
+            // 返回目錄首頁 (入口網頁位於上一層)
+            window.location.href = '../index.html';
+        }
+    </script>
+</body>
+</html>\`;
+
+                // 下載產生的 HTML
+                const blob = new Blob([outputHtml], { type: 'text/html;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = \`\${title}_已加密保護.html\`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+
+                // 重設按鈕
+                packBtn.disabled = false;
+                packBtn.textContent = '🚀 開始打包並下載網頁';
+                alert('🎉 打包成功！加密網頁已自動下載。請將該檔案放進 apps/ 目錄下。');
+            };
+            reader.readAsArrayBuffer(selectedFile);
+        });
+    </script>
+</body>
+</html>
