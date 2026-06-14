@@ -126,17 +126,6 @@
             if (!descInput.value) descInput.value = "本教學簡報已受密碼保護，請輸入密碼以檢視。";
         }
 
-        // 轉換 ArrayBuffer 到 Base64
-        function arrayBufferToBase64(buffer) {
-            let binary = '';
-            const bytes = new Uint8Array(buffer);
-            const len = bytes.byteLength;
-            for (let i = 0; i < len; i++) {
-                binary += String.fromCharCode(bytes[i]);
-            }
-            return window.btoa(binary);
-        }
-
         // 打包加密
         packBtn.addEventListener('click', () => {
             if (!selectedFile) {
@@ -158,11 +147,12 @@
             const reader = new FileReader();
             reader.onload = function(e) {
                 const arrayBuffer = e.target.result;
-                const base64Data = arrayBufferToBase64(arrayBuffer);
+                const uint8Array = new Uint8Array(arrayBuffer);
+                const wordArray = CryptoJS.lib.WordArray.create(uint8Array);
                 
                 // 加密
                 const password = passwordInput.value.trim();
-                const encrypted = CryptoJS.AES.encrypt(base64Data, password).toString();
+                const encrypted = CryptoJS.AES.encrypt(wordArray, password).toString();
                 
                 const title = titleInput.value.trim();
                 const desc = descInput.value.trim() || '本教學簡報已受密碼保護，請輸入密碼以檢視。';
@@ -236,6 +226,9 @@
                 <h2 class="text-lg font-black text-slate-700">${title}</h2>
             </div>
             <div class="flex gap-2">
+                <button onclick="openInNewTab()" class="px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200 font-bold rounded-full text-sm transition-all shadow-sm">
+                    ✨ 在新分頁開啟
+                </button>
                 <button onclick="downloadPdf()" class="px-4 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-600 border border-emerald-200 font-bold rounded-full text-sm transition-all shadow-sm">
                     📥 下載簡報 PDF
                 </button>
@@ -260,6 +253,23 @@
             if (e.key === 'Enter') verifyAndDecrypt();
         });
 
+        // 將 WordArray 轉為 Uint8Array (解決 stack size 超出問題)
+        function wordArrayToUint8Array(wordArray) {
+            const words = wordArray.words;
+            const sigBytes = wordArray.sigBytes;
+            const u8 = new Uint8Array(sigBytes);
+            let count = 0;
+            for (let i = 0; i < words.length; i++) {
+                const word = words[i];
+                for (let j = 0; j < 4; j++) {
+                    if (count >= sigBytes) break;
+                    const byte = (word >>> (24 - j * 8)) & 0xff;
+                    u8[count++] = byte;
+                }
+            }
+            return u8;
+        }
+
         function verifyAndDecrypt() {
             const pwd = document.getElementById('pwdInput').value.trim();
             const errorMsg = document.getElementById('errorMsg');
@@ -272,21 +282,13 @@
             try {
                 // 解密
                 const decryptedBytes = CryptoJS.AES.decrypt(encryptedData, pwd);
-                const base64Data = decryptedBytes.toString(CryptoJS.enc.Utf8);
+                const u8 = wordArrayToUint8Array(decryptedBytes);
                 
-                if (!base64Data || !base64Data.startsWith('JVBERi')) { // PDF 檔案的 Base64 常以 JVBERi 開頭
+                if (u8.length === 0 || u8[0] !== 37 || u8[1] !== 80 || u8[2] !== 68 || u8[3] !== 70) { // PDF header is %PDF
                     throw new Error('解密失敗');
                 }
 
-                // 轉為 Blob 并創建 URL
-                const byteCharacters = atob(base64Data);
-                const byteNumbers = new Array(byteCharacters.length);
-                for (let i = 0; i < byteCharacters.length; i++) {
-                    byteNumbers[i] = byteCharacters.charCodeAt(i);
-                }
-                const byteArray = new Uint8Array(byteNumbers);
-                const blob = new Blob([byteArray], { type: 'application/pdf' });
-                
+                const blob = new Blob([u8], { type: 'application/pdf' });
                 decryptedBlobUrl = URL.createObjectURL(blob);
 
                 // 載入檢視器
@@ -303,6 +305,11 @@
             }
         }
 
+        function openInNewTab() {
+            if (!decryptedBlobUrl) return;
+            window.open(decryptedBlobUrl, '_blank');
+        }
+
         function downloadPdf() {
             if (!decryptedBlobUrl) return;
             const a = document.createElement('a');
@@ -317,7 +324,7 @@
             // 返回目錄首頁 (入口網頁位於上一層)
             window.location.href = '../index.html';
         }
-    <\/script>
+    </script>
 </body>
 </html>`;
 
