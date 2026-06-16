@@ -272,23 +272,14 @@
             };
 
             useEffect(() => {
-                let activeMode = scaleMode;
-                if (scaleMode === 'auto') {
-                    if (windowSize.width > windowSize.height) {
-                        activeMode = 'fit';
-                    } else {
-                        activeMode = 'width';
-                    }
-                }
-                if (activeMode === 'fit') {
-                    document.body.style.overflow = 'hidden';
-                } else {
-                    document.body.style.overflow = 'auto';
-                }
+                // Ensure body allows natural scrolling on all devices
+                document.body.style.overflowX = 'hidden';
+                document.body.style.overflowY = 'auto';
                 return () => {
-                    document.body.style.overflow = 'auto';
+                    document.body.style.overflowX = 'auto';
+                    document.body.style.overflowY = 'auto';
                 };
-            }, [scaleMode, windowSize]);
+            }, []);
 
             // 基礎狀態
             const [activeTab, setActiveTab] = useState('preset'); // preset, random, custom
@@ -954,56 +945,39 @@
             
             const useZoom = typeof CSS !== 'undefined' && CSS.supports && CSS.supports('zoom', '1');
             
-            const outerStyle = activeMode === 'fit' ? {
-                width: '100vw',
-                height: '100vh',
-                overflow: 'hidden',
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                backgroundColor: '#f8fafc',
-                position: 'fixed',
-                top: 0,
-                left: 0,
-                zIndex: 40
-            } : {
+            // Calculate dynamic vertical centering padding for fit mode
+            const scaledHeight = target.height * currentScale;
+            const verticalPadding = (activeMode === 'fit' && windowSize.height > scaledHeight)
+                ? (windowSize.height - scaledHeight) / 2
+                : 16;
+
+            const outerStyle = {
                 width: '100%',
                 minHeight: '100vh',
                 backgroundColor: '#f8fafc',
-                paddingBottom: '2rem',
-                overflowX: 'hidden'
+                overflowX: 'hidden',
+                overflowY: 'auto',
+                position: 'relative',
+                display: 'block'
             };
             
-            const innerStyle = activeMode === 'fit' ? (
-                useZoom ? {
-                    width: `${target.width}px`,
-                    height: `${target.height}px`,
-                    zoom: currentScale,
-                    position: 'relative',
-                    flexShrink: 0
-                } : {
-                    width: `${target.width}px`,
-                    height: `${target.height}px`,
-                    transform: `scale(${currentScale})`,
-                    transformOrigin: 'center center',
-                    position: 'relative',
-                    flexShrink: 0
-                }
-            ) : (
-                useZoom ? {
-                    width: `${target.width}px`,
-                    zoom: currentScale,
-                    margin: '0 auto',
-                    position: 'relative'
-                } : {
-                    width: `${target.width}px`,
-                    transform: `scale(${currentScale})`,
-                    transformOrigin: 'top center',
-                    margin: '0 auto',
-                    position: 'relative',
-                    marginBottom: currentScale < 1 ? `${(target.height || 1000) * (currentScale - 1)}px` : '0px'
-                }
-            );
+            const innerStyle = useZoom ? {
+                width: `${target.width}px`,
+                zoom: currentScale,
+                margin: '0 auto',
+                position: 'relative',
+                paddingTop: `${verticalPadding}px`,
+                paddingBottom: '2rem'
+            } : {
+                width: `${target.width}px`,
+                transform: `scale(${currentScale})`,
+                transformOrigin: 'top center',
+                margin: '0 auto',
+                position: 'relative',
+                paddingTop: `${verticalPadding}px`,
+                paddingBottom: '2rem',
+                marginBottom: currentScale < 1 ? `${(target.height || 850) * (currentScale - 1) - 32}px` : '0px'
+            };
 
             return (
                 <div style={outerStyle}>
