@@ -1099,7 +1099,7 @@
                                         }}
                                         class={`flex-1 py-2 rounded-xl font-bold text-center transition text-sm ${activeTab === 'preset' ? 'bg-white text-teal-600 shadow' : 'text-slate-600 hover:text-slate-900'}`}
                                     >
-                                        📖 課本原題
+                                        📖 課本原題 (南一版)
                                     </button>
                                     <button 
                                         onClick={() => {
@@ -1125,6 +1125,9 @@
 
                                 {activeTab === 'preset' && (
                                     <div>
+                                        <div class="text-[10px] text-slate-400 mb-2.5 font-medium text-center bg-slate-50 py-1.5 rounded-xl border border-slate-100">
+                                            ※ 課本題目與頁碼取材自南一版數學教科書
+                                        </div>
                                         <div class="flex space-x-2 mb-3">
                                             <button 
                                                 onClick={() => { setSelectedCategory('addition'); resetProblem(textbookProblems.addition[0]); }}
