@@ -21,23 +21,103 @@
         body {
             font-family: 'Noto Sans TC', sans-serif;
             background-color: #f8fafc;
+            overflow-x: hidden;
         }
-        /* 課本風格的硬幣樣式 */
-        .coin-10 {
+        /* 課本風格的硬幣樣式與響應式大小 */
+        .coin-10, .coin-10-slashed {
             background: radial-gradient(circle, #ffe4e6 20%, #fda4af 80%);
-            border: 3px solid #f43f5e;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), inset 0 2px 4px rgba(255, 255, 255, 0.6);
+            border: 2px solid #f43f5e;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1), inset 0 1px 2px rgba(255, 255, 255, 0.6);
+            width: 2.25rem;
+            height: 2.25rem;
+            font-size: 0.875rem;
+            border-radius: 9999px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            user-select: none;
+            box-sizing: border-box;
         }
         .coin-1 {
             background: radial-gradient(circle, #ecfeff 20%, #a5f3fc 80%);
-            border: 3px solid #0891b2;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), inset 0 2px 4px rgba(255, 255, 255, 0.6);
+            border: 2px solid #0891b2;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1), inset 0 1px 2px rgba(255, 255, 255, 0.6);
+            width: 2rem;
+            height: 2rem;
+            font-size: 0.875rem;
+            border-radius: 9999px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            user-select: none;
+            box-sizing: border-box;
         }
+        .coin-small {
+            width: 1.75rem !important;
+            height: 1.75rem !important;
+            font-size: 0.75rem !important;
+            border-width: 1.5px !important;
+        }
+        @media (min-width: 400px) {
+            .coin-10, .coin-10-slashed {
+                width: 2.75rem;
+                height: 2.75rem;
+                font-size: 1.125rem;
+                border-width: 2.5px;
+            }
+            .coin-1 {
+                width: 2.5rem;
+                height: 2.5rem;
+                font-size: 1rem;
+                border-width: 2.5px;
+            }
+            .coin-small {
+                width: 2rem !important;
+                height: 2rem !important;
+                font-size: 0.875rem !important;
+                border-width: 2px !important;
+            }
+        }
+        @media (min-width: 640px) {
+            .coin-10, .coin-10-slashed {
+                width: 3.5rem;
+                height: 3.5rem;
+                font-size: 1.25rem;
+                border-width: 3px;
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), inset 0 2px 4px rgba(255, 255, 255, 0.6);
+            }
+            .coin-1 {
+                width: 3rem;
+                height: 3rem;
+                font-size: 1.125rem;
+                border-width: 3px;
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), inset 0 2px 4px rgba(255, 255, 255, 0.6);
+            }
+            .coin-small {
+                width: 2.5rem !important;
+                height: 2.5rem !important;
+                font-size: 1rem !important;
+                border-width: 2.5px !important;
+            }
+        }
+
         .coin-10-slashed {
             background: radial-gradient(circle, #f1f5f9 20%, #cbd5e1 80%);
-            border: 3px dashed #94a3b8;
+            border: 2px dashed #94a3b8;
             opacity: 0.5;
             position: relative;
+        }
+        @media (min-width: 400px) {
+            .coin-10-slashed {
+                border-width: 2.5px dashed;
+            }
+        }
+        @media (min-width: 640px) {
+            .coin-10-slashed {
+                border-width: 3px dashed;
+            }
         }
         .coin-10-slashed::after {
             content: '';
@@ -56,7 +136,7 @@
         .coin-1-crossed::after {
             content: '❌';
             position: absolute;
-            font-size: 2rem;
+            font-size: 1.125rem;
             color: #ef4444;
             display: flex;
             align-items: center;
@@ -65,6 +145,16 @@
             height: 100%;
             background-color: rgba(255, 255, 255, 0.2);
             border-radius: 50%;
+        }
+        @media (min-width: 400px) {
+            .coin-1-crossed::after {
+                font-size: 1.5rem;
+            }
+        }
+        @media (min-width: 640px) {
+            .coin-1-crossed::after {
+                font-size: 2rem;
+            }
         }
         
         /* 1元硬幣畫斜線樣式 */
@@ -78,20 +168,32 @@
             top: 50%;
             left: -10%;
             width: 120%;
-            height: 4px;
+            height: 3px;
             background-color: #ef4444;
             transform: rotate(-45deg);
             box-shadow: 0 1px 2px rgba(0,0,0,0.3);
         }
+        @media (min-width: 640px) {
+            .coin-1-slashed::after {
+                height: 4px;
+            }
+        }
 
         /* 10合1粉紅色虛線包裹框 */
         .wrap-container {
-            border: 4px dashed #ec4899;
+            border: 2px dashed #ec4899;
             background-color: rgba(253, 242, 248, 0.75);
-            border-radius: 1.5rem;
-            padding: 0.75rem;
+            border-radius: 1rem;
+            padding: 0.35rem;
             transition: all 0.5s ease-in-out;
             animation: pulse-border 1.5s infinite;
+        }
+        @media (min-width: 640px) {
+            .wrap-container {
+                border-width: 4px;
+                border-radius: 1.5rem;
+                padding: 0.75rem;
+            }
         }
         @keyframes pulse-border {
             0%, 100% { border-color: #ec4899; }
@@ -106,8 +208,13 @@
         .trans-coin-active {
             animation: floatAndPulse 2s infinite ease-in-out;
             box-shadow: 0 0 20px #f43f5e, inset 0 2px 4px rgba(255, 255, 255, 0.6);
-            border: 4px solid #f43f5e !important;
+            border: 3px solid #f43f5e !important;
             cursor: pointer;
+        }
+        @media (min-width: 640px) {
+            .trans-coin-active {
+                border-width: 4px !important;
+            }
         }
 
         /* 呼吸動畫 */
@@ -144,6 +251,45 @@
         };
 
         function App() {
+            // 螢幕縮放與適應狀態
+            const [scaleMode, setScaleMode] = useState('auto'); // auto, fit, width, none
+            const [windowSize, setWindowSize] = useState({ width: window.innerWidth, height: window.innerHeight });
+
+            useEffect(() => {
+                const handleResize = () => {
+                    setWindowSize({ width: window.innerWidth, height: window.innerHeight });
+                };
+                window.addEventListener('resize', handleResize);
+                return () => window.removeEventListener('resize', handleResize);
+            }, []);
+
+            const getTargetDimensions = () => {
+                if (windowSize.width > windowSize.height) {
+                    return { width: 1200, height: 820, isLandscape: true };
+                } else {
+                    return { width: 768, height: 1100, isLandscape: false };
+                }
+            };
+
+            useEffect(() => {
+                let activeMode = scaleMode;
+                if (scaleMode === 'auto') {
+                    if (windowSize.width > windowSize.height) {
+                        activeMode = 'fit';
+                    } else {
+                        activeMode = 'width';
+                    }
+                }
+                if (activeMode === 'fit') {
+                    document.body.style.overflow = 'hidden';
+                } else {
+                    document.body.style.overflow = 'auto';
+                }
+                return () => {
+                    document.body.style.overflow = 'auto';
+                };
+            }, [scaleMode, windowSize]);
+
             // 基礎狀態
             const [activeTab, setActiveTab] = useState('preset'); // preset, random, custom
             const [selectedCategory, setSelectedCategory] = useState('addition'); // addition, subtraction
@@ -596,10 +742,10 @@
                     if (additionCarryStage === 'selecting') {
                         return (
                             <div class="flex flex-col items-center justify-center flex-1 space-y-3 w-full">
-                                <p class="text-xs font-extrabold text-teal-800 bg-teal-100/85 px-4 py-1.5 rounded-full animate-pulse border border-teal-200">
+                                <p class="text-[10px] sm:text-xs font-extrabold text-teal-800 bg-teal-100/85 px-2 py-1.5 rounded-full animate-pulse border border-teal-200 text-center">
                                     👈 請點選 10 個一元畫上斜線 ({selectedOnesForCarry.length} / 10)
                                 </p>
-                                <div class="grid grid-cols-4 sm:grid-cols-5 gap-3 p-3 bg-cyan-50/50 rounded-2xl border-2 border-cyan-100 w-full justify-items-center">
+                                <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-1.5 sm:gap-3 p-1.5 sm:p-3 bg-cyan-50/50 rounded-2xl border border-cyan-100 w-full justify-items-center">
                                     {Array.from({ length: totalOnesCount }).map((_, i) => {
                                         const isSelected = selectedOnesForCarry.includes(i);
                                         return (
@@ -620,7 +766,7 @@
                                                         }
                                                     }
                                                 }}
-                                                class={`w-12 h-12 rounded-full coin-1 text-cyan-700 font-black text-lg flex items-center justify-center shadow select-none cursor-pointer transition-all hover:scale-110 active:scale-95 ring-2 ring-cyan-200
+                                                class={`coin-1 cursor-pointer transition-all hover:scale-110 active:scale-95 ring-2 ring-cyan-200
                                                     ${isSelected ? 'coin-1-slashed ring-rose-400 border-rose-500 border-2 scale-105' : ''}
                                                 `}
                                             >
@@ -636,14 +782,14 @@
                     // 2. 包起來階段
                     if (additionCarryStage === 'wrapped') {
                         return (
-                            <div class="flex flex-col items-center justify-center flex-1 space-y-4 w-full animate-in fade-in zoom-in-95 duration-200">
-                                <div class="wrap-container w-full max-w-[280px] flex flex-col items-center justify-center space-y-2 shadow-md">
-                                    <div class="text-[11px] font-extrabold text-pink-700 animate-pulse flex items-center space-x-1">
-                                        <span>🎁 準備合十的一元（共10個）</span>
+                            <div class="flex flex-col items-center justify-center flex-1 space-y-3 sm:space-y-4 w-full animate-in fade-in zoom-in-95 duration-200">
+                                <div class="wrap-container w-full max-w-[140px] sm:max-w-[280px] flex flex-col items-center justify-center space-y-1.5 sm:space-y-2 shadow-md">
+                                    <div class="text-[9px] sm:text-[11px] font-extrabold text-pink-700 animate-pulse flex items-center space-x-1 text-center">
+                                        <span>🎁 準備合十（共10個）</span>
                                     </div>
-                                    <div class="grid grid-cols-5 gap-2">
+                                    <div class="grid grid-cols-3 sm:grid-cols-5 gap-1 sm:gap-2">
                                         {Array.from({ length: 10 }).map((_, i) => (
-                                            <div key={`wrapped-one-${i}`} class="w-10 h-10 rounded-full coin-1 coin-1-slashed text-cyan-700 font-black text-md flex items-center justify-center shadow select-none">
+                                            <div key={`wrapped-one-${i}`} class="coin-1 coin-small coin-1-slashed">
                                                 1
                                             </div>
                                         ))}
@@ -655,17 +801,18 @@
                                         playSound('exchange');
                                         setAdditionCarryStage('transitional-coin');
                                     }}
-                                    class="bg-gradient-to-r from-pink-500 to-rose-500 text-white font-extrabold px-6 py-3 rounded-2xl shadow-lg hover:from-pink-600 hover:to-rose-600 transition-all scale-105 animate-bounce flex items-center space-x-1.5"
+                                    class="bg-gradient-to-r from-pink-500 to-rose-500 text-white font-extrabold px-3 py-2 sm:px-6 sm:py-3 rounded-2xl shadow-lg hover:from-pink-600 hover:to-rose-600 transition-all scale-105 animate-bounce flex items-center space-x-1 text-xs sm:text-base"
                                 >
-                                    <span>🎁 把這十個包起來！</span>
+                                    <span class="hidden sm:inline">🎁 把這十個包起來！</span>
+                                    <span class="sm:hidden">🎁 包起來！</span>
                                 </button>
 
                                 {leftoverCount > 0 && (
                                     <div class="flex flex-col items-center space-y-1 w-full">
-                                        <div class="text-[10px] font-bold text-slate-400">剩下的個位：</div>
-                                        <div class="flex flex-wrap gap-2 justify-center">
+                                        <div class="text-[9px] sm:text-[10px] font-bold text-slate-400">剩下的個位：</div>
+                                        <div class="flex flex-wrap gap-1.5 justify-center">
                                             {Array.from({ length: leftoverCount }).map((_, i) => (
-                                                <div key={`leftover-wrapped-${i}`} class="w-10 h-10 rounded-full coin-1 text-cyan-700 font-black text-md flex items-center justify-center shadow select-none">
+                                                <div key={`leftover-wrapped-${i}`} class="coin-1 coin-small">
                                                     1
                                                 </div>
                                             ))}
@@ -679,9 +826,9 @@
                     // 3. 生產新的10元，引導搬移階段
                     if (additionCarryStage === 'transitional-coin') {
                         return (
-                            <div class="flex flex-col items-center justify-center flex-1 space-y-5 w-full animate-in fade-in zoom-in-95 duration-200">
-                                <div class="flex flex-col items-center space-y-2 bg-yellow-50 border-2 border-yellow-300 p-4 rounded-3xl shadow-md relative">
-                                    <div class="absolute -top-3 bg-yellow-400 text-yellow-950 font-extrabold text-[11px] px-3 py-1 rounded-full shadow">
+                            <div class="flex flex-col items-center justify-center flex-1 space-y-4 sm:space-y-5 w-full animate-in fade-in zoom-in-95 duration-200">
+                                <div class="flex flex-col items-center space-y-1.5 sm:space-y-2 bg-yellow-50 border-2 border-yellow-300 p-2.5 sm:p-4 rounded-2xl sm:rounded-3xl shadow-md relative">
+                                    <div class="absolute -top-3 bg-yellow-400 text-yellow-950 font-extrabold text-[9px] sm:text-[11px] px-2 py-0.5 sm:px-3 sm:py-1 rounded-full shadow">
                                         🌟 成功換成十元囉！
                                     </div>
                                     <div
@@ -691,21 +838,22 @@
                                             setAdditionCarryStage('done');
                                             setStep(5);
                                         }}
-                                        class="w-16 h-16 rounded-full coin-10 trans-coin-active text-rose-700 font-black text-2xl flex items-center justify-center shadow select-none"
+                                        class="w-12 h-12 sm:w-16 sm:h-16 rounded-full coin-10 trans-coin-active text-rose-700 font-black text-lg sm:text-2xl flex items-center justify-center shadow select-none"
                                     >
                                         10
                                     </div>
-                                    <p class="text-xs font-bold text-rose-600 animate-pulse flex items-center space-x-1">
-                                        <span>⬅️ 點我把十元搬移到十位欄位</span>
+                                    <p class="text-[10px] sm:text-xs font-bold text-rose-600 animate-pulse flex items-center space-x-1 text-center">
+                                        <span class="hidden sm:inline">⬅️ 點我把十元搬移到十位欄位</span>
+                                        <span class="sm:hidden">⬅️ 點我搬移十元</span>
                                     </p>
                                 </div>
 
                                 {leftoverCount > 0 && (
                                     <div class="flex flex-col items-center space-y-1 w-full">
-                                        <div class="text-[10px] font-bold text-slate-400">剩下的個位：</div>
-                                        <div class="flex flex-wrap gap-2 justify-center">
+                                        <div class="text-[9px] sm:text-[10px] font-bold text-slate-400">剩下的個位：</div>
+                                        <div class="flex flex-wrap gap-1.5 justify-center">
                                             {Array.from({ length: leftoverCount }).map((_, i) => (
-                                                <div key={`leftover-trans-${i}`} class="w-10 h-10 rounded-full coin-1 text-cyan-700 font-black text-md flex items-center justify-center shadow select-none">
+                                                <div key={`leftover-trans-${i}`} class="coin-1 coin-small">
                                                     1
                                                 </div>
                                             ))}
@@ -718,10 +866,10 @@
                 }
 
                 return (
-                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 justify-items-center p-2">
+                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-3 justify-items-center p-1 sm:p-2">
                         {currentProblem.op === '+' && isCarried ? (
                             Array.from({ length: leftoverCount }).map((_, i) => (
-                                <div key={`leftover-final-${i}`} class="w-12 h-12 rounded-full coin-1 text-cyan-700 font-black text-lg flex items-center justify-center shadow select-none animate-in zoom-in duration-200">
+                                <div key={`leftover-final-${i}`} class="coin-1 animate-in zoom-in duration-200">
                                     1
                                 </div>
                             ))
@@ -733,7 +881,7 @@
                                         <div 
                                             key={`one-${i}`} 
                                             onClick={() => handleToggleCross(i)}
-                                            class={`w-12 h-12 rounded-full coin-1 text-cyan-700 font-black text-lg flex items-center justify-center shadow select-none transition-all
+                                            class={`coin-1 transition-all
                                                 ${isCrossed ? 'coin-1-crossed' : 'hover:scale-105 active:scale-95'}
                                                 ${step === 4 && currentProblem.op === '-' ? 'cursor-pointer ring-2 ring-orange-300' : 'cursor-default'}
                                             `}
@@ -747,18 +895,18 @@
                                     Array.from({ length: drawnAddOnes }).map((_, i) => (
                                         <div 
                                             key={`add-one-${i}`} 
-                                            class="w-12 h-12 rounded-full coin-1 text-cyan-700 font-black text-lg flex items-center justify-center shadow select-none border-dashed border-rose-500 border-2 relative"
+                                            class="coin-1 border-dashed border-rose-500 border-2 relative"
                                         >
                                             1
-                                            <div class="absolute -top-1 -right-1 text-[8px] bg-rose-500 text-white rounded-full px-0.5 font-bold">+1</div>
+                                            <div class="absolute -top-1 -right-1 text-[7px] sm:text-[8px] bg-rose-500 text-white rounded-full px-0.5 font-bold">+1</div>
                                         </div>
                                     ))
                                 )}
 
                                 {isExchanged && (
-                                    <div class="col-span-full border-4 border-dashed border-pink-400 bg-pink-50 p-2.5 rounded-2xl w-full animate-in slide-in-from-bottom duration-300">
-                                        <div class="text-[10px] font-bold text-pink-700 mb-1.5 text-center">👇 10元換開來的 10個一元</div>
-                                        <div class="grid grid-cols-5 gap-2 justify-items-center">
+                                    <div class="col-span-full border border-dashed border-pink-400 bg-pink-50/50 p-1.5 sm:p-2.5 rounded-2xl w-full animate-in slide-in-from-bottom duration-300">
+                                        <div class="text-[9px] sm:text-[10px] font-bold text-pink-700 mb-1 sm:mb-1.5 text-center">👇 10元換開來的 10個一元</div>
+                                        <div class="grid grid-cols-3 sm:grid-cols-5 gap-1.5 justify-items-center">
                                             {Array.from({ length: 10 }).map((_, i) => {
                                                 const globalIndex = drawnOnes + i;
                                                 const isCrossed = crossedOnes.includes(globalIndex);
@@ -766,7 +914,7 @@
                                                     <div 
                                                         key={`exchanged-one-${i}`} 
                                                         onClick={() => handleToggleCross(globalIndex)}
-                                                        class={`w-10 h-10 rounded-full coin-1 text-cyan-700 font-black text-md flex items-center justify-center shadow select-none transition-all
+                                                        class={`coin-1 coin-small transition-all
                                                             ${isCrossed ? 'coin-1-crossed' : 'hover:scale-105 active:scale-95'}
                                                             ${step === 4 && currentProblem.op === '-' ? 'cursor-pointer ring-2 ring-orange-300' : 'cursor-default'}
                                                         `}
@@ -784,42 +932,132 @@
                 );
             };
 
+            const target = getTargetDimensions();
+            const scaleX = windowSize.width / target.width;
+            const scaleY = windowSize.height / target.height;
+            
+            let activeMode = scaleMode;
+            if (scaleMode === 'auto') {
+                if (windowSize.width > windowSize.height) {
+                    activeMode = 'fit';
+                } else {
+                    activeMode = 'width';
+                }
+            }
+            
+            let currentScale = 1;
+            if (activeMode === 'fit') {
+                currentScale = Math.min(scaleX, scaleY);
+            } else if (activeMode === 'width') {
+                currentScale = scaleX;
+            }
+            
+            const useZoom = typeof CSS !== 'undefined' && CSS.supports && CSS.supports('zoom', '1');
+            
+            const outerStyle = activeMode === 'fit' ? {
+                width: '100vw',
+                height: '100vh',
+                overflow: 'hidden',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                backgroundColor: '#f8fafc',
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                zIndex: 40
+            } : {
+                width: '100%',
+                minHeight: '100vh',
+                backgroundColor: '#f8fafc',
+                paddingBottom: '2rem',
+                overflowX: 'hidden'
+            };
+            
+            const innerStyle = activeMode === 'fit' ? (
+                useZoom ? {
+                    width: `${target.width}px`,
+                    height: `${target.height}px`,
+                    zoom: currentScale,
+                    position: 'relative',
+                    flexShrink: 0
+                } : {
+                    width: `${target.width}px`,
+                    height: `${target.height}px`,
+                    transform: `scale(${currentScale})`,
+                    transformOrigin: 'center center',
+                    position: 'relative',
+                    flexShrink: 0
+                }
+            ) : (
+                useZoom ? {
+                    width: `${target.width}px`,
+                    zoom: currentScale,
+                    margin: '0 auto',
+                    position: 'relative'
+                } : {
+                    width: `${target.width}px`,
+                    transform: `scale(${currentScale})`,
+                    transformOrigin: 'top center',
+                    margin: '0 auto',
+                    position: 'relative',
+                    marginBottom: currentScale < 1 ? `${(target.height || 1000) * (currentScale - 1)}px` : '0px'
+                }
+            );
+
             return (
-                <div class="max-w-6xl mx-auto px-4 py-6">
-                    {/* 頂部標題 */}
-                    <header class="bg-gradient-to-r from-teal-500 to-cyan-500 rounded-3xl p-6 text-white mb-6 shadow-lg flex flex-col md:flex-row items-center justify-between">
-                        <div class="flex items-center space-x-4">
-                            <div class="bg-white p-3 rounded-2xl shadow">
-                                <span class="text-4xl">🎨</span>
-                            </div>
-                            <div>
-                                <h1 class="text-3xl font-extrabold tracking-wide">「10個和1個」硬幣解題大挑戰</h1>
-                                <p class="text-teal-50 text-sm mt-1 font-medium">專為理解心算、精熟課本畫圖題所設計的數位教具</p>
-                            </div>
-                        </div>
-                        
-                        {/* 系統控制項 */}
-                        <div class="flex flex-wrap gap-2 mt-4 md:mt-0">
-                            <button 
-                                onClick={() => { playSound('click'); setShowGuide(true); }}
-                                class="px-4 py-2 rounded-full font-bold bg-indigo-600 text-white hover:bg-indigo-700 text-sm shadow transition flex items-center space-x-1.5"
-                            >
-                                <span>👥 家長與老師指南</span>
-                            </button>
-                            <button 
-                                onClick={() => setSpeechEnabled(!speechEnabled)}
-                                class={`px-4 py-2 rounded-full font-bold flex items-center space-x-1 text-sm shadow transition ${speechEnabled ? 'bg-amber-400 text-amber-950 hover:bg-amber-500' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}`}
-                            >
-                                <span>{speechEnabled ? '🔊 語音導讀開' : '🔇 語音導讀關'}</span>
-                            </button>
-                            <button 
-                                onClick={() => setSoundEnabled(!soundEnabled)}
-                                class={`px-4 py-2 rounded-full font-bold flex items-center space-x-1 text-sm shadow transition ${soundEnabled ? 'bg-amber-400 text-amber-950 hover:bg-amber-500' : 'bg-slate-700 text-slate-300'}`}
-                            >
-                                <span>{soundEnabled ? '🔔 音效開' : '🔕 音效關'}</span>
-                            </button>
-                        </div>
-                    </header>
+                <div style={outerStyle}>
+                    <div style={innerStyle}>
+                        <div class="max-w-6xl mx-auto px-2 py-4 sm:px-4 sm:py-6">
+                            {/* 頂部標題 */}
+                            <header class="bg-gradient-to-r from-teal-500 to-cyan-500 rounded-2xl sm:rounded-3xl p-4 sm:p-6 text-white mb-6 shadow-lg flex flex-col md:flex-row items-center justify-between gap-4">
+                                <div class="flex items-center space-x-2 sm:space-x-4">
+                                    <div class="bg-white p-2 sm:p-3 rounded-xl sm:rounded-2xl shadow">
+                                        <span class="text-3xl sm:text-4xl">🎨</span>
+                                    </div>
+                                    <div>
+                                        <h1 class="text-xl sm:text-2xl md:text-3xl font-extrabold tracking-wide">「10個和1個」硬幣解題大挑戰</h1>
+                                        <p class="text-teal-50 text-[11px] sm:text-xs md:text-sm mt-1 font-medium">專為理解心算、精熟課本畫圖題所設計的數位教具</p>
+                                    </div>
+                                </div>
+                                
+                                {/* 系統控制項 */}
+                                <div class="flex flex-wrap gap-1.5 sm:gap-2 mt-2 md:mt-0">
+                                    <button 
+                                        onClick={() => {
+                                            playSound('click');
+                                            const modes = ['auto', 'fit', 'width', 'none'];
+                                            const nextIdx = (modes.indexOf(scaleMode) + 1) % modes.length;
+                                            setScaleMode(modes[nextIdx]);
+                                        }}
+                                        class="px-4 py-2 rounded-full font-bold bg-teal-600 hover:bg-teal-700 text-white text-sm shadow transition flex items-center space-x-1.5"
+                                    >
+                                        <span>{
+                                            scaleMode === 'auto' ? '📱 螢幕適應: 自動' :
+                                            scaleMode === 'fit' ? '📱 螢幕適應: 滿版' :
+                                            scaleMode === 'width' ? '📱 螢幕適應: 寬度' : '📱 螢幕適應: 關閉'
+                                        }</span>
+                                    </button>
+                                    <button 
+                                        onClick={() => { playSound('click'); setShowGuide(true); }}
+                                        class="px-4 py-2 rounded-full font-bold bg-indigo-600 text-white hover:bg-indigo-700 text-sm shadow transition flex items-center space-x-1.5"
+                                    >
+                                        <span>👥 家長與老師指南</span>
+                                    </button>
+                                    <button 
+                                        onClick={() => setSpeechEnabled(!speechEnabled)}
+                                        class={`px-4 py-2 rounded-full font-bold flex items-center space-x-1 text-sm shadow transition ${speechEnabled ? 'bg-amber-400 text-amber-950 hover:bg-amber-500' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}`}
+                                    >
+                                        <span>{speechEnabled ? '🔊 語音導讀開' : '🔇 語音導讀關'}</span>
+                                    </button>
+                                    <button 
+                                        onClick={() => setSoundEnabled(!soundEnabled)}
+                                        class={`px-4 py-2 rounded-full font-bold flex items-center space-x-1 text-sm shadow transition ${soundEnabled ? 'bg-amber-400 text-amber-950 hover:bg-amber-500' : 'bg-slate-700 text-slate-300'}`}
+                                    >
+                                        <span>{soundEnabled ? '🔔 音效開' : '🔕 音效關'}</span>
+                                    </button>
+                                </div>
+                            </header>
 
                     {/* 家長與老師指南 Modal 彈出視窗 */}
                     {showGuide && (
@@ -1108,17 +1346,17 @@
                         {/* 右側：主解題區 */}
                         <div class="lg:col-span-8 space-y-6">
                             {/* 題目顯示卡片 */}
-                            <div class="bg-white rounded-3xl p-5 shadow-md border border-slate-100 flex items-center justify-between">
+                            <div class="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-md border border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                                 <div class="space-y-1">
                                     <div class="flex items-center space-x-2">
-                                        <span class="px-3 py-1 rounded-full text-xs font-black bg-teal-100 text-teal-800 border border-teal-200">
+                                        <span class="px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full text-[10px] sm:text-xs font-black bg-teal-100 text-teal-800 border border-teal-200 animate-pulse">
                                             {currentProblem.op === '+' ? '🔴 加法題' : '🔵 減法題'}
                                         </span>
-                                        <span class="text-slate-500 text-xs font-bold">
+                                        <span class="text-slate-500 text-[10px] sm:text-xs font-bold">
                                             {currentProblem.desc}
                                         </span>
                                     </div>
-                                    <div class="text-3xl font-black tracking-wide text-slate-800 flex items-baseline space-x-2 py-1">
+                                    <div class="text-2xl sm:text-3xl font-black tracking-wide text-slate-800 flex items-baseline space-x-2 py-0.5 sm:py-1">
                                         <span>{currentProblem.num1}</span>
                                         <span class="text-rose-500">{currentProblem.op}</span>
                                         <span>{currentProblem.num2}</span>
@@ -1128,26 +1366,26 @@
                                 </div>
                                 <button 
                                     onClick={() => speak(`題目是：${currentProblem.num1} ${currentProblem.op === '+' ? '加' : '減'} ${currentProblem.num2}`)}
-                                    class="w-12 h-12 rounded-full bg-amber-100 hover:bg-amber-200 text-amber-800 flex items-center justify-center shadow-sm transition active:scale-95"
+                                    class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-amber-100 hover:bg-amber-200 text-amber-800 flex items-center justify-center shadow-sm transition active:scale-95 self-end sm:self-auto"
                                     title="播放題目語音"
                                 >
-                                    <span class="text-xl">🔊</span>
+                                    <span class="text-lg sm:text-xl">🔊</span>
                                 </button>
                             </div>
 
                             {/* 畫板與硬幣顯示區 */}
                             {isRandomActive && isRandomFinished ? (
-                                <div class="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-3xl p-8 text-white text-center shadow-xl">
-                                    <div class="text-6xl mb-4">🏆</div>
-                                    <h2 class="text-3xl font-black mb-2">隨機挑戰完成！</h2>
-                                    <p class="text-indigo-100 mb-6 font-medium">恭喜你完成了所有 {randomTotalQuestions} 題挑戰！</p>
-                                    <div class="bg-white/10 rounded-2xl p-4 max-w-sm mx-auto mb-6">
-                                        <div class="text-sm text-indigo-200">你的總積分</div>
-                                        <div class="text-5xl font-black text-amber-300 mt-1">{randomScore} 分</div>
+                                <div class="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl sm:rounded-3xl p-6 sm:p-8 text-white text-center shadow-xl">
+                                    <div class="text-5xl sm:text-6xl mb-3 sm:mb-4">🏆</div>
+                                    <h2 class="text-2xl sm:text-3xl font-black mb-1 sm:mb-2">隨機挑戰完成！</h2>
+                                    <p class="text-indigo-100 mb-4 sm:mb-6 font-medium text-xs sm:text-sm">恭喜你完成了所有 {randomTotalQuestions} 題挑戰！</p>
+                                    <div class="bg-white/10 rounded-2xl p-3 sm:p-4 max-w-[240px] sm:max-w-sm mx-auto mb-4 sm:mb-6">
+                                        <div class="text-xs sm:text-sm text-indigo-200">你的總積分</div>
+                                        <div class="text-4xl sm:text-5xl font-black text-amber-300 mt-1">{randomScore} 分</div>
                                     </div>
                                     <button 
                                         onClick={handleResetRandomSettings}
-                                        class="bg-white text-indigo-700 hover:bg-slate-100 font-extrabold px-8 py-3 rounded-2xl shadow transition"
+                                        class="bg-white text-indigo-700 hover:bg-slate-100 font-extrabold px-6 py-2.5 sm:px-8 sm:py-3 rounded-2xl shadow transition text-xs sm:text-sm"
                                     >
                                         再挑戰一次 🔄
                                     </button>
@@ -1155,43 +1393,43 @@
                             ) : (
                                 <div class="space-y-6">
                                     {/* 實體硬幣畫板 */}
-                                    <div class="bg-white rounded-3xl p-6 shadow-md border border-slate-100 relative">
-                                        <div class="absolute -top-3 left-6 bg-slate-800 text-white font-extrabold text-xs px-4 py-1.5 rounded-full shadow">
+                                    <div class="bg-white rounded-2xl sm:rounded-3xl p-3 sm:p-6 shadow-md border border-slate-100 relative">
+                                        <div class="absolute -top-3 left-4 sm:left-6 bg-slate-800 text-white font-extrabold text-[10px] sm:text-xs px-3 py-1 sm:px-4 sm:py-1.5 rounded-full shadow">
                                             🪙 硬幣對應畫板
                                         </div>
                                         
-                                        <div class="grid grid-cols-2 gap-0 border-4 border-slate-200 rounded-3xl bg-white overflow-hidden mt-2">
+                                        <div class="grid grid-cols-2 gap-0 border-2 sm:border-4 border-slate-200 rounded-2xl sm:rounded-3xl bg-white overflow-hidden mt-2">
                                             {/* 十位 (十元硬幣) 欄位 */}
-                                            <div class="border-r-4 border-slate-200 p-4 flex flex-col items-center min-h-[320px] bg-rose-50/20">
-                                                <div class="bg-rose-100/70 border border-rose-200 px-4 py-1.5 rounded-full mb-4">
-                                                    <h3 class="font-extrabold text-rose-700 text-sm flex items-center space-x-1">
+                                            <div class="border-r-2 sm:border-r-4 border-slate-200 p-2 sm:p-4 flex flex-col items-center min-h-[280px] sm:min-h-[320px] bg-rose-50/20">
+                                                <div class="bg-rose-100/70 border border-rose-200 px-2.5 py-1 sm:px-4 sm:py-1.5 rounded-full mb-3 sm:mb-4">
+                                                    <h3 class="font-extrabold text-rose-700 text-xs sm:text-sm flex items-center space-x-1">
                                                         <span>🔴</span>
-                                                        <span>十位 (十元硬幣)</span>
+                                                        <span>十位 (十元)</span>
                                                     </h3>
                                                 </div>
                                                 
-                                                <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 justify-items-center w-full p-2">
+                                                <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3 justify-items-center w-full p-1 sm:p-2">
                                                     {/* 正常顯示十位硬幣 */}
                                                     {currentProblem.op === '+' ? (
                                                         <>
                                                             {/* 第一個數的十元 */}
                                                             {Array.from({ length: drawnTens }).map((_, i) => (
-                                                                <div key={`ten-${i}`} class="w-14 h-14 rounded-full coin-10 text-rose-700 font-black text-xl flex items-center justify-center shadow select-none animate-in zoom-in duration-200">
+                                                                <div key={`ten-${i}`} class="coin-10 animate-in zoom-in duration-200">
                                                                     10
                                                                 </div>
                                                             ))}
                                                             {/* 加數的十元 */}
                                                             {step >= 3 && Array.from({ length: drawnAddTens }).map((_, i) => (
-                                                                <div key={`add-ten-${i}`} class="w-14 h-14 rounded-full coin-10 border-dashed border-rose-500 border-2 text-rose-700 font-black text-xl flex items-center justify-center shadow select-none relative animate-in zoom-in duration-200">
+                                                                <div key={`add-ten-${i}`} class="coin-10 border-dashed border-rose-500 border-2 relative animate-in zoom-in duration-200">
                                                                     10
-                                                                    <div class="absolute -top-1 -right-1 text-[8px] bg-rose-500 text-white rounded-full px-0.5 font-bold">+10</div>
+                                                                    <div class="absolute -top-1 -right-1 text-[7px] sm:text-[8px] bg-rose-500 text-white rounded-full px-0.5 font-bold">+10</div>
                                                                 </div>
                                                             ))}
                                                             {/* 合十新產生的十元 */}
                                                             {isCarried && (
-                                                                <div class="w-14 h-14 rounded-full coin-10 text-rose-700 font-black text-xl flex items-center justify-center shadow select-none border-2 ring-4 ring-yellow-300 animate-in slide-in-from-right duration-500">
+                                                                <div class="coin-10 border-2 ring-2 sm:ring-4 ring-yellow-300 animate-in slide-in-from-right duration-500 relative">
                                                                     10
-                                                                    <div class="absolute -top-1 -right-1 text-[8px] bg-yellow-500 text-yellow-950 font-bold rounded-full px-1">新</div>
+                                                                    <div class="absolute -top-1 -right-1 text-[7px] sm:text-[8px] bg-yellow-500 text-yellow-950 font-bold rounded-full px-0.5 sm:px-1">新</div>
                                                                 </div>
                                                             )}
                                                         </>
@@ -1209,9 +1447,9 @@
                                                                                 handleExchangeTen(i);
                                                                             }
                                                                         }}
-                                                                        class={`w-14 h-14 rounded-full text-rose-700 font-black text-xl flex items-center justify-center shadow select-none transition-all
+                                                                        class={`transition-all
                                                                             ${isSlashed ? 'coin-10-slashed' : 'coin-10'}
-                                                                            ${step === 3 && !isExchanged && i === drawnTens - 1 ? 'cursor-pointer ring-4 ring-amber-400 scale-105 animate-pulse border-amber-500' : 'cursor-default'}
+                                                                            ${step === 3 && !isExchanged && i === drawnTens - 1 ? 'cursor-pointer ring-2 sm:ring-4 ring-amber-400 scale-105 animate-pulse border-amber-500' : 'cursor-default'}
                                                                         `}
                                                                     >
                                                                         10
@@ -1224,11 +1462,11 @@
                                             </div>
 
                                             {/* 個位 (一元硬幣) 欄位 */}
-                                            <div class="p-4 flex flex-col items-center min-h-[320px] bg-cyan-50/20">
-                                                <div class="bg-cyan-100/70 border border-cyan-200 px-4 py-1.5 rounded-full mb-4">
-                                                    <h3 class="font-extrabold text-cyan-700 text-sm flex items-center space-x-1">
+                                            <div class="p-2 sm:p-4 flex flex-col items-center min-h-[280px] sm:min-h-[320px] bg-cyan-50/20">
+                                                <div class="bg-cyan-100/70 border border-cyan-200 px-2.5 py-1 sm:px-4 sm:py-1.5 rounded-full mb-3 sm:mb-4">
+                                                    <h3 class="font-extrabold text-cyan-700 text-xs sm:text-sm flex items-center space-x-1">
                                                         <span>🔵</span>
-                                                        <span>個位 (一元硬幣)</span>
+                                                        <span>個位 (一元)</span>
                                                     </h3>
                                                 </div>
                                                 <div class="w-full">
@@ -1567,6 +1805,8 @@
                                 </div>
                             )}
                         </div>
+                    </div>
+                </div>
                     </div>
                 </div>
             );
