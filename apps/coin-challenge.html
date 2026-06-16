@@ -416,7 +416,7 @@
                 const prefix = activeTab === 'random' ? `第 ${randomCurrentIndex + 1} 題挑戰，` : '';
 
                 if (step === 1) {
-                    text = `${prefix}我們要挑戰的題目是：${num1} ${op === '+' ? '加' : '減'} ${num2}。在開始畫圖前，你覺得答案是多少呢？先用心算猜個答案，把它悄悄鎖定吧！`;
+                    text = `${prefix}我們要挑戰的題目是：${num1} ${op === '+' ? '加' : '減'} ${num2}。在開始畫圖前，你可以用心算猜個答案在格子裡鎖定，或者也可以直接點選按鈕進入下一步喔！`;
                 } else if (step === 2) {
                     text = `現在，我們要在畫板上畫出第一個數：${num1}。它有 ${Math.floor(num1/10)} 個十和 ${num1%10} 個一。請點擊按鈕，把它畫出來吧！`;
                 } else if (step === 3) {
@@ -445,11 +445,15 @@
                 } else if (step === 5) {
                     text = `太棒了！現在數數看畫面上，剩下幾個十元？幾個一元？把它們合起來，在空格寫下最後的答案。`;
                 } else if (step === 6) {
-                    const isLockedCorrect = parseInt(mentalLockValue) === currentProblem.answer;
-                    if (isLockedCorrect) {
-                        text = `太厲害了！你畫得完全正確，而且跟你一開始鎖定的心算答案一模一樣！畫圖其實很簡單，對不對！`;
+                    if (mentalLockValue) {
+                        const isLockedCorrect = parseInt(mentalLockValue) === currentProblem.answer;
+                        if (isLockedCorrect) {
+                            text = `太厲害了！你畫得完全正確，而且跟你一開始鎖定的心算答案一模一樣！畫圖其實很簡單，對不對！`;
+                        } else {
+                            text = `太厲害了！你算出正確答案囉！雖然一開始的心算答案有一點點小誤差，但是畫圖幫你找到了正確的答案，真是好幫手！`;
+                        }
                     } else {
-                        text = `太厲害了！你算出正確答案囉！雖然一開始的心算答案有一點點小誤差，但是畫圖幫你找到了正確的答案，真是好幫手！`;
+                        text = `太厲害了！你算出正確答案囉！畫圖其實很簡單，對不對！`;
                     }
                 }
                 
@@ -1457,32 +1461,32 @@
                                             <div class="text-center space-y-4">
                                                 <h4 class="text-indigo-900 font-extrabold text-lg flex items-center justify-center space-x-1.5">
                                                     <span>🧠</span>
-                                                    <span>心算估計大考驗</span>
+                                                    <span>心算估計大考驗 (選填)</span>
                                                 </h4>
                                                 <p class="text-slate-600 text-sm max-w-md mx-auto">
-                                                    在動手畫硬幣之前，先在腦袋裡想一想。你覺得答案是多少元呢？請在下面寫下來，把它悄悄鎖定吧！
+                                                    在動手畫硬幣之前，先在腦袋裡想一想。你覺得答案是多少元呢？可以在下面寫下你的估算，或是直接點選下一步開始畫硬幣喔！
                                                 </p>
                                                 <div class="flex items-center justify-center space-x-3 max-w-sm mx-auto pt-2">
                                                     <input 
                                                         type="number"
                                                         value={mentalLockValue}
                                                         onChange={(e) => setMentalLockValue(e.target.value)}
-                                                        placeholder="心算答案"
+                                                        placeholder="心算答案 (選填)"
                                                         class="w-36 px-4 py-3 border-2 border-slate-200 rounded-2xl text-center font-bold text-xl focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition"
                                                     />
                                                     <button
                                                         onClick={() => {
-                                                            if (!mentalLockValue) {
-                                                                alert("請輸入您的心算猜測答案喔！");
-                                                                return;
-                                                            }
                                                             playSound('click');
-                                                            setIsMentalLocked(true);
+                                                            if (mentalLockValue) {
+                                                                setIsMentalLocked(true);
+                                                            } else {
+                                                                setIsMentalLocked(false);
+                                                            }
                                                             setStep(2);
                                                         }}
                                                         class="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold px-6 py-3.5 rounded-2xl shadow-md transition active:scale-95 text-sm"
                                                     >
-                                                        🔒 鎖定心算答案
+                                                        {mentalLockValue ? '🔒 鎖定並前往下一步' : '➡️ 直接前往下一步'}
                                                     </button>
                                                 </div>
                                             </div>
@@ -1726,20 +1730,28 @@
                                                         <span>正確答案：</span>
                                                         <span class="text-teal-600 text-lg">{currentProblem.answer} 元</span>
                                                     </p>
-                                                    <p class="flex justify-between pt-1">
-                                                        <span>一開始心算鎖定的答案：</span>
-                                                        <span class="font-extrabold text-indigo-700">{mentalLockValue} 元</span>
-                                                    </p>
-                                                    {parseInt(mentalLockValue) === currentProblem.answer ? (
-                                                        <p class="text-indigo-800 bg-indigo-50 border border-indigo-100 px-3 py-2 rounded-xl font-extrabold text-xs mt-3 text-center">
-                                                            🌟 太不可思議了！你的心算答案與畫硬幣答案完全一樣！太聰明啦！
-                                                        </p>
-                                                    ) : (
-                                                        <p class="text-slate-600 font-medium text-xs mt-3 text-center">
-                                                            雖然心算有一點小誤差，但藉由畫硬幣你成功找到了正確答案！畫圖是不是很棒的工具呢？
+                                                    {mentalLockValue && (
+                                                        <p class="flex justify-between pt-1 border-b border-teal-100 pb-1.5 font-medium">
+                                                            <span>一開始心算鎖定的答案：</span>
+                                                            <span class="font-extrabold text-indigo-700">{mentalLockValue} 元</span>
                                                         </p>
                                                     )}
-                                                </div>
+                                                    {mentalLockValue ? (
+                                                        parseInt(mentalLockValue) === currentProblem.answer ? (
+                                                            <p class="text-indigo-800 bg-indigo-50 border border-indigo-100 px-3 py-2 rounded-xl font-extrabold text-xs mt-3 text-center">
+                                                                🌟 太不可思議了！你的心算答案與畫硬幣答案完全一樣！太聰明啦！
+                                                            </p>
+                                                        ) : (
+                                                            <p class="text-slate-600 font-medium text-xs mt-3 text-center">
+                                                                雖然心算有一點小誤差，但藉由畫硬幣你成功找到了正確答案！畫圖是不是很棒的工具呢？
+                                                            </p>
+                                                        )
+                                                     ) : (
+                                                         <p class="text-slate-600 font-medium text-xs mt-3 text-center">
+                                                             藉由畫硬幣，你成功找到了正確答案！畫圖是不是很棒的工具呢？
+                                                         </p>
+                                                     )}
+                                                 </div>
                                                 
                                                 <div class="pt-2">
                                                     {activeTab === 'random' ? (
