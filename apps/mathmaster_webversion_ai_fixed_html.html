@@ -17,7 +17,7 @@
     <script>window.react = window.React;</script>
     
     <!-- Babel for JSX -->
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone@7/babel.min.js"></script>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -162,7 +162,7 @@
         const { useState, useEffect, useRef, useMemo } = React;
         
         // Safety check for Lucide Icons
-        const icons = window.lucideReact || {};
+        const icons = window.LucideReact || window.lucideReact || {};
         
         // Fallback component if icon is missing
         const IconFallback = ({ size = 24, ...props }) => (

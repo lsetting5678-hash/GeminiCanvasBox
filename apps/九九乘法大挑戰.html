@@ -1,0 +1,1162 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="category" content="數學">
+    <meta name="description" content="九九乘法宇宙大挑戰，支援單人練習、闖關冒險與雙人 PK 模式，搭配多巴胺特效與語音回饋。">
+    <meta name="icon" content="🚀">
+    <meta name="tags" content="九九乘法,數學,遊戲,特教">
+    <title>九九乘法大挑戰</title>
+    
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Fix for lucide-react UMD global dependency -->
+    <script>window.react = window.React;</script>
+    
+    <!-- Lucide Icons React -->
+    <script src="https://unpkg.com/lucide-react@0.292.0/dist/umd/lucide-react.min.js"></script>
+    
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone@7/babel.min.js"></script>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-[#0f172a] min-h-screen">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef, useCallback } = React;
+        const { Star, Trophy, Volume2, VolumeX, Settings, Play, Users, User, ArrowLeft, RefreshCcw, Map: MapIcon, Award, Music, Music4, ListOrdered, Timer, Hash } = window.LucideReact || {};
+
+        // --- 星空背景組件 (Canvas) ---
+        const StarryBackground = () => {
+          const canvasRef = useRef(null);
+
+          useEffect(() => {
+            const canvas = canvasRef.current;
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            let animationFrameId;
+            let stars = [];
+            let width = window.innerWidth;
+            let height = window.innerHeight;
+
+            const initStars = () => {
+              width = window.innerWidth;
+              height = window.innerHeight;
+              canvas.width = width;
+              canvas.height = height;
+              stars = [];
+              const numStars = Math.floor((width * height) / 1000); 
+              for (let i = 0; i < numStars; i++) {
+                stars.push({
+                  x: Math.random() * width,
+                  y: Math.random() * height,
+                  radius: Math.random() * 1.5,
+                  alpha: Math.random(),
+                  speed: Math.random() * 0.05,
+                  twinkleSpeed: Math.random() * 0.02
+                });
+              }
+            };
+
+            const draw = () => {
+              ctx.clearRect(0, 0, width, height);
+              const gradient = ctx.createLinearGradient(0, 0, 0, height);
+              gradient.addColorStop(0, '#0f172a'); 
+              gradient.addColorStop(1, '#1e1b4b'); 
+              ctx.fillStyle = gradient;
+              ctx.fillRect(0, 0, width, height);
+
+              ctx.fillStyle = 'white';
+              stars.forEach(star => {
+                ctx.globalAlpha = Math.abs(Math.sin(Date.now() * star.twinkleSpeed + star.x)) * star.alpha;
+                ctx.beginPath();
+                ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+                ctx.fill();
+                
+                star.y -= star.speed;
+                if (star.y < 0) star.y = height;
+              });
+              animationFrameId = requestAnimationFrame(draw);
+            };
+
+            initStars();
+            draw();
+
+            const handleResize = () => initStars();
+            window.addEventListener('resize', handleResize);
+
+            return () => {
+              window.removeEventListener('resize', handleResize);
+              cancelAnimationFrame(animationFrameId);
+            };
+          }, []);
+
+          return <canvas ref={canvasRef} className="absolute inset-0 z-0 w-full h-full pointer-events-none" />;
+        };
+
+        // --- 煙火特效組件 (Canvas) ---
+        const Fireworks = ({ active, burstTrigger }) => {
+          const canvasRef = useRef(null);
+          const activeRef = useRef(active);
+          const burstQueueRef = useRef(0);
+          const prevBurstRef = useRef(burstTrigger);
+
+          // 同步 active 狀態 (避免重置 Canvas)
+          useEffect(() => {
+            activeRef.current = active;
+          }, [active]);
+
+          // 監聽答對瞬間的觸發，加入待發射佇列
+          useEffect(() => {
+            if (burstTrigger > prevBurstRef.current) {
+                burstQueueRef.current += 5; // 每次答對瞬間發射5發煙火
+            }
+            prevBurstRef.current = burstTrigger;
+          }, [burstTrigger]);
+
+          useEffect(() => {
+            const canvas = canvasRef.current;
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            let width = window.innerWidth;
+            let height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+
+            const fireworks = [];
+            const particles = [];
+            // 搭配多巴胺風格的高明度霓虹色彩
+            const colors = ['#fbbf24', '#f472b6', '#34d399', '#60a5fa', '#a78bfa', '#fcd34d', '#38bdf8', '#fb7185'];
+
+            let animationId;
+
+            const createParticles = (x, y, color) => {
+              let particleCount = 80; // 每發煙火爆炸的粒子數
+              while (particleCount--) {
+                particles.push({
+                  x: x,
+                  y: y,
+                  vx: (Math.random() - 0.5) * (Math.random() * 15 + 5),
+                  vy: (Math.random() - 0.5) * (Math.random() * 15 + 5),
+                  alpha: 1,
+                  color: color,
+                  decay: Math.random() * 0.015 + 0.005,
+                  size: Math.random() * 3 + 1
+                });
+              }
+            };
+
+            const launchFirework = () => {
+                const startX = Math.random() * width;
+                fireworks.push({
+                  x: startX,
+                  y: height,
+                  targetX: startX + (Math.random() - 0.5) * 200,
+                  targetY: Math.random() * (height / 2),
+                  speed: Math.random() * 5 + 10,
+                  angle: 0,
+                  color: colors[Math.floor(Math.random() * colors.length)]
+                });
+                const f = fireworks[fireworks.length - 1];
+                f.angle = Math.atan2(f.targetY - f.y, f.targetX - f.x);
+                f.vx = Math.cos(f.angle) * f.speed;
+                f.vy = Math.sin(f.angle) * f.speed;
+            };
+
+            const loop = () => {
+              if (!activeRef.current && fireworks.length === 0 && particles.length === 0 && burstQueueRef.current === 0) {
+                  // 畫面完全閒置時清空畫布，避免殘影與多餘效能消耗
+                  ctx.clearRect(0, 0, width, height);
+              } else {
+                  // 利用 globalCompositeOperation 創造漸隱的殘影拖尾效果
+                  ctx.globalCompositeOperation = 'destination-out';
+                  ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+                  ctx.fillRect(0, 0, width, height);
+                  ctx.globalCompositeOperation = 'lighter';
+
+                  // 處理瞬間爆發的煙火 (答對時觸發)
+                  while (burstQueueRef.current > 0) {
+                      launchFirework();
+                      burstQueueRef.current--;
+                  }
+
+                  // 隨機發射新的煙火 (機率控制煙火密集度，過關時持續發射)
+                  if (activeRef.current && Math.random() < 0.08) {
+                      launchFirework();
+                  }
+
+                  // 更新與繪製升空的煙火本體
+                  for (let i = fireworks.length - 1; i >= 0; i--) {
+                    const f = fireworks[i];
+                    f.x += f.vx;
+                    f.y += f.vy;
+
+                    ctx.beginPath();
+                    ctx.arc(f.x, f.y, 3, 0, Math.PI * 2);
+                    ctx.fillStyle = f.color;
+                    ctx.fill();
+
+                    // 抵達目標點或開始下墜時爆炸
+                    if (f.vy >= -1 || f.y <= f.targetY) {
+                      createParticles(f.x, f.y, f.color);
+                      fireworks.splice(i, 1);
+                    }
+                  }
+
+                  // 更新與繪製爆炸散開的粒子
+                  for (let i = particles.length - 1; i >= 0; i--) {
+                    const p = particles[i];
+                    p.vx *= 0.95; // 摩擦力減速
+                    p.vy *= 0.95;
+                    p.vy += 0.15; // 重力下墜
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.alpha -= p.decay; // 逐漸透明
+
+                    if (p.alpha <= 0) {
+                      particles.splice(i, 1);
+                      continue;
+                    }
+
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                    ctx.fillStyle = p.color;
+                    ctx.globalAlpha = p.alpha;
+                    ctx.fill();
+                    ctx.globalAlpha = 1;
+                  }
+              }
+              animationId = requestAnimationFrame(loop);
+            };
+            loop();
+
+            const handleResize = () => {
+              width = window.innerWidth;
+              height = window.innerHeight;
+              canvas.width = width;
+              canvas.height = height;
+            };
+            window.addEventListener('resize', handleResize);
+
+            return () => {
+              cancelAnimationFrame(animationId);
+              window.removeEventListener('resize', handleResize);
+            };
+          }, []);
+
+          return <canvas ref={canvasRef} className="fixed inset-0 z-30 pointer-events-none" />;
+        };
+
+        // --- 音效系統 (SFX) ---
+        const PRAISE_WORDS = [
+          "太神了！", "天才！", "數學大師！", "勢不可擋！", 
+          "好樣的！", "快如閃電！", "完美！", "太強了！"
+        ];
+
+        const ENCOURAGE_WORDS = [
+          "哎呀，再想想看喔", 
+          "差一點點，再試一次", 
+          "加油，再算一次看看", 
+          "慢慢來，沒關係"
+        ];
+
+        const playSound = (type) => {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          if (!AudioContext) return;
+          const ctx = new AudioContext();
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+
+          const now = ctx.currentTime;
+
+          if (type === 'correct') {
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(600, now);
+            osc.frequency.exponentialRampToValueAtTime(1200, now + 0.1);
+            gain.gain.setValueAtTime(0.4, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+            osc.start();
+            osc.stop(now + 0.3);
+          } else if (type === 'wrong') {
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(200, now);
+            osc.frequency.linearRampToValueAtTime(100, now + 0.2);
+            gain.gain.setValueAtTime(0.3, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+            osc.start();
+            osc.stop(now + 0.3);
+          } else if (type === 'pop') {
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(300, now);
+            gain.gain.setValueAtTime(0.1, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+            osc.start();
+            osc.stop(now + 0.1);
+          } else if (type === 'win') {
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(400, now);
+            osc.frequency.setValueAtTime(600, now + 0.1);
+            osc.frequency.setValueAtTime(800, now + 0.2);
+            gain.gain.setValueAtTime(0.2, now);
+            gain.gain.linearRampToValueAtTime(0, now + 0.6);
+            osc.start();
+            osc.stop(now + 0.6);
+          }
+        };
+
+        const speakPraise = () => {
+          if (!window.speechSynthesis) return;
+          window.speechSynthesis.cancel(); // 避免連續點擊時語音重疊
+          const text = PRAISE_WORDS[Math.floor(Math.random() * PRAISE_WORDS.length)];
+          const utterance = new SpeechSynthesisUtterance(text);
+          utterance.lang = 'zh-TW';
+          utterance.rate = 1.2;
+          utterance.pitch = 1.2;
+          window.speechSynthesis.speak(utterance);
+        };
+
+        const speakEncourage = () => {
+          if (!window.speechSynthesis) return;
+          window.speechSynthesis.cancel(); // 避免連續點擊時語音重疊
+          const text = ENCOURAGE_WORDS[Math.floor(Math.random() * ENCOURAGE_WORDS.length)];
+          const utterance = new SpeechSynthesisUtterance(text);
+          utterance.lang = 'zh-TW';
+          utterance.rate = 0.85; // 語速調慢，適合低年級吸收
+          utterance.pitch = 1.4;  // 音調調高，聲音更溫柔親切
+          window.speechSynthesis.speak(utterance);
+        };
+
+        // --- 背景音樂系統 (BGM) ---
+        const useBGM = (enabled, gameState) => {
+          const audioCtxRef = useRef(null);
+          const isPlayingRef = useRef(false);
+          const nextNoteTimeRef = useRef(0);
+          const timerIDRef = useRef(null);
+          const melody = [
+            { note: 261.63, dur: 0.5 }, { note: 329.63, dur: 0.5 }, { note: 392.00, dur: 0.5 }, { note: 523.25, dur: 1.0 },
+            { note: 392.00, dur: 0.5 }, { note: 329.63, dur: 0.5 }, { note: 261.63, dur: 1.0 },
+            { note: 293.66, dur: 0.5 }, { note: 349.23, dur: 0.5 }, { note: 440.00, dur: 0.5 }, { note: 587.33, dur: 1.0 },
+            { note: 440.00, dur: 0.5 }, { note: 349.23, dur: 0.5 }, { note: 293.66, dur: 1.0 }
+          ];
+          let currentNoteIndex = 0;
+
+          const playNote = (ctx, freq, duration, time) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.type = 'sine';
+            osc.frequency.value = freq;
+            gain.gain.setValueAtTime(0.05, time); 
+            gain.gain.exponentialRampToValueAtTime(0.001, time + duration - 0.05);
+            osc.start(time);
+            osc.stop(time + duration);
+          };
+
+          const scheduler = () => {
+            if (!audioCtxRef.current) return;
+            while (nextNoteTimeRef.current < audioCtxRef.current.currentTime + 0.1) {
+              const { note, dur } = melody[currentNoteIndex];
+              playNote(audioCtxRef.current, note, dur, nextNoteTimeRef.current);
+              nextNoteTimeRef.current += dur;
+              currentNoteIndex = (currentNoteIndex + 1) % melody.length;
+            }
+            timerIDRef.current = requestAnimationFrame(scheduler);
+          };
+
+          useEffect(() => {
+            if (enabled && gameState !== 'menu' && !isPlayingRef.current) {
+              const AudioContext = window.AudioContext || window.webkitAudioContext;
+              if (!AudioContext) return;
+              audioCtxRef.current = new AudioContext();
+              nextNoteTimeRef.current = audioCtxRef.current.currentTime;
+              isPlayingRef.current = true;
+              scheduler();
+            } else if ((!enabled || gameState === 'menu') && isPlayingRef.current) {
+              if (audioCtxRef.current) audioCtxRef.current.close();
+              if (timerIDRef.current) cancelAnimationFrame(timerIDRef.current);
+              isPlayingRef.current = false;
+              audioCtxRef.current = null;
+            }
+            return () => {
+              if (timerIDRef.current) cancelAnimationFrame(timerIDRef.current);
+              if (audioCtxRef.current) audioCtxRef.current.close();
+              isPlayingRef.current = false;
+            };
+          }, [enabled, gameState]);
+        };
+
+        // --- 遊戲資料 ---
+
+        const LEVELS = [
+          { id: 1, title: "初出茅廬", ranges: [2, 3, 4, 5], time: 60, target: 50, color: "from-green-400 to-blue-500" },
+          { id: 2, title: "進階挑戰", ranges: [6, 7, 8, 9], time: 60, target: 60, color: "from-blue-400 to-indigo-500" },
+          { id: 3, title: "混合試煉", ranges: [2, 3, 4, 5, 6, 7, 8, 9], time: 50, target: 80, color: "from-indigo-400 to-purple-500" },
+          { id: 4, title: "極速傳說", ranges: [2, 3, 4, 5, 6, 7, 8, 9], time: 30, target: 60, color: "from-purple-400 to-pink-500" },
+          { id: 5, title: "終極大師", ranges: [2, 3, 4, 5, 6, 7, 8, 9, 10], time: 45, target: 120, color: "from-pink-400 to-rose-500" },
+        ];
+
+        const generateQuestion = (selectedRanges) => {
+          const ranges = selectedRanges.length > 0 ? selectedRanges : [2,3,4,5,6,7,8,9];
+          const num1 = ranges[Math.floor(Math.random() * ranges.length)];
+          const num2 = Math.floor(Math.random() * 9) + 2; 
+          return { num1, num2, answer: num1 * num2 };
+        };
+
+        const generateOptions = (correctAnswer) => {
+          const options = new Set([correctAnswer]);
+          while (options.size < 4) {
+            const offset = Math.floor(Math.random() * 10) - 5; 
+            const val = correctAnswer + offset;
+            if (val > 0 && val !== correctAnswer) options.add(val);
+            else options.add(Math.floor(Math.random() * 80) + 4);
+          }
+          return Array.from(options).sort(() => Math.random() - 0.5);
+        };
+
+        // --- 主程式 ---
+
+        function App() {
+          const [gameState, setGameState] = useState('menu'); 
+          const [mode, setMode] = useState('single'); 
+          const [currentLevelId, setCurrentLevelId] = useState(1);
+          const [selectedRanges, setSelectedRanges] = useState([2, 3, 4, 5, 6, 7, 8, 9]);
+          
+          const [freePlaySettings, setFreePlaySettings] = useState({ type: 'time', value: 60 });
+          const [answeredCount, setAnsweredCount] = useState(0); 
+          const [timerCount, setTimerCount] = useState(0); 
+
+          const [score, setScore] = useState(0);
+          const [p1Score, setP1Score] = useState(0);
+          const [p2Score, setP2Score] = useState(0);
+          const [soundEnabled, setSoundEnabled] = useState(true);
+          const [musicEnabled, setMusicEnabled] = useState(false);
+          const [currentQ, setCurrentQ] = useState(null);
+          const [options, setOptions] = useState([]);
+          const [timeLeft, setTimeLeft] = useState(60); 
+          const [combo, setCombo] = useState(0);
+          
+          // 支援多重特效的陣列狀態
+          const [feedbacks, setFeedbacks] = useState([]);
+          const [particles, setParticles] = useState([]);
+          
+          // 新增：煙火特效控制狀態
+          const [fireworksActive, setFireworksActive] = useState(false);
+          const [fireworksBurst, setFireworksBurst] = useState(0);
+          const fireworksTimerRef = useRef(null);
+
+          const [leaderboard, setLeaderboard] = useState([]);
+          const [trophies, setTrophies] = useState({});
+
+          useBGM(musicEnabled, gameState); 
+
+          useEffect(() => {
+            const savedLeaderboard = JSON.parse(localStorage.getItem('math_leaderboard') || '[]');
+            const savedTrophies = JSON.parse(localStorage.getItem('math_trophies') || '{}');
+            setLeaderboard(savedLeaderboard);
+            setTrophies(savedTrophies);
+          }, []);
+
+          useEffect(() => {
+            let timer;
+            if (gameState === 'playing') {
+              if (mode === 'single' && freePlaySettings.type === 'count') {
+                timer = setInterval(() => setTimerCount(t => t + 1), 1000);
+              } else if (timeLeft > 0) {
+                timer = setInterval(() => setTimeLeft((prev) => prev - 1), 1000);
+              } else if (timeLeft === 0) {
+                handleGameOver();
+              }
+            }
+            return () => clearInterval(timer);
+          }, [gameState, timeLeft, mode, freePlaySettings.type]);
+
+          const handleGameOver = () => {
+            if (mode === 'campaign') {
+              const level = LEVELS.find(l => l.id === currentLevelId);
+              if (score >= level.target) {
+                playSound('win');
+                let medal = 'bronze';
+                if (score >= level.target * 1.5) medal = 'gold';
+                else if (score >= level.target * 1.2) medal = 'silver';
+                
+                const newTrophies = { ...trophies, [level.id]: medal };
+                if (trophies[level.id] === 'gold') newTrophies[level.id] = 'gold';
+                else if (trophies[level.id] === 'silver' && medal === 'bronze') newTrophies[level.id] = 'silver';
+
+                setTrophies(newTrophies);
+                localStorage.setItem('math_trophies', JSON.stringify(newTrophies));
+                setGameState('level_complete');
+                return;
+              }
+            }
+            
+            if (soundEnabled) playSound('wrong');
+            setGameState('gameover');
+
+            if (mode === 'single') {
+              const newEntry = { 
+                score, 
+                date: new Date().toLocaleDateString(),
+                type: freePlaySettings.type === 'time' ? '限時' : `${freePlaySettings.value}題`
+              };
+              const newLeaderboard = [...leaderboard, newEntry].sort((a, b) => b.score - a.score).slice(0, 5);
+              setLeaderboard(newLeaderboard);
+              localStorage.setItem('math_leaderboard', JSON.stringify(newLeaderboard));
+            }
+          };
+
+          const nextRound = useCallback((ranges) => {
+            const q = generateQuestion(ranges || selectedRanges);
+            setCurrentQ(q);
+            setOptions(generateOptions(q.answer));
+          }, [selectedRanges]);
+
+          const startGame = (selectedMode, levelId = null) => {
+            setMode(selectedMode);
+            setScore(0);
+            setP1Score(0);
+            setP2Score(0);
+            setCombo(0);
+            setAnsweredCount(0);
+            setTimerCount(0);
+            setGameState('playing');
+            
+            if (selectedMode === 'campaign' && levelId) {
+              const level = LEVELS.find(l => l.id === levelId);
+              setCurrentLevelId(levelId);
+              setTimeLeft(level.time);
+              nextRound(level.ranges);
+              if (!musicEnabled) setMusicEnabled(true);
+            } else {
+              if (selectedMode === 'single' && freePlaySettings.type === 'count') {
+                 setTimeLeft(9999); 
+              } else {
+                 setTimeLeft(freePlaySettings.type === 'time' && selectedMode === 'single' ? freePlaySettings.value : 60);
+              }
+              nextRound(selectedRanges);
+            }
+            
+            if (soundEnabled) playSound('pop');
+          };
+
+          // 觸發多巴胺視覺特效
+          const triggerVisualEffects = (text, color, clientX, clientY, isCorrect) => {
+            const id = Date.now() + Math.random();
+            
+            // 加入浮動文字
+            setFeedbacks(prev => [...prev, { id, text, color, x: clientX, y: clientY, isCorrect }]);
+            setTimeout(() => {
+              setFeedbacks(prev => prev.filter(f => f.id !== id));
+            }, 1000); // 動畫時間延長一點點
+
+            // 加入星空爆破粒子 (僅答對時)
+            if (isCorrect) {
+              const particleColors = ['#fbbf24', '#f472b6', '#34d399', '#60a5fa', '#a78bfa', '#fcd34d'];
+              const newParticles = Array.from({ length: 15 }).map((_, i) => {
+                const angle = Math.random() * Math.PI * 2;
+                const distance = Math.random() * 150 + 50; // 擴散距離
+                return {
+                  id: id + '_' + i,
+                  x: clientX,
+                  y: clientY,
+                  tx: Math.cos(angle) * distance,
+                  ty: Math.sin(angle) * distance,
+                  color: particleColors[Math.floor(Math.random() * particleColors.length)],
+                  size: Math.random() * 20 + 10,
+                  rotation: Math.random() * 360,
+                  isStar: Math.random() > 0.4 // 隨機決定是星星還是圓圈
+                };
+              });
+              
+              setParticles(prev => [...prev, ...newParticles]);
+              setTimeout(() => {
+                setParticles(prev => prev.filter(p => !newParticles.find(np => np.id === p.id)));
+              }, 800);
+            }
+          };
+
+          const handleAnswer = (val, player = 1, e) => {
+            if (gameState !== 'playing') return;
+            
+            let clientX = window.innerWidth / 2;
+            let clientY = window.innerHeight / 2;
+            if (e && e.clientX) {
+              clientX = e.clientX;
+              clientY = e.clientY;
+            }
+
+            if (val === currentQ.answer) {
+              if (soundEnabled) {
+                playSound('correct');
+                if (combo > 0 && (combo % 3 === 0 || Math.random() > 0.7)) speakPraise();
+              }
+              setCombo(c => c + 1);
+              
+              // 觸發答對煙火特效 (瞬間發射5發 + 延續1秒隨機發射)
+              setFireworksBurst(prev => prev + 1);
+              setFireworksActive(true);
+              if (fireworksTimerRef.current) clearTimeout(fireworksTimerRef.current);
+              fireworksTimerRef.current = setTimeout(() => {
+                  setFireworksActive(false);
+              }, 1000); 
+              
+              const newAnsweredCount = answeredCount + 1;
+              setAnsweredCount(newAnsweredCount);
+
+              if (mode === 'multi') {
+                if (player === 1) {
+                  setP1Score(s => s + 1);
+                  triggerVisualEffects('P1 +1', 'text-cyan-300', clientX, clientY, true);
+                } else {
+                  setP2Score(s => s + 1);
+                  triggerVisualEffects('P2 +1', 'text-fuchsia-300', clientX, clientY, true);
+                }
+              } else {
+                const points = 10 + Math.min(combo, 10) * 2;
+                setScore(s => s + points);
+                triggerVisualEffects(`+${points}`, 'text-yellow-300', clientX, clientY, true);
+              }
+
+              if (mode === 'single' && freePlaySettings.type === 'count' && newAnsweredCount >= freePlaySettings.value) {
+                playSound('win');
+                setGameState('gameover');
+                return;
+              }
+              
+              if (mode === 'campaign') {
+                 const level = LEVELS.find(l => l.id === currentLevelId);
+                 nextRound(level.ranges);
+              } else {
+                 nextRound(selectedRanges);
+              }
+
+            } else {
+              if (soundEnabled) {
+                playSound('wrong');
+                speakEncourage(); // 觸發答錯時的溫和語音鼓勵
+              }
+              setCombo(0);
+              triggerVisualEffects('X', 'text-red-500', clientX, clientY, false);
+              
+              if (mode === 'multi') {
+                 if (player === 1) setP1Score(s => Math.max(0, s - 1));
+                 else setP2Score(s => Math.max(0, s - 1));
+              } else if (mode === 'campaign' || (mode === 'single' && freePlaySettings.type === 'time')) {
+                setTimeLeft(t => Math.max(0, t - 3));
+              }
+            }
+          };
+
+          // --- UI Components ---
+
+          const MedalIcon = ({ type, size = 6 }) => {
+            const colors = {
+              gold: "text-yellow-400 drop-shadow-[0_0_10px_rgba(250,204,21,0.8)]",
+              silver: "text-gray-300 drop-shadow-[0_0_10px_rgba(209,213,219,0.8)]",
+              bronze: "text-orange-400 drop-shadow-[0_0_10px_rgba(251,146,60,0.8)]"
+            };
+            return <Award className={`${colors[type] || 'text-gray-700'} w-${size} h-${size}`} />;
+          };
+
+          const SinglePlayerGame = () => (
+            <div className="flex flex-col items-center justify-center h-full w-full relative overflow-hidden">
+              <div className="absolute top-4 w-full flex justify-between px-6 z-10">
+                <div className="flex items-center gap-2 bg-black/30 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/10">
+                  <Trophy className="text-yellow-400 w-6 h-6" />
+                  <span className="text-2xl font-black text-white">{score}</span>
+                  {mode === 'campaign' && (
+                     <span className="text-xs text-white/50 ml-2">
+                       目標: {LEVELS.find(l=>l.id===currentLevelId).target}
+                     </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-2 bg-black/30 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/10">
+                  {mode === 'single' && freePlaySettings.type === 'count' ? (
+                     <div className="flex items-center gap-2">
+                       <span className="text-white text-xl font-mono">{timerCount}s</span>
+                       <span className="text-white/50">|</span>
+                       <span className="text-yellow-300 font-black text-xl">{answeredCount}/{freePlaySettings.value}</span>
+                     </div>
+                  ) : (
+                     <div className={`text-2xl font-black ${timeLeft < 10 ? 'text-red-500 animate-pulse' : 'text-white'}`}>
+                       {timeLeft}s
+                     </div>
+                  )}
+                </div>
+              </div>
+
+              {combo > 1 && (
+                <div className={`absolute top-20 text-5xl font-black text-transparent bg-clip-text animate-bounce z-0 drop-shadow-[0_0_15px_rgba(250,204,21,0.8)] ${combo > 5 ? 'bg-gradient-to-r from-fuchsia-400 to-pink-600 scale-125 transition-transform' : 'bg-gradient-to-r from-yellow-300 to-red-500'}`}>
+                  {combo} 連擊!
+                </div>
+              )}
+
+              <div className="mb-12 relative z-10 animate-float text-center">
+                <div className="text-8xl font-black text-white drop-shadow-[0_0_20px_rgba(255,255,255,0.6)] tracking-wider">
+                  {currentQ.num1} × {currentQ.num2}
+                </div>
+                <div className="text-center text-white/50 text-xl font-bold mt-2">
+                   {mode === 'campaign' ? `Level ${currentLevelId} - ${LEVELS.find(l=>l.id===currentLevelId).title}` : '等於多少？'}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-6 w-full max-w-md px-4 relative z-10">
+                {options.map((opt, idx) => (
+                  <button
+                    key={idx}
+                    onClick={(e) => handleAnswer(opt, 1, e)}
+                    className="group relative h-32 rounded-3xl bg-white/10 backdrop-blur-lg border-2 border-white/20 hover:border-indigo-400 hover:shadow-[0_0_30px_rgba(129,140,248,0.5)] active:scale-90 transition-all duration-150 flex items-center justify-center overflow-hidden"
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/5 to-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <span className="text-5xl font-black text-white drop-shadow-md group-hover:scale-110 transition-transform">
+                      {opt}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          );
+
+          const MultiPlayerGame = () => (
+            <div className="flex flex-row h-full w-full bg-gray-900 divide-x-4 divide-yellow-500/50 relative z-10">
+              
+              {/* 玩家 1 (左方) */}
+              <div className="flex-1 flex flex-col items-center justify-center relative bg-gradient-to-r from-cyan-900/40 to-blue-900/40">
+                <div className="absolute top-4 left-4 text-cyan-400 font-bold text-xl md:text-2xl">P1 得分: {p1Score}</div>
+                <div className="text-5xl md:text-7xl font-black text-white mb-8 drop-shadow-[0_0_15px_rgba(34,211,238,0.4)]">
+                  {currentQ.num1} × {currentQ.num2}
+                </div>
+                <div className="grid grid-cols-2 gap-4 w-48 md:w-64">
+                  {options.map((opt, idx) => (
+                    <button key={idx} onClick={(e) => handleAnswer(opt, 1, e)} className="h-20 md:h-24 bg-cyan-600 border-2 border-transparent hover:border-cyan-300 rounded-2xl text-3xl md:text-4xl font-bold text-white shadow-lg active:scale-90 transition-all">
+                      {opt}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* 中央計時器條 (垂直向) */}
+              <div className="w-10 md:w-12 bg-black flex flex-col items-center justify-end relative shadow-[0_0_20px_rgba(0,0,0,0.8)] z-20">
+                <div 
+                  className="absolute bottom-0 w-full bg-gradient-to-t from-green-500 via-yellow-400 to-red-500 transition-all duration-1000 ease-linear" 
+                  style={{ height: `${(timeLeft / 60) * 100}%` }} 
+                />
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 font-mono font-black text-white text-xl md:text-2xl drop-shadow-md bg-black/60 px-2 py-4 rounded-full border border-white/10">
+                  {timeLeft}
+                </div>
+              </div>
+
+              {/* 玩家 2 (右方) */}
+              <div className="flex-1 flex flex-col items-center justify-center relative bg-gradient-l from-fuchsia-900/40 to-purple-900/40">
+                <div className="absolute top-4 right-4 text-fuchsia-400 font-bold text-xl md:text-2xl">P2 得分: {p2Score}</div>
+                <div className="text-5xl md:text-7xl font-black text-white mb-8 drop-shadow-[0_0_15px_rgba(232,121,249,0.4)]">
+                  {currentQ.num1} × {currentQ.num2}
+                </div>
+                <div className="grid grid-cols-2 gap-4 w-48 md:w-64">
+                  {options.map((opt, idx) => (
+                    <button key={idx} onClick={(e) => handleAnswer(opt, 2, e)} className="h-20 md:h-24 bg-fuchsia-600 border-2 border-transparent hover:border-fuchsia-300 rounded-2xl text-3xl md:text-4xl font-bold text-white shadow-lg active:scale-90 transition-all">
+                      {opt}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+            </div>
+          );
+
+          const MainMenu = () => (
+            <div className="flex flex-col items-center justify-center h-full max-w-lg mx-auto px-6 space-y-6 animate-fade-in w-full relative z-10">
+              <div className="text-center space-y-2">
+                <h1 className="text-5xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-red-500 to-yellow-500 filter drop-shadow-lg animate-pulse-slow">
+                  乘法宇宙
+                </h1>
+                <p className="text-white/70 font-medium tracking-widest text-lg">極速 • 快樂 • 學習</p>
+              </div>
+
+              <div className="grid grid-cols-1 w-full gap-4 mt-6">
+                <button onClick={() => setGameState('campaign_select')} className="h-24 bg-gradient-to-r from-amber-500 to-orange-600 rounded-2xl flex items-center justify-between px-8 shadow-lg shadow-orange-500/30 transition-all hover:scale-105 active:scale-95 group border-2 border-orange-400">
+                  <div className="flex items-center gap-4">
+                     <MapIcon className="w-10 h-10 text-white" />
+                     <div className="text-left">
+                        <div className="text-2xl font-black text-white">闖關冒險</div>
+                        <div className="text-white/70 text-sm">挑戰 5 大關卡贏取獎盃</div>
+                     </div>
+                  </div>
+                  <Award className="w-12 h-12 text-yellow-300 group-hover:rotate-12 transition-transform" />
+                </button>
+
+                <div className="flex flex-col gap-2">
+                   <div className="bg-white/10 rounded-2xl p-4 border border-white/10">
+                     <div className="flex items-center justify-between mb-3">
+                       <div className="flex items-center gap-2 text-white font-bold">
+                         <Settings size={18} />
+                         <span>自由練習設定</span>
+                       </div>
+                     </div>
+                     <div className="flex gap-2 mb-3">
+                       <button 
+                         onClick={() => setFreePlaySettings({ type: 'time', value: 60 })}
+                         className={`flex-1 py-2 rounded-xl text-sm font-bold flex items-center justify-center gap-1 transition-all ${freePlaySettings.type === 'time' ? 'bg-indigo-500 text-white shadow-lg' : 'bg-white/5 text-white/50'}`}
+                       >
+                         <Timer size={14} /> 60秒限時
+                       </button>
+                       <button 
+                         onClick={() => setFreePlaySettings({ type: 'count', value: 20 })}
+                         className={`flex-1 py-2 rounded-xl text-sm font-bold flex items-center justify-center gap-1 transition-all ${freePlaySettings.type === 'count' ? 'bg-indigo-500 text-white shadow-lg' : 'bg-white/5 text-white/50'}`}
+                       >
+                         <Hash size={14} /> 指定題數
+                       </button>
+                     </div>
+                     
+                     {freePlaySettings.type === 'count' && (
+                       <div className="flex gap-2">
+                         {[10, 20, 50, 100].map(val => (
+                           <button 
+                             key={val}
+                             onClick={() => setFreePlaySettings({ type: 'count', value: val })}
+                             className={`flex-1 py-1 rounded-lg text-xs font-bold transition-all ${freePlaySettings.value === val ? 'bg-white text-indigo-900' : 'bg-white/10 text-white/60'}`}
+                           >
+                             {val}題
+                           </button>
+                         ))}
+                       </div>
+                     )}
+
+                     <button onClick={() => startGame('single')} className="w-full mt-3 h-12 bg-gradient-to-r from-violet-600 to-indigo-600 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-indigo-500/30 transition-all hover:scale-105 active:scale-95 border border-indigo-400">
+                        <User className="text-white w-5 h-5" />
+                        <span className="text-lg font-bold text-white">開始練習</span>
+                     </button>
+                   </div>
+                </div>
+
+                <button onClick={() => startGame('multi')} className="h-20 bg-gradient-to-r from-pink-500 to-rose-500 rounded-2xl flex items-center justify-center gap-3 shadow-lg shadow-rose-500/30 transition-all hover:scale-105 active:scale-95 border border-pink-400">
+                  <Users className="text-white w-6 h-6" />
+                  <span className="text-xl font-bold text-white">雙人 PK</span>
+                </button>
+                
+                <button onClick={() => setGameState('leaderboard')} className="h-16 bg-white/10 border border-white/20 rounded-2xl flex items-center justify-center gap-3 hover:bg-white/20 transition-all">
+                  <ListOrdered className="text-white w-5 h-5" />
+                  <span className="text-lg font-bold text-white">排行榜</span>
+                </button>
+              </div>
+
+              <div className="bg-white/5 p-4 rounded-2xl border border-white/10 w-full">
+                 <div className="flex items-center gap-2 mb-2 text-white/60 text-sm">
+                    <Settings size={14} />
+                    <span>題目範圍設定 (自由/雙人)</span>
+                 </div>
+                 <div className="flex flex-wrap gap-2 justify-center">
+                    {[2, 3, 4, 5, 6, 7, 8, 9].map(num => (
+                       <button 
+                         key={num} 
+                         onClick={() => {
+                           if(selectedRanges.includes(num) && selectedRanges.length===1) return;
+                           setSelectedRanges(p => p.includes(num) ? p.filter(n=>n!==num) : [...p, num].sort((a,b)=>a-b));
+                         }}
+                         className={`w-8 h-8 rounded-full text-sm font-bold transition-all ${selectedRanges.includes(num) ? 'bg-green-500 text-white shadow-[0_0_10px_rgba(34,197,94,0.6)]' : 'bg-gray-800 text-gray-500 border border-gray-700 hover:border-gray-500'}`}
+                       >
+                         {num}
+                       </button>
+                    ))}
+                 </div>
+              </div>
+            </div>
+          );
+
+          const CampaignSelect = () => (
+            <div className="flex flex-col items-center h-full w-full max-w-lg mx-auto px-6 py-8 animate-fade-in overflow-y-auto relative z-10">
+              <div className="flex items-center justify-between w-full mb-8">
+                <button onClick={() => setGameState('menu')} className="p-2 bg-white/10 rounded-full hover:bg-white/20"><ArrowLeft className="text-white" /></button>
+                <h2 className="text-3xl font-black text-white">選擇關卡</h2>
+                <div className="w-10"></div>
+              </div>
+              
+              <div className="flex flex-col gap-4 w-full">
+                {LEVELS.map((level) => {
+                  const isUnlocked = level.id === 1 || trophies[level.id - 1]; 
+                  const medal = trophies[level.id];
+                  
+                  return (
+                    <button
+                      key={level.id}
+                      disabled={!isUnlocked}
+                      onClick={() => startGame('campaign', level.id)}
+                      className={`relative h-28 rounded-3xl p-6 flex items-center justify-between transition-all ${
+                        isUnlocked 
+                          ? `bg-gradient-to-r ${level.color} shadow-lg hover:scale-105 border border-white/20` 
+                          : 'bg-gray-800 opacity-50 cursor-not-allowed border border-gray-700'
+                      }`}
+                    >
+                      <div className="flex flex-col items-start">
+                        <div className="flex items-center gap-2">
+                           <span className="text-4xl font-black text-white/30">#{level.id}</span>
+                           <span className="text-2xl font-bold text-white">{level.title}</span>
+                        </div>
+                        <div className="text-white/80 text-sm mt-1">範圍: {level.ranges.join(',')} | 目標: {level.target}分</div>
+                      </div>
+                      
+                      <div className="flex items-center justify-center w-16 h-16 bg-white/20 rounded-full backdrop-blur-sm shadow-inner">
+                         {medal ? <MedalIcon type={medal} size={10} /> : isUnlocked ? <Play className="text-white fill-white ml-1" /> : <div className="text-2xl">🔒</div>}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          );
+
+          const Leaderboard = () => (
+            <div className="flex flex-col items-center justify-center h-full w-full max-w-lg mx-auto px-6 animate-fade-in relative z-10">
+               <div className="flex items-center justify-between w-full mb-8">
+                <button onClick={() => setGameState('menu')} className="p-2 bg-white/10 rounded-full"><ArrowLeft className="text-white" /></button>
+                <h2 className="text-3xl font-black text-white">排行榜</h2>
+                <div className="w-10"></div>
+              </div>
+              
+              <div className="w-full bg-white/10 backdrop-blur-md rounded-3xl p-6 border border-white/10 shadow-2xl">
+                 {leaderboard.length === 0 ? (
+                   <div className="text-center text-white/50 py-10">暫無紀錄，快去挑戰自由模式！</div>
+                 ) : (
+                   <div className="space-y-4">
+                     {leaderboard.map((entry, idx) => (
+                       <div key={idx} className="flex items-center justify-between border-b border-white/10 pb-2 last:border-0">
+                         <div className="flex items-center gap-4">
+                           <span className={`text-2xl font-black w-8 ${idx===0?'text-yellow-400 drop-shadow-md':idx===1?'text-gray-300':idx===2?'text-orange-400':'text-white/50'}`}>{idx+1}</span>
+                           <div className="flex flex-col items-start">
+                             <span className="text-white/70 text-sm">{entry.date}</span>
+                             <span className="text-white/40 text-xs">{entry.type || '限時'}</span>
+                           </div>
+                         </div>
+                         <span className="text-2xl font-bold text-white">{entry.score} 分</span>
+                       </div>
+                     ))}
+                   </div>
+                 )}
+              </div>
+            </div>
+          );
+
+          const LevelComplete = () => {
+            const level = LEVELS.find(l => l.id === currentLevelId);
+            const medal = trophies[currentLevelId];
+            return (
+              <div className="flex flex-col items-center justify-center h-full text-center px-6 animate-zoom-in relative z-20">
+                 <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/80 -z-10" />
+                 
+                 <div className="mb-6 relative animate-bounce">
+                    <MedalIcon type={medal} size={32} />
+                    <div className="absolute inset-0 bg-yellow-400/20 blur-3xl -z-10 rounded-full" />
+                 </div>
+                 
+                 <h2 className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-orange-500 mb-2">闖關成功！</h2>
+                 <p className="text-white/80 text-xl mb-8">你完成了 {level.title}</p>
+                 
+                 <div className="text-6xl font-black text-white mb-8">{score} <span className="text-2xl text-white/50">分</span></div>
+
+                 <div className="flex gap-4">
+                   <button onClick={() => setGameState('campaign_select')} className="px-8 h-16 rounded-full bg-white/20 hover:bg-white/30 text-white font-bold text-xl backdrop-blur-md border border-white/20 transition-all active:scale-95">
+                     返回選單
+                   </button>
+                   {currentLevelId < 5 && (
+                     <button onClick={() => startGame('campaign', currentLevelId + 1)} className="px-8 h-16 rounded-full bg-gradient-to-r from-green-500 to-emerald-600 flex items-center justify-center gap-2 text-white font-bold text-xl shadow-lg shadow-emerald-500/40 hover:scale-105 active:scale-95 transition-transform border border-green-400">
+                       下一關
+                       <Play className="fill-white" size={20} />
+                     </button>
+                   )}
+                 </div>
+              </div>
+            );
+          };
+          
+          const GameOver = () => (
+            <div className="flex flex-col items-center justify-center h-full text-center px-6 animate-zoom-in relative z-10">
+              <h2 className="text-4xl font-black text-white mb-6">
+                {mode === 'campaign' ? "挑戰失敗..." : "遊戲結束"}
+              </h2>
+              
+              {mode !== 'multi' && (
+                <div className="bg-white/10 backdrop-blur-md p-8 rounded-3xl border border-white/20 mb-8 w-full max-w-sm shadow-2xl">
+                  <p className="text-gray-300 mb-2">本次得分</p>
+                  <div className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-green-300 to-emerald-500 drop-shadow-lg">
+                    {score}
+                  </div>
+                  {mode === 'single' && freePlaySettings.type === 'count' && (
+                    <p className="mt-4 text-white/60 font-bold">
+                      耗時: {timerCount} 秒
+                    </p>
+                  )}
+                  {mode === 'campaign' && (
+                    <p className="mt-4 text-red-300 font-bold bg-red-900/30 py-1 px-3 rounded-full inline-block">
+                      目標: {LEVELS.find(l=>l.id===currentLevelId).target} 分
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {mode === 'multi' && (
+                <div className="flex gap-4 mb-8 w-full max-w-md">
+                  <div className={`flex-1 p-6 rounded-3xl border ${p1Score > p2Score ? 'bg-gradient-to-b from-cyan-600 to-cyan-800 border-cyan-400 scale-110 z-10 shadow-[0_0_20px_rgba(34,211,238,0.5)]' : 'bg-white/10 border-white/10 opacity-70'}`}>
+                    <div className="text-cyan-200 font-bold mb-2">P1</div>
+                    <div className="text-4xl font-black text-white">{p1Score}</div>
+                    {p1Score > p2Score && <div className="mt-2 text-xs font-bold text-yellow-300 bg-black/30 rounded-full py-1">WINNER</div>}
+                  </div>
+                  <div className={`flex-1 p-6 rounded-3xl border ${p2Score > p1Score ? 'bg-gradient-to-b from-fuchsia-600 to-fuchsia-800 border-fuchsia-400 scale-110 z-10 shadow-[0_0_20px_rgba(232,121,249,0.5)]' : 'bg-white/10 border-white/10 opacity-70'}`}>
+                    <div className="text-fuchsia-200 font-bold mb-2">P2</div>
+                    <div className="text-4xl font-black text-white">{p2Score}</div>
+                    {p2Score > p1Score && <div className="mt-2 text-xs font-bold text-yellow-300 bg-black/30 rounded-full py-1">WINNER</div>}
+                  </div>
+                </div>
+              )}
+
+              <div className="flex gap-4">
+                <button 
+                  onClick={() => setGameState(mode === 'campaign' ? 'campaign_select' : 'menu')}
+                  className="w-16 h-16 rounded-full bg-gray-700 hover:bg-gray-600 flex items-center justify-center text-white transition-transform hover:scale-110 active:scale-95 border border-gray-500"
+                >
+                  <ArrowLeft size={24} />
+                </button>
+                <button 
+                  onClick={() => startGame(mode, currentLevelId)}
+                  className="px-8 h-16 rounded-full bg-gradient-to-r from-green-500 to-emerald-600 flex items-center justify-center gap-2 text-white font-bold text-xl shadow-lg shadow-emerald-500/40 transition-transform hover:scale-105 active:scale-95 border border-green-400"
+                >
+                  <RefreshCcw size={24} />
+                  <span>再一次</span>
+                </button>
+              </div>
+            </div>
+          );
+
+          return (
+            <div className="min-h-screen bg-[#0f172a] text-white font-sans overflow-hidden select-none relative">
+              <StarryBackground />
+
+              <div className="fixed top-4 right-4 z-50 flex gap-2">
+                <button 
+                  onClick={() => setMusicEnabled(!musicEnabled)}
+                  className={`p-2 backdrop-blur rounded-full transition-colors ${musicEnabled ? 'bg-indigo-500/50 text-white' : 'bg-black/20 text-white/30'}`}
+                >
+                  {musicEnabled ? <Music size={20} /> : <Music4 size={20} />}
+                </button>
+                <button 
+                  onClick={() => setSoundEnabled(!soundEnabled)}
+                  className={`p-2 backdrop-blur rounded-full transition-colors ${soundEnabled ? 'bg-white/20 text-white/70' : 'bg-black/20 text-white/30'}`}
+                >
+                  {soundEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
+                </button>
+              </div>
+
+              {/* 渲染粒子特效 (Particle Confetti) */}
+              {particles.map(p => (
+                 p.isStar ? (
+                   <Star
+                     key={p.id}
+                     className="fixed pointer-events-none z-40 animate-particle-burst"
+                     style={{
+                       left: p.x, top: p.y,
+                       width: p.size, height: p.size,
+                       color: p.color, fill: p.color,
+                       '--tx': `${p.tx}px`, '--ty': `${p.ty}px`, '--rot': `${p.rotation}deg`
+                     }}
+                   />
+                 ) : (
+                   <div
+                     key={p.id}
+                     className="fixed pointer-events-none z-40 rounded-full animate-particle-burst"
+                     style={{
+                       left: p.x, top: p.y,
+                       width: p.size, height: p.size,
+                       backgroundColor: p.color,
+                       '--tx': `${p.tx}px`, '--ty': `${p.ty}px`, '--rot': `0deg`
+                     }}
+                   />
+                 )
+              ))}
+
+              {/* 渲染浮動加分文字 */}
+              {feedbacks.map(fb => (
+                <div 
+                  key={fb.id}
+                  className="fixed pointer-events-none z-50 font-black drop-shadow-[0_0_15px_rgba(255,255,255,0.8)]"
+                  style={{ 
+                    left: fb.x, 
+                    top: fb.y, 
+                    color: fb.isCorrect ? '#fef08a' : '#ef4444', 
+                    animation: fb.isCorrect 
+                      ? 'feedback-correct 1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards' 
+                      : 'feedback-wrong 0.8s ease-out forwards'
+                  }}
+                >
+                   <span className={`text-6xl md:text-8xl drop-shadow-2xl ${fb.color}`}>{fb.text}</span>
+                </div>
+              ))}
+
+              {/* 常駐煙火畫布：由 active 與 burstTrigger 動態控制發射 */}
+              <Fireworks 
+                active={fireworksActive || gameState === 'level_complete' || (gameState === 'gameover' && mode === 'single' && freePlaySettings.type === 'count' && answeredCount >= freePlaySettings.value)} 
+                burstTrigger={fireworksBurst} 
+              />
+
+              <div className="relative z-10 h-screen w-full flex items-center justify-center">
+                {gameState === 'menu' && <MainMenu />}
+                {gameState === 'campaign_select' && <CampaignSelect />}
+                {gameState === 'leaderboard' && <Leaderboard />}
+                {gameState === 'playing' && mode === 'single' && <SinglePlayerGame />}
+                {gameState === 'playing' && mode === 'campaign' && <SinglePlayerGame />}
+                {gameState === 'playing' && mode === 'multi' && <MultiPlayerGame />}
+                {gameState === 'gameover' && <GameOver />}
+                {gameState === 'level_complete' && <LevelComplete />}
+              </div>
+
+              <style dangerouslySetInnerHTML={{__html: `
+                @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+                @keyframes pulse-slow { 0%, 100% { opacity: 0.5; transform: scale(1); } 50% { opacity: 0.8; transform: scale(1.05); } }
+                @keyframes zoom-in { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+                @keyframes fade-in { 0% { opacity: 0; transform: translateY(20px); } 100% { opacity: 1; transform: translateY(0); } }
+                
+                /* 全新的答對浮動文字動畫：放大彈出、傾斜並向上飄 */
+                @keyframes feedback-correct { 
+                  0% { transform: translate(-50%, -50%) scale(0.2); opacity: 0; } 
+                  20% { transform: translate(-50%, -100%) scale(1.5) rotate(5deg); opacity: 1; filter: drop-shadow(0 0 20px currentColor); } 
+                  80% { transform: translate(-50%, -150%) scale(1.2) rotate(-5deg); opacity: 1; filter: drop-shadow(0 0 5px currentColor); }
+                  100% { transform: translate(-50%, -200%) scale(1); opacity: 0; } 
+                }
+
+                /* 全新的答錯動畫：左右搖晃往下掉落 */
+                @keyframes feedback-wrong { 
+                  0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; } 
+                  20% { transform: translate(-50%, -50%) scale(1.5) rotate(-15deg); opacity: 1; } 
+                  40% { transform: translate(-50%, -50%) scale(1.5) rotate(15deg); opacity: 1; } 
+                  60% { transform: translate(-50%, -50%) scale(1.5) rotate(-15deg); opacity: 1; } 
+                  100% { transform: translate(-50%, 0%) scale(0.8); opacity: 0; } 
+                }
+
+                /* 爆破粒子特效動畫 */
+                @keyframes particle-burst {
+                  0% { transform: translate(-50%, -50%) scale(1) rotate(0deg); opacity: 1; }
+                  100% { transform: translate(calc(-50% + var(--tx)), calc(-50% + var(--ty))) scale(0) rotate(var(--rot)); opacity: 0; }
+                }
+
+                .animate-float { animation: float 3s ease-in-out infinite; }
+                .animate-pulse-slow { animation: pulse-slow 4s ease-in-out infinite; }
+                .animate-zoom-in { animation: zoom-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+                .animate-fade-in { animation: fade-in 0.5s ease-out; }
+                .animate-particle-burst { animation: particle-burst 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+              `}} />
+            </div>
+          );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
