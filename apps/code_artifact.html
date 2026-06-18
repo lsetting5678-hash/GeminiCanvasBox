@@ -761,7 +761,22 @@
         }
       });
 
-      htmlContent += `
+      htmlContent += `</body></html>`;
+      const blob = new Blob(['\ufeff', htmlContent], { type: 'application/msword' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `初級加法樂園_${difficulty === 'hard' ? '心算版' : '圖示版'}_${totalQuestions}題.doc`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }
+
+    // 啟動程式
+    window.onload = init;
+  </script>
+
 <!-- Start: Portal Back Button -->
 <div id="portal-back-button" class="no-print" style="position: fixed; bottom: 20px; right: 20px; z-index: 999999;">
   <a href="../index.html" style="display: flex; align-items: center; gap: 8px; padding: 10px 16px; background: rgba(15, 23, 42, 0.8); color: white; text-decoration: none; border-radius: 30px; font-family: system-ui, -apple-system, sans-serif; font-size: 14px; font-weight: 600; box-shadow: 0 4px 12px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(8px); transition: all 0.2s ease-in-out;" onmouseover="this.style.transform='scale(1.05)'; this.style.background='rgba(30, 41, 59, 0.9)';" onmouseout="this.style.transform='scale(1)'; this.style.background='rgba(15, 23, 42, 0.8)';">
@@ -777,20 +792,5 @@
   }
 </style>
 <!-- End: Portal Back Button -->
-</body></html>`;
-      const blob = new Blob(['\ufeff', htmlContent], { type: 'application/msword' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `初級加法樂園_${difficulty === 'hard' ? '心算版' : '圖示版'}_${totalQuestions}題.doc`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-    }
-
-    // 啟動程式
-    window.onload = init;
-  </script>
 </body>
 </html>

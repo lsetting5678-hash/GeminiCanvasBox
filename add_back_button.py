@@ -49,12 +49,13 @@ def inject_button(file_path):
             new_content = pattern.sub(button_html, content)
             action = "Updated"
         else:
-            # Inject before </body>
-            body_close_match = re.search(r"</body>", content, re.IGNORECASE)
-            if body_close_match:
-                idx = body_close_match.start()
+            # Inject before the LAST occurrence of </body>
+            body_close_matches = list(re.finditer(r"</body>", content, re.IGNORECASE))
+            if body_close_matches:
+                last_match = body_close_matches[-1]
+                idx = last_match.start()
                 new_content = content[:idx] + "\n" + button_html + "\n" + content[idx:]
-                action = "Injected before </body> in"
+                action = "Injected before last </body> in"
             else:
                 new_content = content + "\n" + button_html
                 action = "Appended to the end of"
