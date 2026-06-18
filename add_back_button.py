@@ -34,6 +34,7 @@ def inject_button(file_path):
     
     # If the file is in apps/ itself, depth is 1, so link is "../index.html"
     # If in apps/subfolder/index.html, depth is 2, so link is "../../index.html"
+    # If in root itself, depth is 0, so link is "index.html"
     relative_link = '../' * depth + 'index.html'
     
     button_html = BUTTON_TEMPLATE.replace("{relative_path}", relative_link)
@@ -70,18 +71,21 @@ def inject_button(file_path):
         print(f"Error processing {file_path}: {e}")
 
 def main():
-    if not os.path.exists(APPS_DIR):
-        print(f"Error: {APPS_DIR} directory does not exist.")
-        return
-        
-    for root, dirs, files in os.walk(APPS_DIR):
-        # Skip git and cache directories
-        if any(x in root for x in [".git", "__pycache__"]):
-            continue
-        for file in files:
-            if file.endswith(".html"):
-                file_path = os.path.join(root, file)
-                inject_button(file_path)
+    # Scan root folder for html files (excluding index.html itself)
+    for file in os.listdir("."):
+        if file.endswith(".html") and file != "index.html":
+            inject_button(file)
+            
+    # Scan apps directory recursively
+    if os.path.exists(APPS_DIR):
+        for root, dirs, files in os.walk(APPS_DIR):
+            # Skip git and cache directories
+            if any(x in root for x in [".git", "__pycache__"]):
+                continue
+            for file in files:
+                if file.endswith(".html"):
+                    file_path = os.path.join(root, file)
+                    inject_button(file_path)
 
 if __name__ == "__main__":
     main()
