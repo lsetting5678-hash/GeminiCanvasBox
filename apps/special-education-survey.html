@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>普通班教師送鑑定困難與 AI 輔助工具需求調查</title>
+    <meta name="description" content="本調查旨在精確聚焦各位在送鑑定過程中所遭遇的真實困境，並期望藉此利用 AI 開發實用工具，實質減輕您的行政負擔！">
+    <meta name="category" content="特教行政工具">
+    <meta name="icon" content="📝">
+    <meta name="tags" content="問卷調查, 鑑定痛點, AI工具需求">
+    <!-- 引入 Tailwind CSS 以進行快速且美觀的排版 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* 自訂字體與一些細微調整 */
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght=400;500;700&display=swap');
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #f3f4f6; /* Tailwind gray-100 */
+        }
+        /* 隱藏預設的滾動條但保留功能以提升美觀 */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+    </style>
+</head>
+<body class="text-gray-800 antialiased min-h-screen py-8 px-4 sm:px-6 lg:px-8 flex items-center justify-center">
+
+    <div class="max-w-3xl w-full bg-white rounded-2xl shadow-xl overflow-hidden">
+        
+        <!-- 表單頭部 -->
+        <div class="bg-indigo-600 px-6 py-8 sm:px-10 text-white relative overflow-hidden">
+            <!-- 裝飾用背景圈圈 -->
+            <div class="absolute top-0 right-0 -mt-16 -mr-16 w-48 h-48 bg-indigo-500 rounded-full opacity-50"></div>
+            <div class="absolute bottom-0 left-0 -mb-16 -ml-16 w-32 h-32 bg-indigo-700 rounded-full opacity-50"></div>
+            
+            <h1 class="relative z-10 text-2xl sm:text-3xl font-bold mb-3 tracking-wide">📝 送鑑定困難與 AI 輔助工具調查</h1>
+            <p class="relative z-10 text-indigo-100 text-sm sm:text-base leading-relaxed">
+                各位老師好：這是一份非公開的實務調查。旨在精確聚焦各位在送鑑定過程中所遭遇的真實困境，並期望藉此利用 AI 開發實用工具，實質減輕您的行政負擔！約需 3 分鐘，感謝協助。
+            </p>
+        </div>
+
+        <!-- 表單內容區塊 -->
+        <form id="surveyForm" class="px-6 py-8 sm:px-10 space-y-8">
+            
+            <!-- 第一部分 -->
+            <div class="space-y-4">
+                <div class="flex items-center space-x-2 border-b-2 border-indigo-100 pb-2">
+                    <span class="bg-indigo-100 text-indigo-700 font-bold px-3 py-1 rounded-full text-sm">Part 1</span>
+                    <h2 class="text-xl font-bold text-gray-800">基本背景</h2>
+                </div>
+                
+                <div class="bg-gray-50 p-5 rounded-xl border border-gray-100">
+                    <label class="block text-gray-700 font-medium mb-3">1. 您的主要任教年段：</label>
+                    <div class="flex flex-wrap gap-4">
+                        <label class="inline-flex items-center cursor-pointer hover:text-indigo-600 transition-colors">
+                            <input type="radio" name="grade" value="低年級" class="w-5 h-5 text-indigo-600 border-gray-300 focus:ring-indigo-500" required>
+                            <span class="ml-2">低年級</span>
+                        </label>
+                        <label class="inline-flex items-center cursor-pointer hover:text-indigo-600 transition-colors">
+                            <input type="radio" name="grade" value="中年級" class="w-5 h-5 text-indigo-600 border-gray-300 focus:ring-indigo-500">
+                            <span class="ml-2">中年級</span>
+                        </label>
+                        <label class="inline-flex items-center cursor-pointer hover:text-indigo-600 transition-colors">
+                            <input type="radio" name="grade" value="高年級" class="w-5 h-5 text-indigo-600 border-gray-300 focus:ring-indigo-500">
+                            <span class="ml-2">高年級</span>
+                        </label>
+                        <label class="inline-flex items-center cursor-pointer hover:text-indigo-600 transition-colors">
+                            <input type="radio" name="grade" value="科任教師" class="w-5 h-5 text-indigo-600 border-gray-300 focus:ring-indigo-500">
+                            <span class="ml-2">科任教師</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="bg-gray-50 p-5 rounded-xl border border-gray-100">
+                    <label class="block text-gray-700 font-medium mb-3">2. 過去三年內，您是否有協助學生提報學障或智障鑑定的經驗？</label>
+                    <div class="flex flex-col sm:flex-row gap-4 sm:items-center">
+                        <label class="inline-flex items-center cursor-pointer hover:text-indigo-600 transition-colors">
+                            <input type="radio" name="experience" value="是" class="w-5 h-5 text-indigo-600 border-gray-300 focus:ring-indigo-500" required>
+                            <span class="ml-2">是</span>
+                        </label>
+                        <input type="number" placeholder="若選是，約幾次？" class="mt-2 sm:mt-0 px-3 py-1.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm w-40">
+                        <label class="inline-flex items-center cursor-pointer hover:text-indigo-600 transition-colors">
+                            <input type="radio" name="experience" value="否" class="w-5 h-5 text-indigo-600 border-gray-300 focus:ring-indigo-500">
+                            <span class="ml-2">否</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 第二部分 -->
+            <div class="space-y-4 pt-4">
+                <div class="flex items-center space-x-2 border-b-2 border-indigo-100 pb-2">
+                    <span class="bg-indigo-100 text-indigo-700 font-bold px-3 py-1 rounded-full text-sm">Part 2</span>
+                    <h2 class="text-xl font-bold text-gray-800">實務痛點與困難度評估</h2>
+                </div>
+                <p class="text-sm text-gray-500 italic mb-4">請依直覺評估以下事項的困擾程度（1 = 完全不困擾，5 = 非常困擾）</p>
+
+                <!-- 刻度題模板容器 -->
+                <div class="space-y-4">
+                    <!-- 題目 1 -->
+                    <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                        <label class="block text-gray-800 font-medium mb-3">
+                            <span class="text-red-500 mr-1">*</span>常規衝突：需刻意保留學生未訂正的原始錯誤作業或考卷，打亂批改節奏。
+                        </label>
+                        <div class="flex justify-between items-end max-w-md mx-auto sm:mx-0 pt-2">
+                            <span class="text-xs text-gray-500 pb-1 w-12 text-center">不困擾</span>
+                            <div class="flex justify-between flex-1 px-1 sm:px-4">
+                                <label class="flex flex-col items-center cursor-pointer group">
+                                    <span class="text-sm text-gray-600 mb-2 group-hover:text-indigo-600 transition-colors">1</span>
+                                    <input type="radio" name="q1" value="1" class="w-5 h-5 text-indigo-600 border-gray-300 focus:ring-indigo-500 cursor-pointer" required>
+                                </label>
+                                <label class="flex flex-col items-center cursor-pointer group">
+                                    <span class="text-sm text-gray-600 mb-2 group-hover:text-indigo-600 transition-colors">2</span>
+                                    <input type="radio" name="q1" value="2" class="w-5 h-5 text-indigo-600 border-gray-300 focus:ring-indigo-500 cursor-pointer">
+                                </label>
+                                <label class="flex flex-col items-center cursor-pointer group">
+                                    <span class="text-sm text-gray-600 mb-2 group-hover:text-indigo-600 transition-colors">3</span>
+                                    <input type="radio" name="q1" value="3" class="w-5 h-5 text-indigo-600 border-gray-300 focus:ring-indigo-500 cursor-pointer">
+                                </label>
+                                <label class="flex flex-col items-center cursor-pointer group">
+                                    <span class="text-sm text-gray-600 mb-2 group-hover:text-indigo-600 transition-colors">4</span>
+                                    <input type="radio" name="q1" value="4" class="w-5 h-5 text-indigo-600 border-gray-300 focus:ring-indigo-500 cursor-pointer">
+                                </label>
+                                <label class="flex flex-col items-center cursor-pointer group">
+                                    <span class="text-sm text-gray-600 mb-2 group-hover:text-indigo-600 transition-colors">5</span>
+                                    <input type="radio" name="q1" value="5" class="w-5 h-5 text-indigo-600 border-gray-300 focus:ring-indigo-500 cursor-pointer">
+                                </label>
+                            </div>
+                            <span class="text-xs text-gray-500 pb-1 w-12 text-center">非常困擾</span>
+                        </div>
+                    </div>
+
+                    <!-- 題目 2 -->
+                    <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                        <label class="block text-gray-800 font-medium mb-3">
+                            <span class="text-red-500 mr-1">*</span>專業詞彙：難以精準分析寫出「錯誤型態」（如：視覺區辨困難），只能寫「就是不會寫」。
+                        </label>
+                        <div class="flex justify-between items-end max-w-md mx-auto sm:mx-0 pt-2">
+                            <span class="text-xs text-gray-500 pb-1 w-12 text-center">不困擾</span>
+                            <div class="flex justify-between flex-1 px-1 sm:px-4">
+                                <label class="flex flex-col items-center cursor-pointer group">
+                                    <span class="text-sm text-gray-600 mb-2 group-hover:text-indigo-600 transition-colors">1</span>
+                                    <input type="radio" name="q2" value="1" class="w-5 h-5 text-indigo-600 border-gray-300 focus:ring-indigo-500 cursor-pointer" required>
+                                </label>
+                                <label class="flex flex-col items-center cursor-pointer group">
+                                    <span class="text-sm text-gray-600 mb-2 group-hover:text-indigo-600 transition-colors">2</span>
+                                    <input type="radio" name="q2" value="2" class="w-5 h-5 text-indigo-600 border-gray-300 focus:ring-indigo-500 cursor-pointer">
+                                </label>
+                                <label class="flex flex-col items-center cursor-pointer group">
+                                    <span class="text-sm text-gray-600 mb-2 group-hover:text-indigo-600 transition-colors">3</span>
+                                    <input type="radio" name="q2" value="3" class="w-5 h-5 text-indigo-600 border-gray-300 focus:ring-indigo-500 cursor-pointer">
+                                </label>
+                                <label class="flex flex-col items-center cursor-pointer group">
+                                    <span class="text-sm text-gray-600 mb-2 group-hover:text-indigo-600 transition-colors">4</span>
+                                    <input type="radio" name="q2" value="4" class="w-5 h-5 text-indigo-600 border-gray-300 focus:ring-indigo-500 cursor-pointer">
+                                </label>
+                                <label class="flex flex-col items-center cursor-pointer group">
+                                    <span class="text-sm text-gray-600 mb-2 group-hover:text-indigo-600 transition-colors">5</span>
+                                    <input type="radio" name="q2" value="5" class="w-5 h-5 text-indigo-600 border-gray-300 focus:ring-indigo-500 cursor-pointer">
+                                </label>
+                            </div>
+                            <span class="text-xs text-gray-500 pb-1 w-12 text-center">非常困擾</span>
+                        </div>
+                    </div>
+
+                    <!-- 題目 3 -->
+                    <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                        <label class="block text-gray-800 font-medium mb-3">
+                            <span class="text-red-500 mr-1">*</span>質性描述：撰寫輔導紀錄時，不知如何具體描述成效，容易流於空泛流水帳。
+                        </label>
+                        <div class="flex justify-between items-end max-w-md mx-auto sm:mx-0 pt-2">
+                            <span class="text-xs text-gray-500 pb-1 w-12 text-center">不困擾</span>
+                            <div class="flex justify-between flex-1 px-1 sm:px-4">
+                                <label class="flex flex-col items-center cursor-pointer group">
+                                    <span class="text-sm text-gray-600 mb-2 group-hover:text-indigo-600 transition-colors">1</span>
+                                    <input type="radio" name="q3" value="1" class="w-5 h-5 text-indigo-600 border-gray-300 focus:ring-indigo-500 cursor-pointer" required>
+                                </label>
+                                <label class="flex flex-col items-center cursor-pointer group">
+                                    <span class="text-sm text-gray-600 mb-2 group-hover:text-indigo-600 transition-colors">2</span>
+                                    <input type="radio" name="q3" value="2" class="w-5 h-5 text-indigo-600 border-gray-300 focus:ring-indigo-500 cursor-pointer">
+                                </label>
+                                <label class="flex flex-col items-center cursor-pointer group">
+                                    <span class="text-sm text-gray-600 mb-2 group-hover:text-indigo-600 transition-colors">3</span>
+                                    <input type="radio" name="q3" value="3" class="w-5 h-5 text-indigo-600 border-gray-300 focus:ring-indigo-500 cursor-pointer">
+                                </label>
+                                <label class="flex flex-col items-center cursor-pointer group">
+                                    <span class="text-sm text-gray-600 mb-2 group-hover:text-indigo-600 transition-colors">4</span>
+                                    <input type="radio" name="q3" value="4" class="w-5 h-5 text-indigo-600 border-gray-300 focus:ring-indigo-500 cursor-pointer">
+                                </label>
+                                <label class="flex flex-col items-center cursor-pointer group">
+                                    <span class="text-sm text-gray-600 mb-2 group-hover:text-indigo-600 transition-colors">5</span>
+                                    <input type="radio" name="q3" value="5" class="w-5 h-5 text-indigo-600 border-gray-300 focus:ring-indigo-500 cursor-pointer">
+                                </label>
+                            </div>
+                            <span class="text-xs text-gray-500 pb-1 w-12 text-center">非常困擾</span>
+                        </div>
+                    </div>
+                    
+                    <!-- 題目 4 -->
+                    <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                        <label class="block text-gray-800 font-medium mb-3">
+                            <span class="text-red-500 mr-1">*</span>重複填寫：應付多種鑑定表件，相同的學生特徵與策略需不斷重複謄寫。
+                        </label>
+                        <div class="flex justify-between items-end max-w-md mx-auto sm:mx-0 pt-2">
+                            <span class="text-xs text-gray-500 pb-1 w-12 text-center">不困擾</span>
+                            <div class="flex justify-between flex-1 px-1 sm:px-4">
+                                <label class="flex flex-col items-center cursor-pointer group">
+                                    <span class="text-sm text-gray-600 mb-2 group-hover:text-indigo-600 transition-colors">1</span>
+                                    <input type="radio" name="q4" value="1" class="w-5 h-5 text-indigo-600 border-gray-300 focus:ring-indigo-500 cursor-pointer" required>
+                                </label>
+                                <label class="flex flex-col items-center cursor-pointer group">
+                                    <span class="text-sm text-gray-600 mb-2 group-hover:text-indigo-600 transition-colors">2</span>
+                                    <input type="radio" name="q4" value="2" class="w-5 h-5 text-indigo-600 border-gray-300 focus:ring-indigo-500 cursor-pointer">
+                                </label>
+                                <label class="flex flex-col items-center cursor-pointer group">
+                                    <span class="text-sm text-gray-600 mb-2 group-hover:text-indigo-600 transition-colors">3</span>
+                                    <input type="radio" name="q4" value="3" class="w-5 h-5 text-indigo-600 border-gray-300 focus:ring-indigo-500 cursor-pointer">
+                                </label>
+                                <label class="flex flex-col items-center cursor-pointer group">
+                                    <span class="text-sm text-gray-600 mb-2 group-hover:text-indigo-600 transition-colors">4</span>
+                                    <input type="radio" name="q4" value="4" class="w-5 h-5 text-indigo-600 border-gray-300 focus:ring-indigo-500 cursor-pointer">
+                                </label>
+                                <label class="flex flex-col items-center cursor-pointer group">
+                                    <span class="text-sm text-gray-600 mb-2 group-hover:text-indigo-600 transition-colors">5</span>
+                                    <input type="radio" name="q4" value="5" class="w-5 h-5 text-indigo-600 border-gray-300 focus:ring-indigo-500 cursor-pointer">
+                                </label>
+                            </div>
+                            <span class="text-xs text-gray-500 pb-1 w-12 text-center">非常困擾</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 第三部分 -->
+            <div class="space-y-4 pt-4">
+                <div class="flex items-center space-x-2 border-b-2 border-indigo-100 pb-2">
+                    <span class="bg-indigo-100 text-indigo-700 font-bold px-3 py-1 rounded-full text-sm">Part 3</span>
+                    <h2 class="text-xl font-bold text-gray-800">AI 輔助與自動化工具需求</h2>
+                </div>
+                <p class="text-sm text-gray-500 italic mb-4">若未來開發專屬的輔助小工具，您最希望優先具備以下哪些功能？（可複選）</p>
+
+                <div class="space-y-3">
+                    <label class="flex items-start p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-indigo-50 transition-colors">
+                        <div class="flex-shrink-0 h-5 w-5 mt-0.5">
+                            <input type="checkbox" value="生成器" class="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+                        </div>
+                        <div class="ml-3">
+                            <span class="block text-gray-800 font-medium">🤖 二級輔導紀錄生成器</span>
+                            <span class="block text-sm text-gray-500 mt-1">提供下拉選單（含常見錯誤樣態與策略），點選後自動生成符合規格的文字。</span>
+                        </div>
+                    </label>
+
+                    <label class="flex items-start p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-indigo-50 transition-colors">
+                        <div class="flex-shrink-0 h-5 w-5 mt-0.5">
+                            <input type="checkbox" value="連動系統" class="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+                        </div>
+                        <div class="ml-3">
+                            <span class="block text-gray-800 font-medium">🔄 表件資料連動系統</span>
+                            <span class="block text-sm text-gray-500 mt-1">輸入一次基本狀況與策略，系統自動同步套印至多重表件中（如初級/二級輔導表）。</span>
+                        </div>
+                    </label>
+
+                    <label class="flex items-start p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-indigo-50 transition-colors">
+                        <div class="flex-shrink-0 h-5 w-5 mt-0.5">
+                            <input type="checkbox" value="圖庫" class="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+                        </div>
+                        <div class="ml-3">
+                            <span class="block text-gray-800 font-medium">🖼️ 學智障典型錯誤圖庫對照表</span>
+                            <span class="block text-sm text-gray-500 mt-1">提供錯誤考卷照片範例，讓老師直接「看圖比對」，快速找符合的專有名詞。</span>
+                        </div>
+                    </label>
+
+                    <label class="flex items-start p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-indigo-50 transition-colors">
+                        <div class="flex-shrink-0 h-5 w-5 mt-0.5">
+                            <input type="checkbox" value="APP" class="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+                        </div>
+                        <div class="ml-3">
+                            <span class="block text-gray-800 font-medium">📱 專屬鑑定上傳 APP/平台</span>
+                            <span class="block text-sm text-gray-500 mt-1">用手機拍下考卷或行為影片後，系統自動生成 QRcode 並精準歸檔至專屬資料夾。</span>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <!-- 第四部分 -->
+            <div class="space-y-4 pt-4">
+                <div class="flex items-center space-x-2 border-b-2 border-indigo-100 pb-2">
+                    <span class="bg-indigo-100 text-indigo-700 font-bold px-3 py-1 rounded-full text-sm">Part 4</span>
+                    <h2 class="text-xl font-bold text-gray-800">開放性回饋</h2>
+                </div>
+                
+                <div>
+                    <label class="block text-gray-700 font-medium mb-3">針對「學障與智障」的資料整理或輔導紀錄，您還有什麼疑惑？或期待 AI 工具能朝哪個方向協助您？</label>
+                    <textarea rows="4" placeholder="請自由留下您的寶貴意見... (選填)" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm"></textarea>
+                </div>
+            </div>
+
+            <!-- 送出按鈕 -->
+            <div class="pt-6 border-t border-gray-200">
+                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 text-lg">
+                    📤 送出問卷
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- 成功送出的自訂彈出視窗 (Modal) -->
+    <div id="successModal" class="fixed inset-0 z-50 flex items-center justify-center hidden">
+        <!-- 半透明背景遮罩 -->
+        <div class="fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm transition-opacity" id="modalBackdrop"></div>
+        
+        <!-- 彈出框內容 -->
+        <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-sm w-full mx-4 relative z-10 transform transition-all scale-95 opacity-0 duration-300" id="modalContent">
+            <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-6">
+                <svg class="h-10 w-10 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+            </div>
+            <h3 class="text-xl font-bold text-center text-gray-900 mb-2">送出成功！</h3>
+            <p class="text-gray-500 text-center mb-6">這是一個前端互動範例（Canvas 預覽），目前沒有串接真實的資料庫。感謝您的體驗與測試！</p>
+            <button onclick="closeModal()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 px-4 rounded-xl transition-colors">
+                我知道了
+            </button>
+        </div>
+    </div>
+
+    <!-- 處理表單提交的 JavaScript -->
+    <script>
+        const form = document.getElementById('surveyForm');
+        const modal = document.getElementById('successModal');
+        const modalContent = document.getElementById('modalContent');
+        
+        form.addEventListener('submit', function(e) {
+            e.preventDefault(); // 阻止表單重整網頁
+            
+            // 顯示自訂 Modal (取代原先的 alert)
+            modal.classList.remove('hidden');
+            // 觸發小動畫
+            setTimeout(() => {
+                modalContent.classList.remove('scale-95', 'opacity-0');
+                modalContent.classList.add('scale-100', 'opacity-100');
+            }, 10);
+        });
+
+        function closeModal() {
+            modalContent.classList.remove('scale-100', 'opacity-100');
+            modalContent.classList.add('scale-95', 'opacity-0');
+            
+            // 等待動畫結束後隱藏
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                form.reset(); // 清空表單
+            }, 300);
+        }
+    </script>
+</body>
+</html>
