@@ -10,6 +10,8 @@
     <meta name="tags" content="問卷調查, 鑑定痛點, AI工具需求">
     <!-- 引入 Tailwind CSS 以進行快速且美觀的排版 -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入 Chart.js 以產生專業圖表 -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         /* 自訂字體與一些細微調整 */
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght=400;500;700&display=swap');
@@ -47,6 +49,16 @@
             <p class="relative z-10 text-indigo-100 text-sm sm:text-base leading-relaxed">
                 各位老師好：這是一份非公開的實務調查。旨在精確聚焦各位在送鑑定過程中所遭遇的真實困境，並期望藉此利用 AI 開發實用工具，實質減輕您的行政負擔！約需 3 分鐘，感謝協助。
             </p>
+        </div>
+
+        <!-- 頁籤導覽 (Tabs) -->
+        <div class="flex border-b border-gray-200 bg-gray-50">
+            <button type="button" id="btn-tab-survey" class="w-1/2 py-4 text-center font-bold text-indigo-600 border-b-2 border-indigo-600 focus:outline-none transition-all flex items-center justify-center space-x-2">
+                <span>📝</span> <span>填寫問卷</span>
+            </button>
+            <button type="button" id="btn-tab-stats" class="w-1/2 py-4 text-center font-bold text-gray-500 hover:text-indigo-600 hover:bg-gray-100 focus:outline-none transition-all flex items-center justify-center space-x-2">
+                <span>📊</span> <span>統計結果</span>
+            </button>
         </div>
 
         <!-- 表單內容區塊 -->
@@ -88,7 +100,7 @@
                             <input type="radio" name="experience" value="是" class="w-5 h-5 text-indigo-600 border-gray-300 focus:ring-indigo-500" required>
                             <span class="ml-2">是</span>
                         </label>
-                        <input type="number" placeholder="若選是，約幾次？" class="mt-2 sm:mt-0 px-3 py-1.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm w-40">
+                        <input type="number" id="expTimes" placeholder="若選是，約幾次？" class="mt-2 sm:mt-0 px-3 py-1.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm w-40">
                         <label class="inline-flex items-center cursor-pointer hover:text-indigo-600 transition-colors">
                             <input type="radio" name="experience" value="否" class="w-5 h-5 text-indigo-600 border-gray-300 focus:ring-indigo-500">
                             <span class="ml-2">否</span>
@@ -252,7 +264,7 @@
                 <div class="space-y-3">
                     <label class="flex items-start p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-indigo-50 transition-colors">
                         <div class="flex-shrink-0 h-5 w-5 mt-0.5">
-                            <input type="checkbox" value="生成器" class="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+                            <input type="checkbox" name="features" value="生成器" class="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
                         </div>
                         <div class="ml-3">
                             <span class="block text-gray-800 font-medium">🤖 二級輔導紀錄生成器</span>
@@ -262,7 +274,7 @@
 
                     <label class="flex items-start p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-indigo-50 transition-colors">
                         <div class="flex-shrink-0 h-5 w-5 mt-0.5">
-                            <input type="checkbox" value="連動系統" class="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+                            <input type="checkbox" name="features" value="連動系統" class="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
                         </div>
                         <div class="ml-3">
                             <span class="block text-gray-800 font-medium">🔄 表件資料連動系統</span>
@@ -272,7 +284,7 @@
 
                     <label class="flex items-start p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-indigo-50 transition-colors">
                         <div class="flex-shrink-0 h-5 w-5 mt-0.5">
-                            <input type="checkbox" value="圖庫" class="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+                            <input type="checkbox" name="features" value="圖庫" class="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
                         </div>
                         <div class="ml-3">
                             <span class="block text-gray-800 font-medium">🖼️ 學智障典型錯誤圖庫對照表</span>
@@ -282,7 +294,7 @@
 
                     <label class="flex items-start p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-indigo-50 transition-colors">
                         <div class="flex-shrink-0 h-5 w-5 mt-0.5">
-                            <input type="checkbox" value="APP" class="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+                            <input type="checkbox" name="features" value="APP" class="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
                         </div>
                         <div class="ml-3">
                             <span class="block text-gray-800 font-medium">📱 專屬鑑定上傳 APP/平台</span>
@@ -301,7 +313,7 @@
                 
                 <div>
                     <label class="block text-gray-700 font-medium mb-3">針對「學障與智障」的資料整理或輔導紀錄，您還有什麼疑惑？或期待 AI 工具能朝哪個方向協助您？</label>
-                    <textarea rows="4" placeholder="請自由留下您的寶貴意見... (選填)" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm"></textarea>
+                    <textarea rows="4" id="feedback" placeholder="請自由留下您的寶貴意見... (選填)" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm"></textarea>
                 </div>
             </div>
 
@@ -312,6 +324,78 @@
                 </button>
             </div>
         </form>
+
+        <!-- 統計結果區塊 (預設隱藏) -->
+        <div id="statsContainer" class="hidden px-6 py-8 sm:px-10 space-y-8">
+            <!-- 統計概覽 -->
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100 text-center shadow-sm">
+                    <span class="block text-gray-500 text-xs sm:text-sm">收到問卷總數</span>
+                    <span id="stats-total-count" class="text-2xl sm:text-3xl font-bold text-indigo-600">-</span>
+                </div>
+                <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100 text-center shadow-sm">
+                    <span class="block text-gray-500 text-xs sm:text-sm">曾提報鑑定比例</span>
+                    <span id="stats-exp-pct" class="text-2xl sm:text-3xl font-bold text-indigo-600">-</span>
+                </div>
+                <div class="col-span-2 sm:col-span-1 bg-indigo-50 p-4 rounded-xl border border-indigo-100 text-center shadow-sm">
+                    <span class="block text-gray-500 text-xs sm:text-sm">平均痛點困擾度</span>
+                    <span id="stats-avg-trouble" class="text-2xl sm:text-3xl font-bold text-indigo-600">-</span>
+                </div>
+            </div>
+
+            <!-- 圖表區塊 -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- 圖表 1: 任教年段分佈 -->
+                <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
+                    <h3 class="text-base font-bold text-gray-800 mb-4 flex items-center"><span class="mr-2">🏫</span> 1. 填寫教師年段分佈</h3>
+                    <div class="h-64 relative flex items-center justify-center">
+                        <canvas id="chart-grade"></canvas>
+                    </div>
+                </div>
+
+                <!-- 圖表 2: 提報鑑定經驗 -->
+                <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
+                    <h3 class="text-base font-bold text-gray-800 mb-4 flex items-center"><span class="mr-2">🔍</span> 2. 協助提報鑑定經驗</h3>
+                    <div class="h-64 relative flex items-center justify-center">
+                        <canvas id="chart-experience"></canvas>
+                    </div>
+                </div>
+
+                <!-- 圖表 3: 實務痛點困擾程度 -->
+                <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm md:col-span-2">
+                    <h3 class="text-base font-bold text-gray-800 mb-4 flex items-center"><span class="mr-2">🔥</span> Part 2. 實務困境困擾平均（越高越困擾）</h3>
+                    <div class="h-64 relative">
+                        <canvas id="chart-painpoints"></canvas>
+                    </div>
+                </div>
+
+                <!-- 圖表 4: AI功能需求 -->
+                <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm md:col-span-2">
+                    <h3 class="text-base font-bold text-gray-800 mb-4 flex items-center"><span class="mr-2">🤖</span> Part 3. 期望 AI 工具優先具備之功能需求率</h3>
+                    <div class="h-64 relative">
+                        <canvas id="chart-features"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 開放性回饋意見 -->
+            <div class="space-y-4 pt-4 border-t border-gray-200">
+                <div class="flex items-center space-x-2 border-b-2 border-indigo-100 pb-2">
+                    <span class="bg-indigo-100 text-indigo-700 font-bold px-3 py-1 rounded-full text-sm">Part 4</span>
+                    <h2 class="text-xl font-bold text-gray-800">開放性意見回饋精選</h2>
+                </div>
+                <div id="stats-feedback-list" class="space-y-3 max-h-80 overflow-y-auto pr-2">
+                    <!-- 動態填入回饋內容 -->
+                </div>
+            </div>
+
+            <!-- 重設按鈕 -->
+            <div class="pt-4 flex justify-end">
+                <button type="button" onclick="clearLocalSubmissions()" class="text-xs text-red-400 hover:text-red-600 focus:outline-none transition-colors">
+                    ⚠️ 重設此瀏覽器的自填測試數據
+                </button>
+            </div>
+        </div>
     </div>
 
     <!-- 成功送出的自訂彈出視窗 (Modal) -->
@@ -326,24 +410,337 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                 </svg>
             </div>
-            <h3 class="text-xl font-bold text-center text-gray-900 mb-2">送出成功！</h3>
-            <p class="text-gray-500 text-center mb-6">這是一個前端互動範例（Canvas 預覽），目前沒有串接真實的資料庫。感謝您的體驗與測試！</p>
+            <h3 class="text-xl font-bold text-center text-gray-900 mb-2">問卷送出成功！</h3>
+            <p class="text-gray-500 text-center mb-6">感謝您的協助與寶貴回饋。系統已將您的回答加入本地數據庫，您現在可以直接點擊「統計結果」來查看當前調查圖表！</p>
             <button onclick="closeModal()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 px-4 rounded-xl transition-colors">
-                我知道了
+                前往查看統計圖表
             </button>
         </div>
     </div>
 
-    <!-- 處理表單提交的 JavaScript -->
+    <!-- 處理表單與統計數據的 JavaScript -->
     <script>
         const form = document.getElementById('surveyForm');
         const modal = document.getElementById('successModal');
         const modalContent = document.getElementById('modalContent');
-        
+        const btnTabSurvey = document.getElementById('btn-tab-survey');
+        const btnTabStats = document.getElementById('btn-tab-stats');
+        const statsContainer = document.getElementById('statsContainer');
+
+        // 預設模擬數據 (52份問卷)
+        const mockData = {
+            total: 52,
+            grades: { "低年級": 16, "中年級": 18, "高年級": 13, "科任教師": 5 },
+            experience: { "是": 32, "否": 20 },
+            expTimes: [2, 3, 1, 4, 2, 5, 2, 3, 1, 2, 4, 3, 2, 1, 3, 5, 2, 3, 1, 4, 2, 2, 3, 1, 2, 4, 3, 2, 1, 3, 2, 1],
+            q1: [5, 4, 4, 5, 3, 4, 5, 5, 4, 3, 5, 4, 4, 5, 5, 2, 4, 5, 3, 4, 5, 4, 4, 5, 5, 4, 3, 4, 5, 5, 4, 4, 5, 3, 4, 5, 5, 4, 3, 5, 4, 4, 5, 5, 2, 4, 5, 3, 4, 5, 4, 4],
+            q2: [5, 5, 4, 5, 4, 5, 5, 4, 5, 3, 5, 5, 4, 5, 5, 3, 4, 5, 4, 5, 5, 4, 5, 5, 5, 4, 4, 5, 5, 4, 5, 5, 4, 5, 4, 5, 5, 4, 5, 3, 5, 5, 4, 5, 5, 3, 4, 5, 4, 5, 5, 4],
+            q3: [4, 4, 3, 4, 3, 5, 4, 4, 3, 4, 5, 4, 3, 4, 4, 3, 4, 4, 3, 4, 5, 4, 3, 4, 4, 4, 3, 4, 5, 4, 3, 4, 4, 3, 5, 4, 4, 3, 4, 5, 4, 3, 4, 4, 3, 4, 4, 3, 4, 5, 4, 3],
+            q4: [5, 5, 5, 4, 5, 5, 5, 4, 5, 5, 5, 5, 4, 5, 5, 4, 5, 5, 5, 4, 5, 5, 5, 4, 5, 5, 5, 5, 4, 5, 5, 4, 5, 5, 5, 4, 5, 5, 5, 5, 4, 5, 5, 4, 5, 5, 5, 4, 5, 5, 5, 5],
+            features: { "生成器": 44, "連動系統": 47, "圖庫": 36, "APP": 34 },
+            feedbacks: [
+                "鑑定流程非常繁瑣，尤其是一直重寫重複的內容，特別期待能開發一鍵連動的多重表件系統！",
+                "每次寫輔導紀錄都卡在『錯誤型態』的專門詞彙描述，如果是 AI 能引導點選生成，那真的能省很多心思。",
+                "常規衝突真的很兩難：保留學生未訂正的原始錯誤作為鑑定證據，打亂了班級作業批改節奏，也怕耽誤學生學業。",
+                "手機拍下考卷可以直接做歸檔生成 QR code 實在太貼心了，不用每次找檔案都翻箱倒櫃。",
+                "期待能有二級輔導紀錄的 AI 生成器，可以讓我們把重心更多放在教學實務上，而非紙本行政。"
+            ]
+        };
+
+        // 取得本地儲存提交的資料
+        function getLocalSubmissions() {
+            const data = localStorage.getItem('survey_submissions');
+            return data ? JSON.parse(data) : [];
+        }
+
+        // 合併預設模擬數據與本地提交數據
+        function getMergedStats() {
+            const localData = getLocalSubmissions();
+            
+            const stats = {
+                total: mockData.total + localData.length,
+                grades: { ...mockData.grades },
+                experience: { ...mockData.experience },
+                expTimes: [...mockData.expTimes],
+                q1: [...mockData.q1],
+                q2: [...mockData.q2],
+                q3: [...mockData.q3],
+                q4: [...mockData.q4],
+                features: { ...mockData.features },
+                feedbacks: [...mockData.feedbacks]
+            };
+
+            // 累加本地提交數據
+            localData.forEach(sub => {
+                // 任教年段
+                if (sub.grade && stats.grades[sub.grade] !== undefined) {
+                    stats.grades[sub.grade]++;
+                }
+
+                // 提報經驗
+                if (sub.experience && stats.experience[sub.experience] !== undefined) {
+                    stats.experience[sub.experience]++;
+                }
+
+                // 經驗次數
+                if (sub.experience === '是' && sub.expTimes) {
+                    stats.expTimes.push(parseInt(sub.expTimes) || 1);
+                }
+
+                // 痛點困難度
+                if (sub.q1) stats.q1.push(parseInt(sub.q1));
+                if (sub.q2) stats.q2.push(parseInt(sub.q2));
+                if (sub.q3) stats.q3.push(parseInt(sub.q3));
+                if (sub.q4) stats.q4.push(parseInt(sub.q4));
+
+                // AI功能需求
+                if (sub.features && Array.isArray(sub.features)) {
+                    sub.features.forEach(f => {
+                        if (stats.features[f] !== undefined) {
+                            stats.features[f]++;
+                        }
+                    });
+                }
+
+                // 意見回饋
+                if (sub.feedback && sub.feedback.trim() !== '') {
+                    stats.feedbacks.unshift(sub.feedback.trim()); // 自填的顯示在最前方
+                }
+            });
+
+            return stats;
+        }
+
+        // 頁籤切換邏輯
+        function switchTab(tab) {
+            if (tab === 'survey') {
+                btnTabSurvey.classList.add('text-indigo-600', 'border-b-2', 'border-indigo-600');
+                btnTabSurvey.classList.remove('text-gray-500');
+                btnTabStats.classList.add('text-gray-500');
+                btnTabStats.classList.remove('text-indigo-600', 'border-b-2', 'border-indigo-600');
+
+                form.classList.remove('hidden');
+                statsContainer.classList.add('hidden');
+            } else if (tab === 'stats') {
+                btnTabStats.classList.add('text-indigo-600', 'border-b-2', 'border-indigo-600');
+                btnTabStats.classList.remove('text-gray-500');
+                btnTabSurvey.classList.add('text-gray-500');
+                btnTabSurvey.classList.remove('text-indigo-600', 'border-b-2', 'border-indigo-600');
+
+                statsContainer.classList.remove('hidden');
+                form.classList.add('hidden');
+
+                // 延遲渲染以確保 Canvas 尺寸正確載入
+                setTimeout(() => {
+                    renderCharts();
+                }, 50);
+            }
+        }
+
+        btnTabSurvey.addEventListener('click', () => switchTab('survey'));
+        btnTabStats.addEventListener('click', () => switchTab('stats'));
+
+        // 圖表物件對照表 (供重新渲染時銷毀舊圖表)
+        let chartObjects = {};
+
+        // 渲染圖表與更新數據
+        function renderCharts() {
+            const stats = getMergedStats();
+
+            // 1. 更新概覽數值
+            document.getElementById('stats-total-count').textContent = stats.total + ' 份';
+            
+            const yesExp = stats.experience["是"] || 0;
+            const expPct = stats.total > 0 ? ((yesExp / stats.total) * 100).toFixed(1) : 0;
+            document.getElementById('stats-exp-pct').textContent = expPct + '%';
+
+            const sum = arr => arr.reduce((a, b) => a + b, 0);
+            const avgQ1 = stats.q1.length > 0 ? sum(stats.q1) / stats.q1.length : 0;
+            const avgQ2 = stats.q2.length > 0 ? sum(stats.q2) / stats.q2.length : 0;
+            const avgQ3 = stats.q3.length > 0 ? sum(stats.q3) / stats.q3.length : 0;
+            const avgQ4 = stats.q4.length > 0 ? sum(stats.q4) / stats.q4.length : 0;
+            const totalAvg = ((avgQ1 + avgQ2 + avgQ3 + avgQ4) / 4).toFixed(2);
+            document.getElementById('stats-avg-trouble').textContent = totalAvg + ' / 5';
+
+            // 銷毀現有圖表物件
+            Object.keys(chartObjects).forEach(key => {
+                if (chartObjects[key]) chartObjects[key].destroy();
+            });
+
+            // 圖表 1: 任教年段分佈 (Doughnut Chart)
+            const ctxGrade = document.getElementById('chart-grade').getContext('2d');
+            chartObjects.grade = new Chart(ctxGrade, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(stats.grades),
+                    datasets: [{
+                        data: Object.values(stats.grades),
+                        backgroundColor: ['#ffb7b2', '#a8dadc', '#ffe5b4', '#b5e2b9'],
+                        borderColor: '#ffffff',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    }
+                }
+            });
+
+            // 圖表 2: 協助提報鑑定經驗 (Pie Chart)
+            const ctxExp = document.getElementById('chart-experience').getContext('2d');
+            chartObjects.experience = new Chart(ctxExp, {
+                type: 'pie',
+                data: {
+                    labels: Object.keys(stats.experience),
+                    datasets: [{
+                        data: Object.values(stats.experience),
+                        backgroundColor: ['#b5e2b9', '#ffb7b2'],
+                        borderColor: '#ffffff',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    }
+                }
+            });
+
+            // 圖表 3: 實務痛點困擾得分平均 (Horizontal Bar Chart)
+            const ctxPain = document.getElementById('chart-painpoints').getContext('2d');
+            chartObjects.pain = new Chart(ctxPain, {
+                type: 'bar',
+                data: {
+                    labels: [
+                        '常規衝突 (保留錯誤考卷/作業)',
+                        '專業詞彙 (精準描述寫法困難型態)',
+                        '質性描述 (輔導紀錄內容流於空泛)',
+                        '重複填寫 (多重表件重複謄寫策略)'
+                    ],
+                    datasets: [{
+                        label: '平均困擾程度 (1~5)',
+                        data: [avgQ1.toFixed(2), avgQ2.toFixed(2), avgQ3.toFixed(2), avgQ4.toFixed(2)],
+                        backgroundColor: ['#ffb7b2', '#a8dadc', '#ffe5b4', '#dcd6f7'],
+                        borderRadius: 6,
+                        borderWidth: 1,
+                        borderColor: '#cbd5e1'
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { min: 1, max: 5, grid: { display: false } },
+                        y: { grid: { display: false } }
+                    }
+                }
+            });
+
+            // 圖表 4: AI功能需求率 (Vertical Bar Chart)
+            const ctxFeatures = document.getElementById('chart-features').getContext('2d');
+            const featLabels = ['🤖 二級輔導紀錄生成', '🔄 表件資料連動系統', '🖼️ 典型錯誤圖庫對照', '📱 專屬鑑定上傳 APP'];
+            const featKeys = ['生成器', '連動系統', '圖庫', 'APP'];
+            const featPcts = featKeys.map(k => ((stats.features[k] / stats.total) * 100).toFixed(1));
+
+            chartObjects.features = new Chart(ctxFeatures, {
+                type: 'bar',
+                data: {
+                    labels: featLabels,
+                    datasets: [{
+                        label: '需求期待率 (%)',
+                        data: featPcts,
+                        backgroundColor: '#818cf8',
+                        borderRadius: 6,
+                        barPercentage: 0.55
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { min: 0, max: 100, ticks: { callback: v => v + '%' } }
+                    }
+                }
+            });
+
+            // 4. 開放性回饋清單動態渲染
+            const list = document.getElementById('stats-feedback-list');
+            list.innerHTML = '';
+            stats.feedbacks.forEach(msg => {
+                const card = document.createElement('div');
+                card.className = 'bg-gray-50 p-4 rounded-xl border border-gray-100 text-sm leading-relaxed text-gray-700 hover:border-indigo-100 transition-colors shadow-sm';
+                card.innerHTML = `
+                    <div class="flex items-center space-x-1.5 mb-1 text-xs text-indigo-500 font-semibold">
+                        <span>💬</span>
+                        <span>教育現場回饋意見</span>
+                    </div>
+                    <div>${htmlEscape(msg)}</div>
+                `;
+                list.appendChild(card);
+            });
+        }
+
+        // 防 XSS 字串溢出
+        function htmlEscape(str) {
+            return str
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        // 清除本地自填數據
+        function clearLocalSubmissions() {
+            if (confirm('確定要清空您在此瀏覽器上填寫的測試回答嗎？（預設的 52 筆模擬統計數據將會保留）')) {
+                localStorage.removeItem('survey_submissions');
+                renderCharts();
+            }
+        }
+
+        // 處理表單提交
         form.addEventListener('submit', function(e) {
             e.preventDefault(); // 阻止表單重整網頁
             
-            // 顯示自訂 Modal (取代原先的 alert)
+            // 獲取使用者選擇的值
+            const grade = document.querySelector('input[name="grade"]:checked')?.value;
+            const experience = document.querySelector('input[name="experience"]:checked')?.value;
+            const expTimesVal = document.getElementById('expTimes')?.value;
+            const q1 = document.querySelector('input[name="q1"]:checked')?.value;
+            const q2 = document.querySelector('input[name="q2"]:checked')?.value;
+            const q3 = document.querySelector('input[name="q3"]:checked')?.value;
+            const q4 = document.querySelector('input[name="q4"]:checked')?.value;
+            
+            const selectedFeatures = [];
+            document.querySelectorAll('input[name="features"]:checked').forEach(cb => {
+                selectedFeatures.push(cb.value);
+            });
+            const feedbackVal = document.getElementById('feedback')?.value;
+
+            // 儲存至本地 localStorage
+            const list = getLocalSubmissions();
+            list.push({
+                grade,
+                experience,
+                expTimes: expTimesVal,
+                q1,
+                q2,
+                q3,
+                q4,
+                features: selectedFeatures,
+                feedback: feedbackVal
+            });
+            localStorage.setItem('survey_submissions', JSON.stringify(list));
+
+            // 顯示成功 Modal
             modal.classList.remove('hidden');
             // 觸發小動畫
             setTimeout(() => {
@@ -352,14 +749,15 @@
             }, 10);
         });
 
+        // 關閉 Modal 並自動導向統計結果
         function closeModal() {
             modalContent.classList.remove('scale-100', 'opacity-100');
             modalContent.classList.add('scale-95', 'opacity-0');
             
-            // 等待動畫結束後隱藏
             setTimeout(() => {
                 modal.classList.add('hidden');
-                form.reset(); // 清空表單
+                form.reset(); // 清置表單
+                switchTab('stats'); // 自動切換至統計圖表頁籤
             }, 300);
         }
     </script>
