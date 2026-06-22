@@ -327,73 +327,87 @@
 
         <!-- 統計結果區塊 (預設隱藏) -->
         <div id="statsContainer" class="hidden px-6 py-8 sm:px-10 space-y-8">
-            <!-- 統計概覽 -->
-            <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100 text-center shadow-sm">
-                    <span class="block text-gray-500 text-xs sm:text-sm">收到問卷總數</span>
-                    <span id="stats-total-count" class="text-2xl sm:text-3xl font-bold text-indigo-600">-</span>
-                </div>
-                <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100 text-center shadow-sm">
-                    <span class="block text-gray-500 text-xs sm:text-sm">曾提報鑑定比例</span>
-                    <span id="stats-exp-pct" class="text-2xl sm:text-3xl font-bold text-indigo-600">-</span>
-                </div>
-                <div class="col-span-2 sm:col-span-1 bg-indigo-50 p-4 rounded-xl border border-indigo-100 text-center shadow-sm">
-                    <span class="block text-gray-500 text-xs sm:text-sm">平均痛點困擾度</span>
-                    <span id="stats-avg-trouble" class="text-2xl sm:text-3xl font-bold text-indigo-600">-</span>
-                </div>
-            </div>
-
-            <!-- 圖表區塊 -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- 圖表 1: 任教年段分佈 -->
-                <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
-                    <h3 class="text-base font-bold text-gray-800 mb-4 flex items-center"><span class="mr-2">🏫</span> 1. 填寫教師年段分佈</h3>
-                    <div class="h-64 relative flex items-center justify-center">
-                        <canvas id="chart-grade"></canvas>
-                    </div>
-                </div>
-
-                <!-- 圖表 2: 提報鑑定經驗 -->
-                <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
-                    <h3 class="text-base font-bold text-gray-800 mb-4 flex items-center"><span class="mr-2">🔍</span> 2. 協助提報鑑定經驗</h3>
-                    <div class="h-64 relative flex items-center justify-center">
-                        <canvas id="chart-experience"></canvas>
-                    </div>
-                </div>
-
-                <!-- 圖表 3: 實務痛點困擾程度 -->
-                <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm md:col-span-2">
-                    <h3 class="text-base font-bold text-gray-800 mb-4 flex items-center"><span class="mr-2">🔥</span> Part 2. 實務困境困擾平均（越高越困擾）</h3>
-                    <div class="h-64 relative">
-                        <canvas id="chart-painpoints"></canvas>
-                    </div>
-                </div>
-
-                <!-- 圖表 4: AI功能需求 -->
-                <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm md:col-span-2">
-                    <h3 class="text-base font-bold text-gray-800 mb-4 flex items-center"><span class="mr-2">🤖</span> Part 3. 期望 AI 工具優先具備之功能需求率</h3>
-                    <div class="h-64 relative">
-                        <canvas id="chart-features"></canvas>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 開放性回饋意見 -->
-            <div class="space-y-4 pt-4 border-t border-gray-200">
-                <div class="flex items-center space-x-2 border-b-2 border-indigo-100 pb-2">
-                    <span class="bg-indigo-100 text-indigo-700 font-bold px-3 py-1 rounded-full text-sm">Part 4</span>
-                    <h2 class="text-xl font-bold text-gray-800">開放性意見回饋精選</h2>
-                </div>
-                <div id="stats-feedback-list" class="space-y-3 max-h-80 overflow-y-auto pr-2">
-                    <!-- 動態填入回饋內容 -->
-                </div>
-            </div>
-
-            <!-- 重設按鈕 -->
-            <div class="pt-4 flex justify-end">
-                <button type="button" onclick="clearLocalSubmissions()" class="text-xs text-red-400 hover:text-red-600 focus:outline-none transition-colors">
-                    ⚠️ 重設此瀏覽器的自填測試數據
+            
+            <!-- 尚無數據的提示畫面 -->
+            <div id="stats-empty-state" class="text-center py-12 px-4 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
+                <span class="text-5xl block mb-4">📊</span>
+                <h3 class="text-lg font-bold text-gray-800 mb-2">目前尚無填答數據</h3>
+                <p class="text-sm text-gray-500 max-w-sm mx-auto">本問卷統計結果將100%真實呈現。請先切換至「填寫問卷」分頁進行第一次填答，即可在此即時觀看真實的統計數據分析！</p>
+                <button type="button" onclick="switchTab('survey')" class="mt-5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 px-5 rounded-xl text-sm transition-colors shadow">
+                    立即填寫問卷
                 </button>
+            </div>
+
+            <!-- 實際數據統計內容 (有數據時才顯示) -->
+            <div id="stats-content" class="hidden space-y-8">
+                <!-- 統計概覽 -->
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                    <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100 text-center shadow-sm">
+                        <span class="block text-gray-500 text-xs sm:text-sm">收到問卷總數</span>
+                        <span id="stats-total-count" class="text-2xl sm:text-3xl font-bold text-indigo-600">-</span>
+                    </div>
+                    <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100 text-center shadow-sm">
+                        <span class="block text-gray-500 text-xs sm:text-sm">曾提報鑑定比例</span>
+                        <span id="stats-exp-pct" class="text-2xl sm:text-3xl font-bold text-indigo-600">-</span>
+                    </div>
+                    <div class="col-span-2 sm:col-span-1 bg-indigo-50 p-4 rounded-xl border border-indigo-100 text-center shadow-sm">
+                        <span class="block text-gray-500 text-xs sm:text-sm">平均痛點困擾度</span>
+                        <span id="stats-avg-trouble" class="text-2xl sm:text-3xl font-bold text-indigo-600">-</span>
+                    </div>
+                </div>
+
+                <!-- 圖表區塊 -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- 圖表 1: 任教年段分佈 -->
+                    <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
+                        <h3 class="text-base font-bold text-gray-800 mb-4 flex items-center"><span class="mr-2">🏫</span> 1. 填寫教師年段分佈</h3>
+                        <div class="h-64 relative flex items-center justify-center">
+                            <canvas id="chart-grade"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- 圖表 2: 提報鑑定經驗 -->
+                    <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
+                        <h3 class="text-base font-bold text-gray-800 mb-4 flex items-center"><span class="mr-2">🔍</span> 2. 協助提報鑑定經驗</h3>
+                        <div class="h-64 relative flex items-center justify-center">
+                            <canvas id="chart-experience"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- 圖表 3: 實務痛點困擾程度 -->
+                    <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm md:col-span-2">
+                        <h3 class="text-base font-bold text-gray-800 mb-4 flex items-center"><span class="mr-2">🔥</span> Part 2. 實務困境困擾平均（越高越困擾）</h3>
+                        <div class="h-64 relative">
+                            <canvas id="chart-painpoints"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- 圖表 4: AI功能需求 -->
+                    <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm md:col-span-2">
+                        <h3 class="text-base font-bold text-gray-800 mb-4 flex items-center"><span class="mr-2">🤖</span> Part 3. 期望 AI 工具優先具備之功能需求率</h3>
+                        <div class="h-64 relative">
+                            <canvas id="chart-features"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 開放性回饋意見 -->
+                <div class="space-y-4 pt-4 border-t border-gray-200">
+                    <div class="flex items-center space-x-2 border-b-2 border-indigo-100 pb-2">
+                        <span class="bg-indigo-100 text-indigo-700 font-bold px-3 py-1 rounded-full text-sm">Part 4</span>
+                        <h2 class="text-xl font-bold text-gray-800">開放性意見回饋真實呈現</h2>
+                    </div>
+                    <div id="stats-feedback-list" class="space-y-3 max-h-80 overflow-y-auto pr-2">
+                        <!-- 動態填入真實回饋內容 -->
+                    </div>
+                </div>
+
+                <!-- 重設按鈕 -->
+                <div class="pt-4 flex justify-end">
+                    <button type="button" onclick="clearLocalSubmissions()" class="text-xs text-red-400 hover:text-red-600 focus:outline-none transition-colors">
+                        ⚠️ 清空此瀏覽器的填答統計數據
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -411,9 +425,9 @@
                 </svg>
             </div>
             <h3 class="text-xl font-bold text-center text-gray-900 mb-2">問卷送出成功！</h3>
-            <p class="text-gray-500 text-center mb-6">感謝您的協助與寶貴回饋。系統已將您的回答加入本地數據庫，您現在可以直接點擊「統計結果」來查看當前調查圖表！</p>
+            <p class="text-gray-500 text-center mb-6">感謝您的協助與寶貴回饋。系統已即時將您的資料更新到統計數據庫中！</p>
             <button onclick="closeModal()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 px-4 rounded-xl transition-colors">
-                前往查看統計圖表
+                查看真實統計結果
             </button>
         </div>
     </div>
@@ -427,88 +441,10 @@
         const btnTabStats = document.getElementById('btn-tab-stats');
         const statsContainer = document.getElementById('statsContainer');
 
-        // 預設模擬數據 (52份問卷)
-        const mockData = {
-            total: 52,
-            grades: { "低年級": 16, "中年級": 18, "高年級": 13, "科任教師": 5 },
-            experience: { "是": 32, "否": 20 },
-            expTimes: [2, 3, 1, 4, 2, 5, 2, 3, 1, 2, 4, 3, 2, 1, 3, 5, 2, 3, 1, 4, 2, 2, 3, 1, 2, 4, 3, 2, 1, 3, 2, 1],
-            q1: [5, 4, 4, 5, 3, 4, 5, 5, 4, 3, 5, 4, 4, 5, 5, 2, 4, 5, 3, 4, 5, 4, 4, 5, 5, 4, 3, 4, 5, 5, 4, 4, 5, 3, 4, 5, 5, 4, 3, 5, 4, 4, 5, 5, 2, 4, 5, 3, 4, 5, 4, 4],
-            q2: [5, 5, 4, 5, 4, 5, 5, 4, 5, 3, 5, 5, 4, 5, 5, 3, 4, 5, 4, 5, 5, 4, 5, 5, 5, 4, 4, 5, 5, 4, 5, 5, 4, 5, 4, 5, 5, 4, 5, 3, 5, 5, 4, 5, 5, 3, 4, 5, 4, 5, 5, 4],
-            q3: [4, 4, 3, 4, 3, 5, 4, 4, 3, 4, 5, 4, 3, 4, 4, 3, 4, 4, 3, 4, 5, 4, 3, 4, 4, 4, 3, 4, 5, 4, 3, 4, 4, 3, 5, 4, 4, 3, 4, 5, 4, 3, 4, 4, 3, 4, 4, 3, 4, 5, 4, 3],
-            q4: [5, 5, 5, 4, 5, 5, 5, 4, 5, 5, 5, 5, 4, 5, 5, 4, 5, 5, 5, 4, 5, 5, 5, 4, 5, 5, 5, 5, 4, 5, 5, 4, 5, 5, 5, 4, 5, 5, 5, 5, 4, 5, 5, 4, 5, 5, 5, 4, 5, 5, 5, 5],
-            features: { "生成器": 44, "連動系統": 47, "圖庫": 36, "APP": 34 },
-            feedbacks: [
-                "鑑定流程非常繁瑣，尤其是一直重寫重複的內容，特別期待能開發一鍵連動的多重表件系統！",
-                "每次寫輔導紀錄都卡在『錯誤型態』的專門詞彙描述，如果是 AI 能引導點選生成，那真的能省很多心思。",
-                "常規衝突真的很兩難：保留學生未訂正的原始錯誤作為鑑定證據，打亂了班級作業批改節奏，也怕耽誤學生學業。",
-                "手機拍下考卷可以直接做歸檔生成 QR code 實在太貼心了，不用每次找檔案都翻箱倒櫃。",
-                "期待能有二級輔導紀錄的 AI 生成器，可以讓我們把重心更多放在教學實務上，而非紙本行政。"
-            ]
-        };
-
         // 取得本地儲存提交的資料
         function getLocalSubmissions() {
             const data = localStorage.getItem('survey_submissions');
             return data ? JSON.parse(data) : [];
-        }
-
-        // 合併預設模擬數據與本地提交數據
-        function getMergedStats() {
-            const localData = getLocalSubmissions();
-            
-            const stats = {
-                total: mockData.total + localData.length,
-                grades: { ...mockData.grades },
-                experience: { ...mockData.experience },
-                expTimes: [...mockData.expTimes],
-                q1: [...mockData.q1],
-                q2: [...mockData.q2],
-                q3: [...mockData.q3],
-                q4: [...mockData.q4],
-                features: { ...mockData.features },
-                feedbacks: [...mockData.feedbacks]
-            };
-
-            // 累加本地提交數據
-            localData.forEach(sub => {
-                // 任教年段
-                if (sub.grade && stats.grades[sub.grade] !== undefined) {
-                    stats.grades[sub.grade]++;
-                }
-
-                // 提報經驗
-                if (sub.experience && stats.experience[sub.experience] !== undefined) {
-                    stats.experience[sub.experience]++;
-                }
-
-                // 經驗次數
-                if (sub.experience === '是' && sub.expTimes) {
-                    stats.expTimes.push(parseInt(sub.expTimes) || 1);
-                }
-
-                // 痛點困難度
-                if (sub.q1) stats.q1.push(parseInt(sub.q1));
-                if (sub.q2) stats.q2.push(parseInt(sub.q2));
-                if (sub.q3) stats.q3.push(parseInt(sub.q3));
-                if (sub.q4) stats.q4.push(parseInt(sub.q4));
-
-                // AI功能需求
-                if (sub.features && Array.isArray(sub.features)) {
-                    sub.features.forEach(f => {
-                        if (stats.features[f] !== undefined) {
-                            stats.features[f]++;
-                        }
-                    });
-                }
-
-                // 意見回饋
-                if (sub.feedback && sub.feedback.trim() !== '') {
-                    stats.feedbacks.unshift(sub.feedback.trim()); // 自填的顯示在最前方
-                }
-            });
-
-            return stats;
         }
 
         // 頁籤切換邏輯
@@ -545,7 +481,71 @@
 
         // 渲染圖表與更新數據
         function renderCharts() {
-            const stats = getMergedStats();
+            const localData = getLocalSubmissions();
+            const emptyState = document.getElementById('stats-empty-state');
+            const statsContent = document.getElementById('stats-content');
+
+            // 如果完全沒有資料，顯示空狀態
+            if (localData.length === 0) {
+                emptyState.classList.remove('hidden');
+                statsContent.classList.add('hidden');
+                return;
+            }
+
+            // 有資料時顯示統計內容
+            emptyState.classList.add('hidden');
+            statsContent.classList.remove('hidden');
+
+            const stats = {
+                total: localData.length,
+                grades: { "低年級": 0, "中年級": 0, "高年級": 0, "科任教師": 0 },
+                experience: { "是": 0, "否": 0 },
+                expTimes: [],
+                q1: [],
+                q2: [],
+                q3: [],
+                q4: [],
+                features: { "生成器": 0, "連動系統": 0, "圖庫": 0, "APP": 0 },
+                feedbacks: []
+            };
+
+            // 統計真實數據
+            localData.forEach(sub => {
+                // 任教年段
+                if (sub.grade && stats.grades[sub.grade] !== undefined) {
+                    stats.grades[sub.grade]++;
+                }
+
+                // 提報經驗
+                if (sub.experience && stats.experience[sub.experience] !== undefined) {
+                    stats.experience[sub.experience]++;
+                }
+
+                // 經驗次數
+                if (sub.experience === '是' && sub.expTimes) {
+                    stats.expTimes.push(parseInt(sub.expTimes) || 1);
+                }
+
+                // 痛點困難度
+                if (sub.q1) stats.q1.push(parseInt(sub.q1));
+                if (sub.q2) stats.q2.push(parseInt(sub.q2));
+                if (sub.q3) stats.q3.push(parseInt(sub.q3));
+                if (sub.q4) stats.q4.push(parseInt(sub.q4));
+
+                // AI功能需求
+                if (sub.features && Array.isArray(sub.features)) {
+                    sub.features.forEach(f => {
+                        if (stats.features[f] !== undefined) {
+                            stats.features[f]++;
+                        }
+                    });
+                }
+
+                // 意見回饋
+                if (sub.feedback && sub.feedback.trim() !== '') {
+                    stats.feedbacks.unshift(sub.feedback.trim()); // 真實意見反序排列，越新越上面
+                }
+            });
 
             // 1. 更新概覽數值
             document.getElementById('stats-total-count').textContent = stats.total + ' 份';
@@ -645,7 +645,7 @@
 
             // 圖表 4: AI功能需求率 (Vertical Bar Chart)
             const ctxFeatures = document.getElementById('chart-features').getContext('2d');
-            const featLabels = ['🤖 二級輔導紀錄生成', '🔄 表件資料連動系統', '🖼️ 典型錯誤圖庫對照', '📱 專屬鑑定上傳 APP'];
+            const featLabels = ['二級輔導紀錄生成', '表件資料連動系統', '典型錯誤圖庫對照', '專屬鑑定上傳 APP'];
             const featKeys = ['生成器', '連動系統', '圖庫', 'APP'];
             const featPcts = featKeys.map(k => ((stats.features[k] / stats.total) * 100).toFixed(1));
 
@@ -674,24 +674,31 @@
             // 4. 開放性回饋清單動態渲染
             const list = document.getElementById('stats-feedback-list');
             list.innerHTML = '';
-            stats.feedbacks.forEach(msg => {
-                const card = document.createElement('div');
-                card.className = 'bg-gray-50 p-4 rounded-xl border border-gray-100 text-sm leading-relaxed text-gray-700 hover:border-indigo-100 transition-colors shadow-sm';
-                card.innerHTML = `
-                    <div class="flex items-center space-x-1.5 mb-1 text-xs text-indigo-500 font-semibold">
-                        <span>💬</span>
-                        <span>教育現場回饋意見</span>
-                    </div>
-                    <div>${htmlEscape(msg)}</div>
-                `;
-                list.appendChild(card);
-            });
+            
+            if (stats.feedbacks.length === 0) {
+                list.innerHTML = `<div class="text-gray-400 text-sm text-center py-4">目前尚無具體意見回饋。</div>`;
+            } else {
+                stats.feedbacks.forEach(msg => {
+                    const card = document.createElement('div');
+                    card.className = 'bg-gray-50 p-4 rounded-xl border border-gray-100 text-sm leading-relaxed text-gray-700 hover:border-indigo-100 transition-colors shadow-sm';
+                    card.innerHTML = `
+                        <div class="flex items-center space-x-1.5 mb-1 text-xs text-indigo-500 font-semibold">
+                            <span>💬</span>
+                            <span>真實教師回饋意見</span>
+                        </div>
+                        <div>${htmlEscape(msg)}</div>
+                    `;
+                    list.appendChild(card);
+                });
+            }
         }
 
         // 防 XSS 字串溢出
         function htmlEscape(str) {
             return str
                 .replace(/&/g, '&amp;')
+                .replace(/&lt;/g, '<') // 容許原本可能有的標記，但避免破壞字串
+                .replace(/&gt;/g, '>')
                 .replace(/</g, '&lt;')
                 .replace(/>/g, '&gt;')
                 .replace(/"/g, '&quot;')
@@ -700,7 +707,7 @@
 
         // 清除本地自填數據
         function clearLocalSubmissions() {
-            if (confirm('確定要清空您在此瀏覽器上填寫的測試回答嗎？（預設的 52 筆模擬統計數據將會保留）')) {
+            if (confirm('確定要清空您在此瀏覽器上所有的填答統計數據嗎？')) {
                 localStorage.removeItem('survey_submissions');
                 renderCharts();
             }
