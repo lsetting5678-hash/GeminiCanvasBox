@@ -1,4 +1,15 @@
-﻿__pycache__/
+*.7z
+*.doc
+*.docx
+*.exe
+*.pdf
 *.pyc
+*.spec
+*.zip
 .DS_Store
 .vscode/
+__pycache__/
+build/
+dist/
+待刪除/
+﻿__pycache__/
