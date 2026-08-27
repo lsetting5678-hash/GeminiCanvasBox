@@ -12,6 +12,7 @@
     .badge-perf { background-color: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
     .badge-cont { background-color: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
     .badge-spec { background-color: #fdf2f8; color: #be185d; border: 1px solid #fbcfe8; }
+    .tag-source { background-color: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
   </style>
 </head>
 <body class="min-h-screen flex flex-col">
@@ -25,7 +26,7 @@
         </div>
         <div>
           <h1 class="text-lg font-bold text-slate-800 tracking-tight">桃園市國小特教 IEP 指標資料庫檢索工具 <span class="text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full font-mono">V5 正式版</span></h1>
-          <p class="text-xs text-slate-500">三大入口檢索 ｜ 跨入口購物車 ｜ 雙指標標準對齊 ｜ 特需全階段(Ⅰ～Ⅴ)/初進階(sP/sA)篩選 ｜ 一鍵 Word / JSON 匯出</p>
+          <p class="text-xs text-slate-500">三大入口檢索 ｜ 來源 Context 購物車 ｜ 雙指標標準對齊 ｜ 特需全階段(Ⅰ～Ⅴ)篩選 ｜ 分組 Word / JSON 匯出</p>
         </div>
       </div>
       
@@ -53,11 +54,11 @@
           <span class="px-3 py-1 bg-white/20 backdrop-blur rounded-full text-xs font-semibold tracking-wide uppercase">Official Database Matrix</span>
           <h2 class="text-3xl font-extrabold mt-3 leading-tight">標準化 IEP 指標檢索與匯出系統</h2>
           <p class="mt-2 text-indigo-100 text-sm leading-relaxed">
-            內建 1,849 條官方課綱母庫（國語文、數學領域、特殊需求 9 大科目）與 96 組各版本全學期教材計畫。請選擇檢索入口開始選取指標。
+            內建 1,849 條官方課綱母庫（國語文、數學領域、特殊需求 9 大科目）與 96 組各版本全學期教材計畫。支援跨入口、跨學期 Context 購物車與純淨匯出。
           </p>
           <div class="mt-4 flex items-center space-x-4 text-xs font-medium text-indigo-200">
             <span><i class="fa-solid fa-circle-check text-emerald-400 mr-1"></i> 官方指標母庫完整 (1,758 / 1,849)</span>
-            <span><i class="fa-solid fa-circle-check text-emerald-400 mr-1"></i> 特需 9 大領域全階段／初進階完備</span>
+            <span><i class="fa-solid fa-circle-check text-emerald-400 mr-1"></i> 購物車 Context 來源追蹤</span>
           </div>
         </div>
       </div>
@@ -168,7 +169,7 @@
 
   <!-- 購物車與最終預覽 Modal -->
   <div id="modal-cart" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+    <div class="bg-white rounded-2xl max-w-5xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
       <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
         <div class="flex items-center space-x-2">
           <i class="fa-solid fa-cart-shopping text-indigo-600 text-lg"></i>
@@ -179,28 +180,9 @@
         </button>
       </div>
 
-      <div class="p-6 overflow-y-auto flex-1 space-y-6">
-        <!-- 學習表現清單 -->
-        <div>
-          <div class="flex items-center justify-between pb-2 border-b border-blue-100">
-            <h4 class="font-bold text-blue-800 text-sm flex items-center">
-              <span class="w-2 h-2 rounded-full bg-blue-600 mr-2"></span> 🎯 學習表現 (PERFORMANCE)
-              <span id="cart-perf-count" class="ml-2 text-xs font-normal text-slate-500"></span>
-            </h4>
-          </div>
-          <div id="cart-perf-list" class="mt-3 space-y-2"></div>
-        </div>
-
-        <!-- 學習內容清單 -->
-        <div>
-          <div class="flex items-center justify-between pb-2 border-b border-emerald-100">
-            <h4 class="font-bold text-emerald-800 text-sm flex items-center">
-              <span class="w-2 h-2 rounded-full bg-emerald-600 mr-2"></span> 📖 學習內容 (CONTENT)
-              <span id="cart-cont-count" class="ml-2 text-xs font-normal text-slate-500"></span>
-            </h4>
-          </div>
-          <div id="cart-cont-list" class="mt-3 space-y-2"></div>
-        </div>
+      <!-- 購物車分組預覽清單 -->
+      <div id="cart-grouped-container" class="p-6 overflow-y-auto flex-1 space-y-6">
+        <!-- 動態填入分組卡片 -->
       </div>
 
       <!-- 底部操作列 -->
@@ -213,7 +195,7 @@
             <i class="fa-solid fa-copy mr-1.5"></i> 1. 一鍵複製文字格式
           </button>
           <button onclick="exportWordFromCart()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-md flex items-center">
-            <i class="fa-solid fa-file-word mr-1.5"></i> 2. 匯出 Word 表格檔 (.doc)
+            <i class="fa-solid fa-file-word mr-1.5"></i> 2. 匯出分組 Word (.doc)
           </button>
           <button onclick="exportJsonForToolB()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-md flex items-center">
             <i class="fa-solid fa-file-code mr-1.5"></i> 3. 匯出標準 JSON
@@ -281,8 +263,8 @@
     const PLANS = DB_PACKAGE.tables.curriculum_plans;
     const LINKS = DB_PACKAGE.tables.curriculum_indicator_links;
 
-    // 全域購物車 State
-    let cart = []; // indicator_id list
+    // 全域購物車 State: 保存具備完整 source_context 的物件清單
+    let cart = []; 
 
     // 當前檢索狀態
     let currentEntrance = 0;
@@ -297,7 +279,7 @@
       keyword: ''
     };
 
-    // 特需科目適用的階段/初進階選項對照表 (完整補齊學習策略與職業教育之第Ⅰ階段)
+    // 特需科目適用的階段/初進階選項對照表
     const SPEC_STAGE_OPTIONS = {
       '生活管理': [
         { val: 'ALL', label: '全部等級 (初階＋進階)' },
@@ -359,6 +341,52 @@
       'Ⅳ': ['Ⅳ', 'IV', '4'],
       'Ⅴ': ['Ⅴ', 'V', '5']
     };
+
+    // 產生購物車項目的唯一 Key (包含 indicator_id 與完整選取來源 Context)
+    function getCartKey(indId, ctx) {
+      const e = ctx.entrance || 1;
+      const p = ctx.publisher || '';
+      const g = ctx.grade || '';
+      const s = ctx.semester || '';
+      const subj = ctx.subject || ctx.specSubject || '';
+      const st = ctx.stage || ctx.specStage || '';
+      return [indId, e, p, g, s, subj, st].join('|');
+    }
+
+    // 取得當前檢索畫面的 Context
+    function getCurrentContext() {
+      if (currentEntrance === 1) {
+        return {
+          entrance: 1,
+          publisher: filterState.publisher,
+          grade: filterState.grade,
+          semester: filterState.semester,
+          subject: filterState.subject,
+          stage: null
+        };
+      } else if (currentEntrance === 2) {
+        return {
+          entrance: 2,
+          publisher: null,
+          grade: null,
+          semester: null,
+          subject: filterState.subject,
+          stage: filterState.stage
+        };
+      } else if (currentEntrance === 3) {
+        return {
+          entrance: 3,
+          publisher: null,
+          grade: null,
+          semester: null,
+          subject: filterState.specSubject,
+          specSubject: filterState.specSubject,
+          specStage: filterState.specStage,
+          stage: filterState.specStage
+        };
+      }
+      return { entrance: 0 };
+    }
 
     // 切換入口
     function showEntrance(entranceNum) {
@@ -474,13 +502,13 @@
       renderResults();
     }
 
-    // 取得當前檢索數據
+    // 取得當前檢索數據 (嚴格限定目前篩選狀態)
     function getCurrentViewData() {
       if (currentEntrance === 1) {
         const matchedPlans = PLANS.filter(p => 
           p.publisher === filterState.publisher && 
-          p.grade === filterState.grade && 
-          p.semester === filterState.semester && 
+          String(p.grade) === String(filterState.grade) && 
+          String(p.semester) === String(filterState.semester) && 
           p.subject === filterState.subject
         );
 
@@ -569,6 +597,13 @@
       }
     }
 
+    // 檢查指標是否在當前 Context 下已被加入購物車
+    function isItemInCart(indId) {
+      const ctx = getCurrentContext();
+      const key = getCartKey(indId, ctx);
+      return cart.some(item => item.cartKey === key);
+    }
+
     // 渲染檢索結果列表
     function renderResults() {
       const data = getCurrentViewData();
@@ -591,7 +626,7 @@
         `;
       }
 
-      // 入口 1 國語與數學全面採用：整冊學期純淨雙欄（不分單元卡片，依單元出現順序排序並自動去重）
+      // 入口 1 國語與數學全面採用：整冊學期純淨雙欄
       if (currentEntrance === 1) {
         const semName = filterState.semester === '1' ? '上學期' : '下學期';
         const subjName = filterState.subject === '國語' ? '國語文' : '數學';
@@ -659,7 +694,7 @@
 
     // 渲染單條指標 Checkbox 項目
     function renderIndicatorItem(ind) {
-      const isChecked = cart.includes(ind.indicator_id);
+      const isChecked = isItemInCart(ind.indicator_id);
       const isPerf = ind.indicator_type === 'PERFORMANCE';
       const badgeCls = isPerf ? 'badge-perf' : 'badge-cont';
 
@@ -677,27 +712,67 @@
       `;
     }
 
-    // 購物車操作
+    // 購物車單筆切換操作 (具備 Context 感知)
     function toggleCartItem(indId) {
-      const idx = cart.indexOf(indId);
+      const ctx = getCurrentContext();
+      const key = getCartKey(indId, ctx);
+      const idx = cart.findIndex(item => item.cartKey === key);
+
       if (idx > -1) {
         cart.splice(idx, 1);
       } else {
-        cart.push(indId);
+        const ind = INDICATORS.find(x => x.indicator_id === indId);
+        if (ind) {
+          cart.push({
+            cartKey: key,
+            indicator_id: ind.indicator_id,
+            code: ind.code,
+            text: ind.text,
+            domain: ind.domain,
+            subject: ind.subject,
+            indicator_type: ind.indicator_type,
+            stage: ind.stage,
+            source_context: { ...ctx }
+          });
+        }
       }
       updateCartBadge();
       renderResults();
     }
 
+    // 一鍵全選當前頁面指標 (帶入當前 Context)
     function selectAllInCurrentView() {
       const data = getCurrentViewData();
+      const ctx = getCurrentContext();
+
       data.allIndicators.forEach(ind => {
-        if (!cart.includes(ind.indicator_id)) {
-          cart.push(ind.indicator_id);
+        const key = getCartKey(ind.indicator_id, ctx);
+        if (!cart.some(item => item.cartKey === key)) {
+          cart.push({
+            cartKey: key,
+            indicator_id: ind.indicator_id,
+            code: ind.code,
+            text: ind.text,
+            domain: ind.domain,
+            subject: ind.subject,
+            indicator_type: ind.indicator_type,
+            stage: ind.stage,
+            source_context: { ...ctx }
+          });
         }
       });
       updateCartBadge();
       renderResults();
+    }
+
+    function removeCartItemByKey(cartKey) {
+      const idx = cart.findIndex(item => item.cartKey === cartKey);
+      if (idx > -1) {
+        cart.splice(idx, 1);
+        updateCartBadge();
+        updateCartModalContent();
+        renderResults();
+      }
     }
 
     function updateCartBadge() {
@@ -723,50 +798,167 @@
       }
     }
 
-    function updateCartModalContent() {
-      const perfList = document.getElementById('cart-perf-list');
-      const contList = document.getElementById('cart-cont-list');
-      const perfCount = document.getElementById('cart-perf-count');
-      const contCount = document.getElementById('cart-cont-count');
+    // 將購物車項目依來源 Context 分組
+    function groupCartItemsByContext() {
+      const groups = [];
+      const groupMap = new Map();
 
-      const cartInds = cart.map(id => INDICATORS.find(x => x.indicator_id === id)).filter(Boolean);
-      const perfs = cartInds.filter(x => x.indicator_type === 'PERFORMANCE');
-      const conts = cartInds.filter(x => x.indicator_type === 'CONTENT');
+      for (const item of cart) {
+        const ctx = item.source_context;
+        let groupKey = "";
+        let groupTitle = "";
+        let badgeHtml = "";
 
-      perfCount.innerText = `(${perfs.length} 條)`;
-      contCount.innerText = `(${conts.length} 條)`;
+        if (ctx.entrance === 1) {
+          const semName = ctx.semester === '1' ? '上學期' : '下學期';
+          const subjName = ctx.subject === '國語' ? '國語文' : ctx.subject;
+          groupKey = `curriculum|${ctx.publisher}|${ctx.grade}|${ctx.semester}|${ctx.subject}`;
+          groupTitle = `【${ctx.publisher}版 ${ctx.grade}年級${semName} ${subjName}】`;
+          badgeHtml = `
+            <span class="px-2 py-0.5 rounded text-[10px] font-bold tag-source">📚 教材計畫</span>
+            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700">${ctx.publisher}版</span>
+            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-50 text-indigo-700">${ctx.grade}年級</span>
+            <span class="px-2 py-0.5 rounded text-[10px] font-bold ${ctx.semester==='1'?'bg-emerald-50 text-emerald-700':'bg-purple-50 text-purple-700'}">${semName}</span>
+            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-700">${subjName}</span>
+          `;
+        } else if (ctx.entrance === 2) {
+          const subjName = ctx.subject === '國語' ? '國語文' : ctx.subject;
+          const stageText = ctx.stage && ctx.stage !== 'ALL' ? `第${ctx.stage}階段` : '全階段';
+          groupKey = `official|${ctx.subject}|${ctx.stage}`;
+          groupTitle = `【官方課綱 ${subjName} (${stageText})】`;
+          badgeHtml = `
+            <span class="px-2 py-0.5 rounded text-[10px] font-bold tag-source">📐 官方課綱</span>
+            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700">${subjName}</span>
+            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700">${stageText}</span>
+          `;
+        } else if (ctx.entrance === 3) {
+          const stageText = ctx.specStage && ctx.specStage !== 'ALL' ? ` (${ctx.specStage})` : '';
+          groupKey = `spec|${ctx.specSubject}|${ctx.specStage}`;
+          groupTitle = `【特殊需求領域－${ctx.specSubject}${stageText}】`;
+          badgeHtml = `
+            <span class="px-2 py-0.5 rounded text-[10px] font-bold tag-source">🌸 特殊需求</span>
+            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-pink-50 text-pink-700">${ctx.specSubject}</span>
+            ${ctx.specStage && ctx.specStage !== 'ALL' ? `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-50 text-purple-700">${ctx.specStage}</span>` : ''}
+          `;
+        }
 
-      perfList.innerHTML = perfs.length ? perfs.map(ind => renderIndicatorItem(ind)).join('') : '<p class="text-xs text-slate-400 italic">尚無選取的學習表現指標</p>';
-      contList.innerHTML = conts.length ? conts.map(ind => renderIndicatorItem(ind)).join('') : '<p class="text-xs text-slate-400 italic">尚無選取的學習內容指標</p>';
-    }
+        if (!groupMap.has(groupKey)) {
+          const g = {
+            key: groupKey,
+            title: groupTitle,
+            badgeHtml: badgeHtml,
+            context: ctx,
+            perfs: [],
+            conts: []
+          };
+          groupMap.set(groupKey, g);
+          groups.push(g);
+        }
 
-    // 一鍵複製當前檢索文字
-    function copyCurrentViewText() {
-      const data = getCurrentViewData();
-      let text = "";
-      if (currentEntrance === 1) {
-        const semName = filterState.semester === '1' ? '上學期' : '下學期';
-        const subjName = filterState.subject === '國語' ? '國語文' : '數學';
-        text += `【${filterState.publisher}版 ${filterState.grade}年級${semName} ${subjName}】\n\n`;
-        text += `🎯 學習表現 (${data.perfIndicators.length} 條)\n`;
-        data.perfIndicators.forEach(i => { text += `${i.code}：${i.text}\n`; });
-        text += `\n📖 學習內容 (${data.contIndicators.length} 條)\n`;
-        data.contIndicators.forEach(i => { text += `${i.code}：${i.text}\n`; });
-      } else {
-        text += `【IEP 官方指標清單】\n\n🎯 學習表現 (${data.perfIndicators.length} 條)\n`;
-        data.perfIndicators.forEach(i => { text += `${i.code}：${i.text}\n`; });
-        text += `\n📖 學習內容 (${data.contIndicators.length} 條)\n`;
-        data.contIndicators.forEach(i => { text += `${i.code}：${i.text}\n`; });
+        const g = groupMap.get(groupKey);
+        if (item.indicator_type === 'PERFORMANCE') {
+          g.perfs.push(item);
+        } else {
+          g.conts.push(item);
+        }
       }
-      navigator.clipboard.writeText(text).then(() => alert("📋 指標清單已成功複製至剪貼簿！"));
+
+      return groups;
     }
 
-    // 一鍵匯出 Word 表格檔 (.doc)
+    // 渲染購物車分組預覽清單
+    function updateCartModalContent() {
+      const container = document.getElementById('cart-grouped-container');
+      const groups = groupCartItemsByContext();
+
+      if (groups.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-12 text-slate-400">
+            <i class="fa-solid fa-basket-shopping text-4xl mb-3"></i>
+            <p class="text-sm">購物車內目前沒有選取的指標</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = groups.map(g => `
+        <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-100">
+            <div class="flex flex-wrap items-center gap-2">
+              <h4 class="font-bold text-slate-800 text-sm">${g.title}</h4>
+              ${g.badgeHtml}
+            </div>
+            <span class="text-xs text-slate-500">共 ${g.perfs.length + g.conts.length} 條</span>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- 表現 -->
+            <div class="space-y-2">
+              <h5 class="text-xs font-bold text-blue-800 flex items-center">
+                <span class="w-2 h-2 rounded-full bg-blue-600 mr-1.5"></span> 🎯 學習表現 (${g.perfs.length} 條)
+              </h5>
+              ${g.perfs.length ? g.perfs.map(item => renderCartItemRow(item)).join('') : '<p class="text-[11px] text-slate-400 italic">無選取項目</p>'}
+            </div>
+
+            <!-- 內容 -->
+            <div class="space-y-2">
+              <h5 class="text-xs font-bold text-emerald-800 flex items-center">
+                <span class="w-2 h-2 rounded-full bg-emerald-600 mr-1.5"></span> 📖 學習內容 (${g.conts.length} 條)
+              </h5>
+              ${g.conts.length ? g.conts.map(item => renderCartItemRow(item)).join('') : '<p class="text-[11px] text-slate-400 italic">無選取項目</p>'}
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderCartItemRow(item) {
+      const isPerf = item.indicator_type === 'PERFORMANCE';
+      const badgeCls = isPerf ? 'badge-perf' : 'badge-cont';
+      const ctx = item.source_context;
+      let sourceTag = "";
+      if (ctx.entrance === 1) {
+        sourceTag = `[${ctx.publisher}] [${ctx.grade}年級] [${ctx.semester==='1'?'上學期':'下學期'}] [${ctx.subject}]`;
+      } else if (ctx.entrance === 2) {
+        sourceTag = `[課綱] [${ctx.subject}]`;
+      } else if (ctx.entrance === 3) {
+        sourceTag = `[特需] [${ctx.specSubject}]`;
+      }
+
+      return `
+        <div class="p-2.5 rounded-lg border border-slate-100 bg-slate-50/70 flex items-start justify-between space-x-2 text-xs">
+          <div class="flex-1">
+            <div class="flex items-center space-x-1.5">
+              <span class="px-1.5 py-0.5 rounded font-mono font-bold ${badgeCls}">${item.code}</span>
+              <span class="text-[10px] text-slate-400">${sourceTag}</span>
+            </div>
+            <p class="text-slate-700 mt-1 text-[11px] leading-relaxed">${item.text}</p>
+          </div>
+          <button onclick="removeCartItemByKey('${item.cartKey}')" class="text-slate-400 hover:text-red-600 p-1 text-xs">
+            <i class="fa-solid fa-trash-can"></i>
+          </button>
+        </div>
+      `;
+    }
+
+    // 【一、本頁 Word 匯出】：只使用 getCurrentViewData()，並具備嚴格學期 scope 防呆
     function exportWordFromCurrentView() {
       const data = getCurrentViewData();
+
+      // 教材入口防呆驗證
+      if (currentEntrance === 1) {
+        const invalidPlans = data.plans.filter(p => String(p.semester) !== String(filterState.semester));
+        if (invalidPlans.length > 0) {
+          alert(`⚠️ 學期資料範圍異常：目前選擇「第${filterState.semester}學期」，但結果包含其他學期課程資料，已阻止匯出。`);
+          return;
+        }
+      }
+
       const semName = filterState.semester === '1' ? '上學期' : '下學期';
       const subjName = filterState.subject === '國語' ? '國語文' : '數學';
-      const docTitle = currentEntrance === 1 ? `${filterState.publisher}版_${filterState.grade}年級${semName}_${subjName}` : 'IEP官方指標清單';
+      const docTitle = currentEntrance === 1 
+        ? `${filterState.publisher}版_${filterState.grade}年級${semName}_${subjName}` 
+        : (currentEntrance === 2 ? `官方課綱_${filterState.subject}` : `特殊需求_${filterState.specSubject}`);
       
       const docContent = `
         <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
@@ -782,7 +974,7 @@
         </head>
         <body>
           <h2>【${docTitle}】學習表現與學習內容對照表</h2>
-          <p>匯出時間：${new Date().toLocaleString('zh-TW')} ｜ 總指標數：${data.allIndicators.length} 筆</p>
+          <p>匯出時間：${new Date().toLocaleString('zh-TW')} ｜ 總指標數：${data.allIndicators.length} 筆（本頁專屬匯出，無跨學期混入）</p>
           
           <h3>🎯 一、學習表現 (PERFORMANCE) - 共 ${data.perfIndicators.length} 筆</h3>
           <table>
@@ -807,39 +999,51 @@
       a.click();
     }
 
-    // 一鍵匯出購物車 Word
+    // 【二、購物車 Word 匯出】：依來源 Context 嚴格分組輸出，絕不混淆
     function exportWordFromCart() {
-      const cartInds = cart.map(id => INDICATORS.find(x => x.indicator_id === id)).filter(Boolean);
-      const perfs = cartInds.filter(x => x.indicator_type === 'PERFORMANCE');
-      const conts = cartInds.filter(x => x.indicator_type === 'CONTENT');
+      const groups = groupCartItemsByContext();
+      if (groups.length === 0) {
+        alert("購物車內目前沒有指標！");
+        return;
+      }
+
+      let groupsHtml = "";
+      for (const g of groups) {
+        groupsHtml += `
+          <h2 style="color: #1e3a8a; border-bottom: 2px solid #1e3a8a; padding-bottom: 5px; margin-top: 30px;">${g.title}</h2>
+          <p style="font-size: 10pt; color: #64748b;">來源：${g.title} ｜ 總計：${g.perfs.length + g.conts.length} 條</p>
+
+          <h3 style="color: #1d4ed8; margin-top: 15px;">🎯 學習表現 (PERFORMANCE) - 共 ${g.perfs.length} 筆</h3>
+          <table>
+            <tr><th>指標代碼</th><th>官方學習表現條文</th></tr>
+            ${g.perfs.length ? g.perfs.map(i => `<tr><td class="code-cell">${i.code}</td><td>${i.text}</td></tr>`).join('') : '<tr><td colspan="2" style="text-align:center;">無選取項目</td></tr>'}
+          </table>
+
+          <h3 style="color: #15803d; margin-top: 15px;">📖 學習內容 (CONTENT) - 共 ${g.conts.length} 筆</h3>
+          <table>
+            <tr><th>指標代碼</th><th>官方學習內容條文</th></tr>
+            ${g.conts.length ? g.conts.map(i => `<tr><td class="code-cell">${i.code}</td><td>${i.text}</td></tr>`).join('') : '<tr><td colspan="2" style="text-align:center;">無選取項目</td></tr>'}
+          </table>
+          <br>
+        `;
+      }
 
       const docContent = `
         <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
-        <head><meta charset='utf-8'><title>IEP自選指標清單</title>
+        <head><meta charset='utf-8'><title>IEP自選指標清單_依來源分組</title>
         <style>
           body { font-family: '標楷體', 'Times New Roman', serif; }
-          h2 { text-align: center; color: #1e3a8a; }
-          table { width: 100%; border-collapse: collapse; margin-top: 15px; margin-bottom: 25px; }
+          table { width: 100%; border-collapse: collapse; margin-top: 10px; margin-bottom: 20px; }
           th, td { border: 1px solid #333; padding: 8px 10px; font-size: 11pt; }
           th { background-color: #f1f5f9; text-align: center; font-weight: bold; }
           .code-cell { width: 18%; text-align: center; font-weight: bold; }
         </style>
         </head>
         <body>
-          <h2>桃園市國小特教 IEP 自選指標清單 (購物車匯出)</h2>
-          <p>匯出時間：${new Date().toLocaleString('zh-TW')} ｜ 自選指標總數：${cartInds.length} 筆</p>
-          
-          <h3>🎯 一、學習表現 (PERFORMANCE) - 共 ${perfs.length} 筆</h3>
-          <table>
-            <tr><th>指標代碼</th><th>領域/科目</th><th>官方學習表現條文</th></tr>
-            ${perfs.map(i => `<tr><td class="code-cell">${i.code}</td><td style="text-align:center">${i.domain}</td><td>${i.text}</td></tr>`).join('')}
-          </table>
-
-          <h3>📖 二、學習內容 (CONTENT) - 共 ${conts.length} 筆</h3>
-          <table>
-            <tr><th>指標代碼</th><th>領域/科目</th><th>官方學習內容條文</th></tr>
-            ${conts.map(i => `<tr><td class="code-cell">${i.code}</td><td style="text-align:center">${i.domain}</td><td>${i.text}</td></tr>`).join('')}
-          </table>
+          <h1 style="text-align: center; color: #0f172a;">桃園市國小特教 IEP 自選指標清單 (依來源分組匯出)</h1>
+          <p style="text-align: center; font-size: 11pt; color: #475569;">匯出時間：${new Date().toLocaleString('zh-TW')} ｜ 自選指標總數：${cart.length} 筆 ｜ 分組數：${groups.length} 組</p>
+          <hr style="border: 1px solid #cbd5e1; margin: 20px 0;">
+          ${groupsHtml}
         </body>
         </html>
       `;
@@ -848,8 +1052,94 @@
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `IEP自選指標清單_${new Date().toISOString().slice(0,10)}.doc`;
+      a.download = `IEP自選指標清單_依來源分組_${new Date().toISOString().slice(0,10)}.doc`;
       a.click();
+    }
+
+    // 【三、標準 JSON 匯出】：每個 item 均完整包含 selection_context
+    function exportJsonForToolB() {
+      if (cart.length === 0) {
+        alert("購物車內目前沒有指標！");
+        return;
+      }
+
+      const payload = {
+        schema: "IEP_INDICATOR_TRANSFER",
+        version: "2.0",
+        exported_at: new Date().toISOString(),
+        student_profile: {
+          school_year: "115學年度",
+          county: "桃園市"
+        },
+        selected_indicators: cart.map(item => ({
+          indicator_id: item.indicator_id,
+          code: item.code,
+          text: item.text,
+          domain: item.domain,
+          subject: item.subject,
+          indicator_type: item.indicator_type,
+          stage: item.stage,
+          selection_context: {
+            entrance: item.source_context.entrance,
+            publisher: item.source_context.publisher || null,
+            grade: item.source_context.grade || null,
+            semester: item.source_context.semester || null,
+            subject: item.source_context.subject || null,
+            specSubject: item.source_context.specSubject || null,
+            stage: item.source_context.stage || null
+          }
+        }))
+      };
+
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `iep_indicators_transfer_${new Date().toISOString().slice(0,10)}.json`;
+      a.click();
+    }
+
+    // 一鍵複製當前檢索文字
+    function copyCurrentViewText() {
+      const data = getCurrentViewData();
+      let text = "";
+      if (currentEntrance === 1) {
+        const semName = filterState.semester === '1' ? '上學期' : '下學期';
+        const subjName = filterState.subject === '國語' ? '國語文' : '數學';
+        text += `【${filterState.publisher}版 ${filterState.grade}年級${semName} ${subjName}】\n\n`;
+        text += `🎯 學習表現 (${data.perfIndicators.length} 條)\n`;
+        data.perfIndicators.forEach(i => { text += `${i.code}：${i.text}\n`; });
+        text += `\n📖 學習內容 (${data.contIndicators.length} 條)\n`;
+        data.contIndicators.forEach(i => { text += `${i.code}：${i.text}\n`; });
+      } else {
+        text += `【IEP 官方指標清單】\n\n🎯 學習表現 (${data.perfIndicators.length} 條)\n`;
+        data.perfIndicators.forEach(i => { text += `${i.code}：${i.text}\n`; });
+        text += `\n📖 學習內容 (${data.contIndicators.length} 條)\n`;
+        data.contIndicators.forEach(i => { text += `${i.code}：${i.text}\n`; });
+      }
+      navigator.clipboard.writeText(text).then(() => alert("📋 指標清單已成功複製至剪貼簿！"));
+    }
+
+    // 一鍵複製購物車文字 (分組輸出)
+    function copyCartText() {
+      const groups = groupCartItemsByContext();
+      if (groups.length === 0) {
+        alert("購物車內目前沒有指標！");
+        return;
+      }
+
+      let text = "【IEP 自選指標清單 (依來源分組)】\n\n";
+      for (const g of groups) {
+        text += `=====================================\n`;
+        text += `${g.title}\n`;
+        text += `=====================================\n\n`;
+        text += `🎯 學習表現 (${g.perfs.length} 條)：\n`;
+        g.perfs.forEach(i => { text += `${i.code}：${i.text}\n`; });
+        text += `\n📖 學習內容 (${g.conts.length} 條)：\n`;
+        g.conts.forEach(i => { text += `${i.code}：${i.text}\n`; });
+        text += `\n\n`;
+      }
+      navigator.clipboard.writeText(text).then(() => alert("📋 自選指標已依來源分組複製至剪貼簿！"));
     }
 
     // 複製 AI Prompt
@@ -859,47 +1149,6 @@
       const cCodes = data.contIndicators.map(i => `${i.code}(${i.text})`).join('、');
       const prompt = `請根據以下桃園市國小特教官方指標，為一位學習障礙/特教學生撰寫符合 SMART 原則之學期個別化教育計畫 (IEP) 學年與學期目標：\n\n【學習表現】：${pCodes}\n\n【學習內容】：${cCodes}\n\n請輸出包含：1. 學年目標 2. 學期目標 3. 評量標準 4. 評量方式。`;
       navigator.clipboard.writeText(prompt).then(() => alert("🤖 AI Prompt 已複製至剪貼簿！"));
-    }
-
-    // 匯出 JSON 供 工具 B 匯入
-    function exportJsonForToolB() {
-      const cartInds = cart.map(id => INDICATORS.find(x => x.indicator_id === id)).filter(Boolean);
-      const payload = {
-        schema: "IEP_INDICATOR_TRANSFER",
-        version: "1.0",
-        exported_at: new Date().toISOString(),
-        student_profile: {
-          school_year: "115學年度",
-          county: "桃園市"
-        },
-        selected_indicators: cartInds.map(i => ({
-          indicator_id: i.indicator_id,
-          code: i.code,
-          text: i.text,
-          domain: i.domain,
-          subject: i.subject,
-          indicator_type: i.indicator_type,
-          stage: i.stage
-        }))
-      };
-      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json;charset=utf-8" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `iep_indicators_transfer_${new Date().toISOString().slice(0,10)}.json`;
-      a.click();
-    }
-
-    function copyCartText() {
-      const cartInds = cart.map(id => INDICATORS.find(x => x.indicator_id === id)).filter(Boolean);
-      const perfs = cartInds.filter(x => x.indicator_type === 'PERFORMANCE');
-      const conts = cartInds.filter(x => x.indicator_type === 'CONTENT');
-
-      let text = "【IEP 自選指標清單】\n\n🎯 學習表現：\n";
-      perfs.forEach(i => { text += `${i.code}：${i.text}\n`; });
-      text += "\n📖 學習內容：\n";
-      conts.forEach(i => { text += `${i.code}：${i.text}\n`; });
-      navigator.clipboard.writeText(text).then(() => alert("📋 自選指標已複製至剪貼簿！"));
     }
 
     // 診斷 Modal
@@ -919,7 +1168,7 @@
         <div class="text-slate-600 mt-2">
           • 課程計畫單元總數：<strong>${PLANS.length} 個單元</strong><br>
           • 學習表現與內容雙向連結總數：<strong>${LINKS.length} 條關聯</strong><br>
-          • 翰林、康軒、南一、部編 1～6 年級全學期國語與數學均具備去重排序學習表現與內容。
+          • 購物車全面啟用 <strong>Context 來源獨立追蹤 (cartKey)</strong>，上下學期完全隔離，永不污染。
         </div>
       `;
       document.getElementById('modal-diagnostics').classList.remove('hidden');
