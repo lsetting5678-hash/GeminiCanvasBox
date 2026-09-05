@@ -1795,8 +1795,14 @@ const startGame = () => {
 
 // 載入指定題目
 const loadQuestion = (index) => {
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.cancel(); // 立即停止上一題的語音朗讀
+  }
   isAnswering = false;
   const q = questions[index];
+
+  // 滾動回最上方題目區
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 
   // 更新題號與分數
   elements.playingProgressText.textContent = index + 1;
@@ -1900,6 +1906,9 @@ const handleOptionClick = (selectedOpt, clickedBtn, q) => {
 
 // 進入下一題或結算
 const advanceQuestion = () => {
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.cancel(); // 進入下一題時立即停止語音
+  }
   if (currentIndex < questions.length - 1) {
     currentIndex++;
     loadQuestion(currentIndex);
@@ -1910,8 +1919,12 @@ const advanceQuestion = () => {
 
 // --- 結算畫面 ---
 const showResult = () => {
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.cancel(); // 結算時停止語音
+  }
   views.playing.classList.add('hidden');
   views.result.classList.remove('hidden');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 
   playAudioEffect('cheer');
 
