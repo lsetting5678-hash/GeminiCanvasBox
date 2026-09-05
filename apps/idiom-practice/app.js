@@ -1,125 +1,1432 @@
-/* i:\AntiGravity0606\idiom-practice\app.js */
+// 翰林版國語成語大師 - 三下與四上成語精熟練習
+// 資料庫包含：三下（86個成語）與 四上（77個成語），共計 163 個成語
 
-// 嚴格取自提供的教材資料（1-12課，包含生字延伸與習作補充，共86個成語）
-const idiomsData = [
-  // 第一課 (6)
-  { lesson: 1, idiom: "一毛不拔", meaning: "形容人非常小氣。", sentence: "要他這個＿＿＿＿的人來請客,比登天還難。" },
-  { lesson: 1, idiom: "家徒四壁", meaning: "家中只剩下四周的牆壁。形容家境極為貧困。", sentence: "雖然他現在已有一番成就,但他的童年是在＿＿＿＿的環境中度過。" },
-  { lesson: 1, idiom: "如願以償", meaning: "心願得以實現。", sentence: "他相信只要努力,夢想終會＿＿＿＿。" },
-  { lesson: 1, idiom: "一觸即發", meaning: "一經觸動就立即有所感發或反應。後用來比喻很緊張的情勢或很危險的時刻。", sentence: "這兩個人意見不合,你一言我一語的,激烈的爭辯＿＿＿＿!" },
-  { lesson: 1, idiom: "專心致志", meaning: "專一心思,集中精神。", sentence: "他正＿＿＿＿的準備段考,你別打擾他。" },
-  { lesson: 1, idiom: "亡羊補牢", meaning: "丟失了羊,就趕快修補羊圈。比喻犯錯後及時更正,尚能補救。", sentence: "以前努力不夠,現在＿＿＿＿還來得及,千萬不可自暴自棄。" },
-  
-  // 第二課 (6)
-  { lesson: 2, idiom: "差強人意", meaning: "比喻雖然不夠好,但整體上還能讓人滿意。", sentence: "他今天的表現還算＿＿＿＿,希望下一場比賽他能發揮應有的實力。" },
-  { lesson: 2, idiom: "以管窺天", meaning: "比喻見識片面而狹窄。", sentence: "他的觀點只是＿＿＿＿,並沒有看到問題的全貌。" },
-  { lesson: 2, idiom: "隱姓埋名", meaning: "隱瞞姓名,不讓別人知道真實的身分。", sentence: "這位大作家退休之後,就＿＿＿＿,住到深山裡,不再寫作了。" },
-  { lesson: 2, idiom: "模稜兩可", meaning: "比喻處理事情的態度含混,不表示明確的意見或主張。", sentence: "你說話＿＿＿＿,我無法了解你真實的想法。" },
-  { lesson: 2, idiom: "奮不顧身", meaning: "奮勇向前,不顧生死。", sentence: "車禍發生時,他＿＿＿＿的搶救受傷的乘客。" },
-  { lesson: 2, idiom: "不甘示弱", meaning: "不甘心表現得比別人差。", sentence: "緊跟著日本隊之後,中華隊＿＿＿＿也投進了一個三分球。" },
-  
-  // 第三課 (6)
-  { lesson: 3, idiom: "同病相憐", meaning: "有同樣不幸遭遇的人互相同情。", sentence: "這對＿＿＿＿的朋友,總是甘苦與共,感情十分深厚。" },
-  { lesson: 3, idiom: "脫胎換骨", meaning: "比喻澈底改變。", sentence: "透過藝術家的精心設計,讓這些廢棄物＿＿＿＿,變成耀眼的藝術品。" },
-  { lesson: 3, idiom: "心驚膽戰", meaning: "形容十分驚慌害怕。", sentence: "有懼高症的她,只要到稍微高一點的地方,就會感到＿＿＿＿。" },
-  { lesson: 3, idiom: "引人入勝", meaning: "引領人進入美麗奇妙的境地。", sentence: "這篇小說的情節精彩,很能＿＿＿＿。" },
-  { lesson: 3, idiom: "克勤克儉", meaning: "既能勤勞又能節儉。", sentence: "這些年來他過著＿＿＿＿的日子,就是希望能實現出國留學的夢想。" },
-  { lesson: 3, idiom: "對牛彈琴", meaning: "比喻對不懂道理的人講道理,彼此無法溝通。", sentence: "跟他講道理,簡真是＿＿＿＿,得另想辦法才行。" },
-  
-  // 第四課 (6)
-  { lesson: 4, idiom: "集思廣益", meaning: "集合眾人見解,以獲得更大的效益。", sentence: "為了校慶表演,班長要大家＿＿＿＿,想出創新的花樣,希望能有更完美的演出。" },
-  { lesson: 4, idiom: "一塵不染", meaning: "形容非常乾淨,一點灰塵都沒有。", sentence: "他很愛乾淨,家裡總是打掃得＿＿＿＿。" },
-  { lesson: 4, idiom: "門庭若市", meaning: "門庭間來往的人很多,像市集一般熱鬧。比喻上門來的人很多。", sentence: "這家自助餐店物美價廉,因此每到用餐時間,都是＿＿＿＿。" },
-  { lesson: 4, idiom: "躍然紙上", meaning: "形容描繪的對象非常生動逼真。", sentence: "他的畫技高超,所畫的花鳥看起來生動活潑,＿＿＿＿。" },
-  { lesson: 4, idiom: "耀武揚威", meaning: "指炫耀武力,誇示威風。後用來形容人得意張揚的樣子。", sentence: "你別＿＿＿＿得太早,誰勝誰負還不一定!" },
-  { lesson: 4, idiom: "否極泰來", meaning: "情況由壞逐漸好轉。", sentence: "叔叔辛苦奮鬥了好幾年,終於＿＿＿＿,生意逐漸有起色,全家人都為他感到開心。" },
-  
-  // 第五課 (6)
-  { lesson: 5, idiom: "衣錦還鄉", meaning: "形容人功成名就後榮歸故鄉。", sentence: "她到國外留學,經過四年苦讀,如今終於完成學業,可以高興的＿＿＿＿了!" },
-  { lesson: 5, idiom: "愛屋及烏", meaning: "因愛一個人,連帶的也愛護停留在他屋上的烏鴉。比喻愛一個人也連帶的關愛與他有關的一切。", sentence: "小明是表姐的好朋友,他總是＿＿＿＿,對我也特別照顧。" },
-  { lesson: 5, idiom: "生龍活虎", meaning: "比喻活潑勇猛,生氣勃勃。", sentence: "球場上的同學們個個＿＿＿＿。" },
-  { lesson: 5, idiom: "鵬程萬里", meaning: "大鵬飛行的路程數萬里。後用「鵬程萬里」比喻前程遠大,不可限量。", sentence: "校長在畢業典禮上祝福每一位畢業生＿＿＿＿,一帆風順。" },
-  { lesson: 5, idiom: "矯揉造作", meaning: "虛假做作不自然。", sentence: "他的演技不夠純熟,演起戲來還有一點＿＿＿＿,所以評價不高。" },
-  { lesson: 5, idiom: "嘆為觀止", meaning: "讚美所看到的事物好到極點,無與倫比。", sentence: "看到滿山遍野的油桐花盛開,美不勝收,讓人＿＿＿＿。" },
-  
-  // 第六課 (6)
-  { lesson: 6, idiom: "不速之客", meaning: "沒有邀請就自己來的客人。", sentence: "拜訪他人應該事先聯絡,以免變成＿＿＿＿。" },
-  { lesson: 6, idiom: "眉清目秀", meaning: "形容面貌清秀俊美。", sentence: "他生得＿＿＿＿,很討人喜歡。" },
-  { lesson: 6, idiom: "一丘之貉", meaning: "比喻彼此同樣低劣,並無差異。貶義。", sentence: "他們狼狽為奸,一起做壞事,根本就是＿＿＿＿。" },
-  { lesson: 6, idiom: "包羅萬象", meaning: "形容內容豐富,應有盡有。", sentence: "百貨公司裡的商品,食衣住行樣樣齊全,真是＿＿＿＿。" },
-  { lesson: 6, idiom: "死灰復燃", meaning: "比喻已經平息的事物,又重新活動起來。", sentence: "最近幫派勢力似有＿＿＿＿的跡象,警方正密切注意中。" },
-  { lesson: 6, idiom: "大驚小怪", meaning: "形容為一些不足為奇的小事而過分聲張、驚怪。", sentence: "東西用久了難免會壞,不用這麼＿＿＿＿。" },
-  
-  // 第七課 (6生字 + 6習作 = 12)
-  { lesson: 7, idiom: "將信將疑", meaning: "有點相信,又有點疑惑。形容對事情的真假,無法明確判斷。", sentence: "除了他堅信不疑外,大家對這件事都是＿＿＿＿,難以辨別真假。" },
-  { lesson: 7, idiom: "適可而止", meaning: "指事情做到恰到好處就該停止。", sentence: "對別人開玩笑應該＿＿＿＿,否則可能會引起不必要的衝突。" },
-  { lesson: 7, idiom: "鐵石心腸", meaning: "形容人意志堅定,不為感情所動。", sentence: "小明從來就不是個＿＿＿＿的人,怎麼近來突然變得如此冷酷無情,令人百思不得其解。" },
-  { lesson: 7, idiom: "康莊大道", meaning: "比喻光明的前途。", sentence: "我們要互相勉勵,攜手邁向＿＿＿＿。" },
-  { lesson: 7, idiom: "故步自封", meaning: "比喻墨守成規,不知變通。", sentence: "做學問不能＿＿＿＿,否則將難以進步。" },
-  { lesson: 7, idiom: "再接再厲", meaning: "比喻勇往直前,不因挫折而懈怠。", sentence: "希望他得獎後能夠＿＿＿＿,創造更好的成績。" },
-  { lesson: 7, idiom: "古道熱腸", meaning: "形容待人仁厚、熱心。", sentence: "老闆是個＿＿＿＿的人。" },
-  { lesson: 7, idiom: "心血來潮", meaning: "心中忽然產生某種念頭。", sentence: "假日時，爸爸＿＿＿＿，想帶全家人去海邊遊玩。" },
-  { lesson: 7, idiom: "心裡有數", meaning: "對事情的實際情況有大略的了解。", sentence: "看到排隊人潮，姐姐＿＿＿＿，知道一定要排很久。" },
-  { lesson: 7, idiom: "心平氣和", meaning: "心氣平和，不急躁發怒。", sentence: "面對他激動的情緒，老師仍舊＿＿＿＿的跟他說明道理。" },
-  { lesson: 7, idiom: "心甘情願", meaning: "心裡完全願意，沒有一點勉強。", sentence: "經過一番開導，對於犯下的過錯，他總算＿＿＿＿的承認。" },
-  { lesson: 7, idiom: "心滿意足", meaning: "心裡非常的滿足。", sentence: "買到了想要的玩具，妹妹＿＿＿＿的回家。" },
-  
-  // 第八課 (6生字 + 3習作 = 9)
-  { lesson: 8, idiom: "愁眉不展", meaning: "雙眉緊鎖,很憂愁的樣子。", sentence: "父親的病情不太樂觀,為此母親終日＿＿＿＿。" },
-  { lesson: 8, idiom: "紙上談兵", meaning: "在文字上談論用兵的策略。後用「紙上談兵」比喻不切實際的議論。", sentence: "這些提案只是＿＿＿＿,所以在開會討論時全數遭到否決。" },
-  { lesson: 8, idiom: "事半功倍", meaning: "事情只用一半的心力,而功效加倍。形容費力少而收效大。後用「事半功倍」比喻工作效率高。", sentence: "由於有位老師傅的指導,所以大家做起事來,都收到＿＿＿＿的成效。" },
-  { lesson: 8, idiom: "疾言厲色", meaning: "指言語急迫,神色嚴厲。形容人發怒的樣子。", sentence: "老師對我們一直很有耐心,即使犯錯了也從不＿＿＿＿。" },
-  { lesson: 8, idiom: "高抬貴手", meaning: "請求寬容饒恕的客套話。", sentence: "我們再三幫他求情,對方才肯＿＿＿＿,不再計較。" },
-  { lesson: 8, idiom: "胸有成竹", meaning: "指畫竹之前,心中早已有了竹子的完整形象。後用「胸有成竹」比喻處事有定見。", sentence: "經過長期的準備,他對於如何贏得這場比賽早已＿＿＿＿。" },
-  { lesson: 8, idiom: "精神百倍", meaning: "形容精神非常旺盛。", sentence: "我們班裝扮成士兵，抬頭挺胸，＿＿＿＿的邁開整齊步伐。" },
-  { lesson: 8, idiom: "不疾不徐", meaning: "不快不慢，從容不迫。", sentence: "某些班級打扮成舞者，＿＿＿＿的踩著舞步進場。" },
-  { lesson: 8, idiom: "前功盡棄", meaning: "以前辛苦獲得的成果，全部廢棄。", sentence: "他為了完成夢寐以求的心願，花了一大筆錢，最終卻＿＿＿＿。" },
-  
-  // 第九課 (6生字 + 2習作 = 8)
-  { lesson: 9, idiom: "赴湯蹈火", meaning: "甘願奔投至烈火沸水當中。比喻奮不顧身,不避艱險。", sentence: "他早已下定了＿＿＿＿的決心,要挑戰任何艱難險阻。" },
-  { lesson: 9, idiom: "司空見慣", meaning: "比喻經常看到,不足為奇。", sentence: "這事對我們來說早已＿＿＿＿,不值得大驚小怪。" },
-  { lesson: 9, idiom: "錙銖必較", meaning: "斤斤計較。", sentence: "他這種＿＿＿＿的個性,得罪不少親朋好友。" },
-  { lesson: 9, idiom: "無理取鬧", meaning: "比喻不合情理的吵鬧或故意搗亂。", sentence: "他提出的要求非常合理,並不是＿＿＿＿。" },
-  { lesson: 9, idiom: "化險為夷", meaning: "轉化危險為平安。", sentence: "有了醫護人員的細心照顧,爺爺的病情才能＿＿＿＿。" },
-  { lesson: 9, idiom: "輕而易舉", meaning: "形容非常輕鬆,毫不費力。", sentence: "想要在茫茫人海中找到失散多年的親人,可不是件＿＿＿＿的事。" },
-  { lesson: 9, idiom: "一舉兩得", meaning: "做一件事而得到兩種好處。", sentence: "喝茶除了解渴，還能幫助消化，真是＿＿＿＿。" },
-  { lesson: 9, idiom: "十萬八千里", meaning: "形容距離極遠。", sentence: "住在義大利的保羅和美國的以賽亞，雖然距離＿＿＿＿遠，都吃了薯條、漢堡和披薩。" },
-  
-  // 第十課 (6生字 + 2習作 = 8)
-  { lesson: 10, idiom: "無濟於事", meaning: "對事情毫無幫助。", sentence: "事情既然已經發生,你再怎麼怪他也＿＿＿＿了。" },
-  { lesson: 10, idiom: "不修邊幅", meaning: "形容不注意衣飾、儀容的打扮。", sentence: "別看他＿＿＿＿的模樣,做起事來可是相當認真。" },
-  { lesson: 10, idiom: "按圖索驥", meaning: "比喻按照所掌握的線索辦事。", sentence: "你帶著地圖＿＿＿＿,很快就會找到露營的地方。" },
-  { lesson: 10, idiom: "畫蛇添足", meaning: "比喻多此一舉,反將事情弄糟。", sentence: "你加上的這段話,有點＿＿＿＿,不如刪掉。" },
-  { lesson: 10, idiom: "揮金如土", meaning: "比喻極端浪費錢財。", sentence: "他自從中了彩券後,便過著＿＿＿＿、極度浪費的生活。" },
-  { lesson: 10, idiom: "既往不咎", meaning: "對過去的錯誤不再追究責難。", sentence: "過去的恩怨,我們就此＿＿＿＿,從今以後依然是好朋友。" },
-  { lesson: 10, idiom: "目瞪口呆", meaning: "受驚或受窘以致神情痴呆的樣子。", sentence: "消防隊員一邊指揮＿＿＿＿的民眾離開現場，一邊搜尋哪裡還有人受困。" },
-  { lesson: 10, idiom: "愛不釋手", meaning: "喜歡得捨不得放手。", sentence: "書架上的書有白雪公主、灰姑娘、阿拉丁……每一本我都＿＿＿＿。" },
-  
-  // 第十一課 (6生字 + 5習作 = 11)
-  { lesson: 11, idiom: "進退維谷", meaning: "形容前進後退都無路可走的困窘處境。", sentence: "走到半路,沒油了;這裡前不見村,後不著店,真是＿＿＿＿。" },
-  { lesson: 11, idiom: "名落孫山", meaning: "指參加考試或選拔沒有被錄取。", sentence: "他成績那麼好,卻＿＿＿＿,真是令人意外。" },
-  { lesson: 11, idiom: "信誓旦旦", meaning: "指誓言說得非常誠懇可信。", sentence: "警察局長＿＿＿＿的表示絕不袒護部屬,一切秉公處理。" },
-  { lesson: 11, idiom: "另眼相看", meaning: "以特別的眼光或態度相待,以示重視或歧視。", sentence: "只要我們有實力,別人自然會＿＿＿＿。" },
-  { lesson: 11, idiom: "豁然開朗", meaning: "形容心境忽然變得開闊暢快,也用於形容突然領悟到某個道理。", sentence: "小明查了這部百科全書後,頓時＿＿＿＿,解決多年的疑惑。" },
-  { lesson: 11, idiom: "開誠布公", meaning: "比喻誠意待人,坦白無私。", sentence: "我希望你們能＿＿＿＿的談一談,以化解彼此的誤會。" },
-  { lesson: 11, idiom: "畫龍點睛", meaning: "在最重要的地方加上一筆的修飾，使事物變得更加生動。", sentence: "經過作家＿＿＿＿，這篇文章變得更加生動了。" },
-  { lesson: 11, idiom: "雷電交加", meaning: "雷聲與閃電交錯出現。", sentence: "窗外大雨滂沱，＿＿＿＿，小嬰兒被嚇得哇哇大哭。" },
-  { lesson: 11, idiom: "大雨滂沱", meaning: "形容雨下得非常大。", sentence: "窗外＿＿＿＿，雷電交加，小嬰兒被嚇得哇哇大哭。" },
-  { lesson: 11, idiom: "烏雲密布", meaning: "黑雲布滿天空。", sentence: "早上萬里無雲的好天氣，到了下午天空卻突然＿＿＿＿。" },
-  { lesson: 11, idiom: "維妙維肖", meaning: "形容描繪的對象非常精細巧妙，逼真傳神。", sentence: "他把百合花畫得精細巧妙，＿＿＿＿，讓人彷彿能從畫裡聞到花兒的芬芳。" },
-  
-  // 第十二課 (6生字 + 1習作 = 7)
-  { lesson: 12, idiom: "民不聊生", meaning: "形容百姓生活非常困苦。", sentence: "戰爭往往造成＿＿＿＿,家破人亡的後果。" },
-  { lesson: 12, idiom: "抱頭鼠竄", meaning: "形容匆忙逃跑的狼狽樣子。", sentence: "地震時,所有人都驚惶失措,＿＿＿＿。" },
-  { lesson: 12, idiom: "芒刺在背", meaning: "比喻痛苦或內心極度恐懼不安。", sentence: "第一次上臺演說,看著這麼多人瞪著我,真使我有＿＿＿＿的感覺。" },
-  { lesson: 12, idiom: "朝令夕改", meaning: "早上下達的命令,到晚上就更改了。比喻政令、主張或意見反覆無常。", sentence: "這個網站上公告的報名方法不斷＿＿＿＿,引起了不少的爭議。" },
-  { lesson: 12, idiom: "夢寐以求", meaning: "形容願望強烈、迫切。", sentence: "成為一個飛行員,是我從小就＿＿＿＿的事。" },
-  { lesson: 12, idiom: "兵荒馬亂", meaning: "形容戰爭所造成的混亂景象。", sentence: "一旦戰爭開打,必然到處＿＿＿＿,人們顛沛困頓,流離失所。" },
-  { lesson: 12, idiom: "不可思議", meaning: "指事物神祕奧妙，令人難以想像。", sentence: "小販覺得眼前的一切，真是＿＿＿＿。" }
+const idiomsDatabase = [
+  {
+    "semester": "3下",
+    "lesson": 1,
+    "lessonTitle": "許願",
+    "idiom": "一毛不拔",
+    "meaning": "形容人非常小氣。",
+    "sentence": "要他這個＿＿＿＿的人來請客，比登天還難。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 1,
+    "lessonTitle": "許願",
+    "idiom": "家徒四壁",
+    "meaning": "家中只剩下四周的牆壁。形容家境極為貧困。",
+    "sentence": "雖然他現在已有一番成就，但他的童年是在＿＿＿＿的環境中度過。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 1,
+    "lessonTitle": "許願",
+    "idiom": "如願以償",
+    "meaning": "心願得以實現。",
+    "sentence": "他相信只要努力，夢想終會＿＿＿＿。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 1,
+    "lessonTitle": "許願",
+    "idiom": "一觸即發",
+    "meaning": "一經觸動就立即有所感發或反應。後用來比喻很緊張的情勢或很危險的時刻。",
+    "sentence": "這兩個人意見不合，你一言我一語的，激烈的爭辯＿＿＿＿！"
+  },
+  {
+    "semester": "3下",
+    "lesson": 1,
+    "lessonTitle": "許願",
+    "idiom": "專心致志",
+    "meaning": "專一心思，集中精神。",
+    "sentence": "他正＿＿＿＿的準備段考，你別打擾他。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 1,
+    "lessonTitle": "許願",
+    "idiom": "亡羊補牢",
+    "meaning": "丟失了羊，就趕快修補羊圈。比喻犯錯後及時更正，尚能補救。",
+    "sentence": "以前努力不夠，現在＿＿＿＿還來得及，千萬不可自暴自棄。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 2,
+    "lessonTitle": "愛心樹",
+    "idiom": "差強人意",
+    "meaning": "比喻雖然不夠好，但整體上還能讓人滿意。",
+    "sentence": "他今天的表現還算＿＿＿＿，希望下一場比賽他能發揮應有的實力。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 2,
+    "lessonTitle": "愛心樹",
+    "idiom": "以管窺天",
+    "meaning": "比喻見識片面而狹窄。",
+    "sentence": "他的觀點只是＿＿＿＿，並沒有看到問題的全貌。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 2,
+    "lessonTitle": "愛心樹",
+    "idiom": "隱姓埋名",
+    "meaning": "隱瞞姓名，不讓別人知道真實的身分。",
+    "sentence": "這位大作家退休之後，就＿＿＿＿，住到深山裡，不再寫作了。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 2,
+    "lessonTitle": "愛心樹",
+    "idiom": "模稜兩可",
+    "meaning": "比喻處理事情的態度含混，不表示明確的意見或主張。",
+    "sentence": "你說話＿＿＿＿，我無法了解你真實的想法。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 2,
+    "lessonTitle": "愛心樹",
+    "idiom": "奮不顧身",
+    "meaning": "奮勇向前，不顧生死。",
+    "sentence": "車禍發生時，他＿＿＿＿的搶救受傷的乘客。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 2,
+    "lessonTitle": "愛心樹",
+    "idiom": "不甘示弱",
+    "meaning": "不甘心表現得比別人差。",
+    "sentence": "緊跟著日本隊之後，中華隊＿＿＿＿也投進了一個三分球。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 3,
+    "lessonTitle": "鳥兒的家",
+    "idiom": "同病相憐",
+    "meaning": "有同樣不幸遭遇的人互相同情。",
+    "sentence": "這對＿＿＿＿的朋友，總是甘苦與共，感情十分深厚。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 3,
+    "lessonTitle": "鳥兒的家",
+    "idiom": "脫胎換骨",
+    "meaning": "比喻澈底改變。",
+    "sentence": "透過藝術家的精心設計，讓這些廢棄物＿＿＿＿，變成耀眼的藝術品。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 3,
+    "lessonTitle": "鳥兒的家",
+    "idiom": "心驚膽戰",
+    "meaning": "形容十分驚慌害怕。",
+    "sentence": "有懼高症的她，只要到稍微高一點的地方，就會感到＿＿＿＿。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 3,
+    "lessonTitle": "鳥兒的家",
+    "idiom": "引人入勝",
+    "meaning": "引領人進入美麗奇妙的境地。",
+    "sentence": "這篇小說的情節精彩，很能＿＿＿＿。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 3,
+    "lessonTitle": "鳥兒的家",
+    "idiom": "克勤克儉",
+    "meaning": "既能勤勞又能節儉。",
+    "sentence": "這些年來他過著＿＿＿＿的日子，就是希望能實現出國留學的夢想。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 3,
+    "lessonTitle": "鳥兒的家",
+    "idiom": "對牛彈琴",
+    "meaning": "比喻對不懂道理的人講道理，彼此無法溝通。",
+    "sentence": "跟他講道理，簡真是＿＿＿＿，得另想辦法才行。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 4,
+    "lessonTitle": "下雨的時候",
+    "idiom": "集思廣益",
+    "meaning": "集合眾人見解，以獲得更大的效益。",
+    "sentence": "為了校慶表演，班長要大家＿＿＿＿，想出創新的花樣，希望能有更完美的演出。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 4,
+    "lessonTitle": "下雨的時候",
+    "idiom": "一塵不染",
+    "meaning": "形容非常乾淨，一點灰塵都沒有。",
+    "sentence": "他很愛乾淨，家裡總是打掃得＿＿＿＿。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 4,
+    "lessonTitle": "下雨的時候",
+    "idiom": "門庭若市",
+    "meaning": "門庭間來往的人很多，像市集一般熱鬧。比喻上門來的人很多。",
+    "sentence": "這家自助餐店物美價廉，因此每到用餐時間，都是＿＿＿＿。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 4,
+    "lessonTitle": "下雨的時候",
+    "idiom": "躍然紙上",
+    "meaning": "形容描繪的對象非常生動逼真。",
+    "sentence": "他的畫技高超，所畫的花鳥看起來生動活潑，＿＿＿＿。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 4,
+    "lessonTitle": "下雨的時候",
+    "idiom": "耀武揚威",
+    "meaning": "指炫耀武力，誇示威風。後用來形容人得意張揚的樣子。",
+    "sentence": "你別＿＿＿＿得太早，誰勝誰負還不一定！"
+  },
+  {
+    "semester": "3下",
+    "lesson": 4,
+    "lessonTitle": "下雨的時候",
+    "idiom": "否極泰來",
+    "meaning": "情況由壞逐漸好轉。",
+    "sentence": "叔叔辛苦奮鬥了好幾年，終於＿＿＿＿，生意逐漸有起色，全家人都為他感到開心。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 5,
+    "lessonTitle": "油桐花祭",
+    "idiom": "衣錦還鄉",
+    "meaning": "形容人功成名就後榮歸故鄉。",
+    "sentence": "她到國外留學，經過四年苦讀，如今終於完成學業，可以高興的＿＿＿＿了！"
+  },
+  {
+    "semester": "3下",
+    "lesson": 5,
+    "lessonTitle": "油桐花祭",
+    "idiom": "愛屋及烏",
+    "meaning": "因愛一個人，連帶的也愛護停留在他屋上的烏鴉。比喻愛一個人也連帶的關愛與他有關的一切。",
+    "sentence": "小明是表姐的好朋友，他總是＿＿＿＿，對我也特別照顧。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 5,
+    "lessonTitle": "油桐花祭",
+    "idiom": "生龍活虎",
+    "meaning": "比喻活潑勇猛，生氣勃勃。",
+    "sentence": "球場上的同學們個個＿＿＿＿。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 5,
+    "lessonTitle": "油桐花祭",
+    "idiom": "鵬程萬里",
+    "meaning": "大鵬飛行的路程數萬里。後用「鵬程萬里」比喻前程遠大，不可限量。",
+    "sentence": "校長在畢業典禮上祝福每一位畢業生＿＿＿＿，一帆風順。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 5,
+    "lessonTitle": "油桐花祭",
+    "idiom": "矯揉造作",
+    "meaning": "虛假做作不自然。",
+    "sentence": "他的演技不夠純熟，演起戲來還有一點＿＿＿＿，所以評價不高。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 5,
+    "lessonTitle": "油桐花祭",
+    "idiom": "嘆為觀止",
+    "meaning": "讚美所看到的事物好到極點，無與倫比。",
+    "sentence": "看到滿山遍野的油桐花盛開，美不勝收，讓人＿＿＿＿。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 6,
+    "lessonTitle": "鴨子農夫",
+    "idiom": "不速之客",
+    "meaning": "沒有邀請就自己來的客人。",
+    "sentence": "拜訪他人應該事先聯絡，以免變成＿＿＿＿。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 6,
+    "lessonTitle": "鴨子農夫",
+    "idiom": "眉清目秀",
+    "meaning": "形容面貌清秀俊美。",
+    "sentence": "他生得＿＿＿＿，很討人喜歡。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 6,
+    "lessonTitle": "鴨子農夫",
+    "idiom": "一丘之貉",
+    "meaning": "比喻彼此同樣低劣，並無差異。貶義。",
+    "sentence": "他們狼狽為奸，一起做壞事，根本就是＿＿＿＿。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 6,
+    "lessonTitle": "鴨子農夫",
+    "idiom": "包羅萬象",
+    "meaning": "形容內容豐富，應有盡有。",
+    "sentence": "百貨公司裡的商品，食衣住行樣樣齊全，真是＿＿＿＿。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 6,
+    "lessonTitle": "鴨子農夫",
+    "idiom": "死灰復燃",
+    "meaning": "比喻已經平息的事物，又重新活動起來。",
+    "sentence": "最近幫派勢力似有＿＿＿＿的跡象，警方正密切注意中。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 6,
+    "lessonTitle": "鴨子農夫",
+    "idiom": "大驚小怪",
+    "meaning": "形容為一些不足為奇的小事而過分聲張、驚怪。",
+    "sentence": "東西用久了難免會壞，不用這麼＿＿＿＿。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 7,
+    "lessonTitle": "不一樣的醫生",
+    "idiom": "將信將疑",
+    "meaning": "有點相信，又有點疑惑。形容對事情的真假，無法明確判斷。",
+    "sentence": "除了他堅信不疑外，大家對這件事都是＿＿＿＿，難以辨別真假。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 7,
+    "lessonTitle": "不一樣的醫生",
+    "idiom": "適可而止",
+    "meaning": "指事情做到恰到好處就該停止。",
+    "sentence": "對別人開玩笑應該＿＿＿＿，否則可能會引起不必要的衝突。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 7,
+    "lessonTitle": "不一樣的醫生",
+    "idiom": "鐵石心腸",
+    "meaning": "形容人意志堅定，不為感情所動。",
+    "sentence": "小明從來就不是個＿＿＿＿的人，怎麼近來突然變得如此冷酷無情，令人百思不得其解。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 7,
+    "lessonTitle": "不一樣的醫生",
+    "idiom": "康莊大道",
+    "meaning": "比喻光明的前途。",
+    "sentence": "我們要互相勉勵，攜手邁向＿＿＿＿。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 7,
+    "lessonTitle": "不一樣的醫生",
+    "idiom": "故步自封",
+    "meaning": "比喻墨守成規，不知變通。",
+    "sentence": "做學問不能＿＿＿＿，否則將難以進步。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 7,
+    "lessonTitle": "不一樣的醫生",
+    "idiom": "再接再厲",
+    "meaning": "比喻勇往直前，不因挫折而懈怠。",
+    "sentence": "希望他得獎後能夠＿＿＿＿，創造更好的成績。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 7,
+    "lessonTitle": "不一樣的醫生",
+    "idiom": "古道熱腸",
+    "meaning": "形容待人仁厚、熱心。",
+    "sentence": "老闆是個＿＿＿＿的人。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 7,
+    "lessonTitle": "不一樣的醫生",
+    "idiom": "心血來潮",
+    "meaning": "心中忽然產生某種念頭。",
+    "sentence": "假日時，爸爸＿＿＿＿，想帶全家人去海邊遊玩。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 7,
+    "lessonTitle": "不一樣的醫生",
+    "idiom": "心裡有數",
+    "meaning": "對事情的實際情況有大略的了解。",
+    "sentence": "看到排隊人潮，姐姐＿＿＿＿，知道一定要排很久。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 7,
+    "lessonTitle": "不一樣的醫生",
+    "idiom": "心平氣和",
+    "meaning": "心氣平和，不急躁發怒。",
+    "sentence": "面對他激動的情緒，老師仍舊＿＿＿＿的跟他說明道理。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 7,
+    "lessonTitle": "不一樣的醫生",
+    "idiom": "心甘情願",
+    "meaning": "心裡完全願意，沒有一點勉強。",
+    "sentence": "經過一番開導，對於犯下的過錯，他總算＿＿＿＿的承認。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 7,
+    "lessonTitle": "不一樣的醫生",
+    "idiom": "心滿意足",
+    "meaning": "心裡非常的滿足。",
+    "sentence": "買到了想要的玩具，妹妹＿＿＿＿的回家。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 8,
+    "lessonTitle": "巨人的花園",
+    "idiom": "愁眉不展",
+    "meaning": "雙眉緊鎖，很憂愁的樣子。",
+    "sentence": "父親的病情不太樂觀，為此母親終日＿＿＿＿。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 8,
+    "lessonTitle": "巨人的花園",
+    "idiom": "紙上談兵",
+    "meaning": "在文字上談論用兵的策略。後用「紙上談兵」比喻不切實際的議論。",
+    "sentence": "這些提案只是＿＿＿＿，所以在開會討論時全數遭到否決。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 8,
+    "lessonTitle": "巨人的花園",
+    "idiom": "事半功倍",
+    "meaning": "事情只用一半的心力，而功效加倍。形容費力少而收效大。後用「事半功倍」比喻工作效率高。",
+    "sentence": "由於有位老師傅的指導，所以大家做起事來，都收到＿＿＿＿的成效。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 8,
+    "lessonTitle": "巨人的花園",
+    "idiom": "疾言厲色",
+    "meaning": "指言語急迫，神色嚴厲。形容人發怒的樣子。",
+    "sentence": "老師對我們一直很有耐心，即使犯錯了也從不＿＿＿＿。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 8,
+    "lessonTitle": "巨人的花園",
+    "idiom": "高抬貴手",
+    "meaning": "請求寬容饒恕的客套話。",
+    "sentence": "我們再三幫他求情，對方才肯＿＿＿＿，不再計較。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 8,
+    "lessonTitle": "巨人的花園",
+    "idiom": "胸有成竹",
+    "meaning": "指畫竹之前，心中早已有了竹子的完整形象。後用「胸有成竹」比喻處事有定見。",
+    "sentence": "經過長期的準備，他對於如何贏得這場比賽早已＿＿＿＿。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 8,
+    "lessonTitle": "巨人的花園",
+    "idiom": "精神百倍",
+    "meaning": "形容精神非常旺盛。",
+    "sentence": "我們班裝扮成士兵，抬頭挺胸，＿＿＿＿的邁開整齊步伐。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 8,
+    "lessonTitle": "巨人的花園",
+    "idiom": "不疾不徐",
+    "meaning": "不快不慢，從容不迫。",
+    "sentence": "某些班級打扮成舞者，＿＿＿＿的踩著舞步進場。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 8,
+    "lessonTitle": "巨人的花園",
+    "idiom": "前功盡棄",
+    "meaning": "以前辛苦獲得的成果，全部廢棄。",
+    "sentence": "他為了完成夢寐以求的心願，花了一大筆錢，最終卻＿＿＿＿。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 9,
+    "lessonTitle": "不可思議的影子",
+    "idiom": "赴湯蹈火",
+    "meaning": "甘願奔投至烈火沸水當中。比喻奮不顧身，不避艱險。",
+    "sentence": "他早已下定了＿＿＿＿的決心，要挑戰任何艱難險阻。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 9,
+    "lessonTitle": "不可思議的影子",
+    "idiom": "司空見慣",
+    "meaning": "比喻經常看到，不足為奇。",
+    "sentence": "這事對我們來說早已＿＿＿＿，不值得大驚小怪。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 9,
+    "lessonTitle": "不可思議的影子",
+    "idiom": "錙銖必較",
+    "meaning": "斤斤計較。",
+    "sentence": "他這種＿＿＿＿的個性，得罪不少親朋好友。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 9,
+    "lessonTitle": "不可思議的影子",
+    "idiom": "無理取鬧",
+    "meaning": "比喻不合情理的吵鬧或故意搗亂。",
+    "sentence": "他提出的要求非常合理，並不是＿＿＿＿。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 9,
+    "lessonTitle": "不可思議的影子",
+    "idiom": "化險為夷",
+    "meaning": "轉化危險為平安。",
+    "sentence": "有了醫護人員的細心照顧，爺爺的病情才能＿＿＿＿。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 9,
+    "lessonTitle": "不可思議的影子",
+    "idiom": "輕而易舉",
+    "meaning": "形容非常輕鬆，毫不費力。",
+    "sentence": "想要在茫茫人海中找到失散多年的親人，可不是件＿＿＿＿的事。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 9,
+    "lessonTitle": "不可思議的影子",
+    "idiom": "一舉兩得",
+    "meaning": "做一件事而得到兩種好處。",
+    "sentence": "喝茶除了解渴，還能幫助消化，真是＿＿＿＿。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 9,
+    "lessonTitle": "不可思議的影子",
+    "idiom": "十萬八千里",
+    "meaning": "形容距離極遠。",
+    "sentence": "住在義大利的保羅和美國的以賽亞，雖然距離＿＿＿＿遠，都吃了薯條、漢堡和披薩。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 10,
+    "lessonTitle": "搭捷運",
+    "idiom": "無濟於事",
+    "meaning": "對事情毫無幫助。",
+    "sentence": "事情既然已經發生，你再怎麼怪他也＿＿＿＿了。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 10,
+    "lessonTitle": "搭捷運",
+    "idiom": "不修邊幅",
+    "meaning": "形容不注意衣飾、儀容的打扮。",
+    "sentence": "別看他＿＿＿＿的模樣，做起事來可是相當認真。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 10,
+    "lessonTitle": "搭捷運",
+    "idiom": "按圖索驥",
+    "meaning": "比喻按照所掌握的線索辦事。",
+    "sentence": "你帶著地圖＿＿＿＿，很快就會找到露營的地方。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 10,
+    "lessonTitle": "搭捷運",
+    "idiom": "畫蛇添足",
+    "meaning": "比喻多此一舉，反將事情弄糟。",
+    "sentence": "你加上的這段話，有點＿＿＿＿，不如刪掉。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 10,
+    "lessonTitle": "搭捷運",
+    "idiom": "揮金如土",
+    "meaning": "比喻極端浪費錢財。",
+    "sentence": "他自從中了彩券後，便過著＿＿＿＿、極度浪費的生活。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 10,
+    "lessonTitle": "搭捷運",
+    "idiom": "既往不咎",
+    "meaning": "對過去的錯誤不再追究責難。",
+    "sentence": "過去的恩怨，我們就此＿＿＿＿，從今以後依然是好朋友。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 10,
+    "lessonTitle": "搭捷運",
+    "idiom": "目瞪口呆",
+    "meaning": "受驚或受窘以致神情痴呆的樣子。",
+    "sentence": "消防隊員一邊指揮＿＿＿＿的民眾離開現場，一邊搜尋哪裡還有人受困。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 10,
+    "lessonTitle": "搭捷運",
+    "idiom": "愛不釋手",
+    "meaning": "喜歡得捨不得放手。",
+    "sentence": "書架上的書有白雪公主、灰姑娘、阿拉丁……每一本我都＿＿＿＿。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 11,
+    "lessonTitle": "神筆馬良",
+    "idiom": "進退維谷",
+    "meaning": "形容前進後退都無路可走的困窘處境。",
+    "sentence": "走到半路，沒油了；這裡前不見村，後不著店，真是＿＿＿＿。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 11,
+    "lessonTitle": "神筆馬良",
+    "idiom": "名落孫山",
+    "meaning": "指參加考試或選拔沒有被錄取。",
+    "sentence": "他成績那麼好，卻＿＿＿＿，真是令人意外。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 11,
+    "lessonTitle": "神筆馬良",
+    "idiom": "信誓旦旦",
+    "meaning": "指誓言說得非常誠懇可信。",
+    "sentence": "警察局長＿＿＿＿的表示絕不袒護部屬，一切秉公處理。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 11,
+    "lessonTitle": "神筆馬良",
+    "idiom": "另眼相看",
+    "meaning": "以特別的眼光或態度相待，以示重視或歧視。",
+    "sentence": "只要我們有實力，別人自然會＿＿＿＿。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 11,
+    "lessonTitle": "神筆馬良",
+    "idiom": "豁然開朗",
+    "meaning": "形容心境忽然變得開闊暢快，也用於形容突然領悟到某個道理。",
+    "sentence": "小明查了這部百科全書後，頓時＿＿＿＿，解決多年的疑惑。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 11,
+    "lessonTitle": "神筆馬良",
+    "idiom": "開誠布公",
+    "meaning": "比喻誠意待人，坦白無私。",
+    "sentence": "我希望你們能＿＿＿＿的談一談，以化解彼此的誤會。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 11,
+    "lessonTitle": "神筆馬良",
+    "idiom": "畫龍點睛",
+    "meaning": "在最重要的地方加上一筆的修飾，使事物變得更加生動。",
+    "sentence": "經過作家＿＿＿＿，這篇文章變得更加生動了。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 11,
+    "lessonTitle": "神筆馬良",
+    "idiom": "雷電交加",
+    "meaning": "雷聲與閃電交錯出現。",
+    "sentence": "窗外大雨滂沱，＿＿＿＿，小嬰兒被嚇得哇哇大哭。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 11,
+    "lessonTitle": "神筆馬良",
+    "idiom": "大雨滂沱",
+    "meaning": "形容雨下得非常大。",
+    "sentence": "窗外＿＿＿＿，雷電交加，小嬰兒被嚇得哇哇大哭。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 11,
+    "lessonTitle": "神筆馬良",
+    "idiom": "烏雲密布",
+    "meaning": "黑雲布滿天空。",
+    "sentence": "早上萬里無雲的好天氣，到了下午天空卻突然＿＿＿＿。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 11,
+    "lessonTitle": "神筆馬良",
+    "idiom": "維妙維肖",
+    "meaning": "形容描繪的對象非常精細巧妙，逼真傳神。",
+    "sentence": "他把百合花畫得精細巧妙，＿＿＿＿，讓人彷彿能從畫裡聞到花兒的芬芳。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 12,
+    "lessonTitle": "聰明的公寓",
+    "idiom": "民不聊生",
+    "meaning": "形容百姓生活非常困苦。",
+    "sentence": "戰爭往往造成＿＿＿＿，家破人亡的後果。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 12,
+    "lessonTitle": "聰明的公寓",
+    "idiom": "抱頭鼠竄",
+    "meaning": "形容匆忙逃跑的狼狽樣子。",
+    "sentence": "地震時，所有人都驚惶失措，＿＿＿＿。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 12,
+    "lessonTitle": "聰明的公寓",
+    "idiom": "芒刺在背",
+    "meaning": "比喻痛苦或內心極度恐懼不安。",
+    "sentence": "第一次上臺演說，看著這麼多人瞪著我，真使我有＿＿＿＿的感覺。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 12,
+    "lessonTitle": "聰明的公寓",
+    "idiom": "朝令夕改",
+    "meaning": "早上下達的命令，到晚上就更改了。比喻政令、主張或意見反覆無常。",
+    "sentence": "這個網站上公告的報名方法不斷＿＿＿＿，引起了不少的爭議。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 12,
+    "lessonTitle": "聰明的公寓",
+    "idiom": "夢寐以求",
+    "meaning": "形容願望強烈、迫切。",
+    "sentence": "成為一個飛行員，是我從小就＿＿＿＿的事。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 12,
+    "lessonTitle": "聰明的公寓",
+    "idiom": "兵荒馬亂",
+    "meaning": "形容戰爭所造成的混亂景象。",
+    "sentence": "一旦戰爭開打，必然到處＿＿＿＿，人們顛沛困頓，流離失所。"
+  },
+  {
+    "semester": "3下",
+    "lesson": 12,
+    "lessonTitle": "聰明的公寓",
+    "idiom": "不可思議",
+    "meaning": "指事物神祕奧妙，令人難以想像。",
+    "sentence": "小販覺得眼前的一切，真是＿＿＿＿。"
+  },
+  {
+    "semester": "4上",
+    "lesson": 1,
+    "lessonTitle": "美麗島",
+    "idiom": "忠心耿耿",
+    "meaning": "形容非常忠誠，一直守護著。",
+    "sentence": "小水豚是島嶼守護隊最忠誠的夥伴，一直＿＿＿＿地守護著防風林。",
+    "originalSentence": "小水豚是島嶼守護隊最忠誠的夥伴，一直「忠心耿耿」地守護著防風林。"
+  },
+  {
+    "semester": "4上",
+    "lesson": 1,
+    "lessonTitle": "美麗島",
+    "idiom": "街談巷議",
+    "meaning": "大街小巷中的談說議論，指大家都在討論。",
+    "sentence": "海邊小鎮的人都在＿＿＿＿這顆新出現的奇幻美麗島。",
+    "originalSentence": "海邊小鎮的人都在「街談巷議」這顆新出現的奇幻美麗島。"
+  },
+  {
+    "semester": "4上",
+    "lesson": 1,
+    "lessonTitle": "美麗島",
+    "idiom": "唾手可得",
+    "meaning": "比喻非常容易得到。",
+    "sentence": "只要用心觀察，島上的成熟野果簡直是＿＿＿＿。",
+    "originalSentence": "只要用心觀察，島上的成熟野果簡直是「唾手可得」。"
+  },
+  {
+    "semester": "4上",
+    "lesson": 1,
+    "lessonTitle": "美麗島",
+    "idiom": "精衛填海",
+    "meaning": "比喻意志堅定，不怕艱苦，堅持到底。",
+    "sentence": "他抱著＿＿＿＿的決心，一定要把暴風雨損壞的木橋修好。",
+    "originalSentence": "他抱著「精衛填海」的決心，一定要把暴風雨損壞的木橋修好。"
+  },
+  {
+    "semester": "4上",
+    "lesson": 1,
+    "lessonTitle": "美麗島",
+    "idiom": "相濡以沫",
+    "meaning": "比喻在困境中相互關懷與照顧。",
+    "sentence": "在雨季缺乏乾糧的避難所裡，隊員們＿＿＿＿，共同度過難關。",
+    "originalSentence": "在雨季缺乏乾糧的避難所裡，隊員們「相濡以沫」，共同度過難關。"
+  },
+  {
+    "semester": "4上",
+    "lesson": 1,
+    "lessonTitle": "美麗島",
+    "idiom": "返老還童",
+    "meaning": "比喻年紀大的人恢復了青春與活力。",
+    "sentence": "看到島上新建的沙灘溜滑梯，年邁的水豚爺爺就像＿＿＿＿一樣笑開了花。",
+    "originalSentence": "看到島上新建的沙灘溜滑梯，年邁的水豚爺爺就像「返老還童」一樣笑開了花。"
+  },
+  {
+    "semester": "4上",
+    "lesson": 2,
+    "lessonTitle": "請到我的家鄉來",
+    "idiom": "文思泉湧",
+    "meaning": "比喻寫文章時，思路非常順暢，像泉水一樣噴出來。",
+    "sentence": "小鴿子一拿起鋼筆，便＿＿＿＿，很快就寫好了一封邀請信。",
+    "originalSentence": "小鴿子一拿起鋼筆，便「文思泉湧」，很快就寫好了一封邀請信。"
+  },
+  {
+    "semester": "4上",
+    "lesson": 2,
+    "lessonTitle": "請到我的家鄉來",
+    "idiom": "濃妝豔抹",
+    "meaning": "形容打扮得非常華麗、豔麗。",
+    "sentence": "歡迎舞會上，許多來自各國的舞蹈家都＿＿＿＿地盛裝出席。",
+    "originalSentence": "歡迎舞會上，許多來自各國的舞蹈家都「濃妝豔抹」地盛裝出席。"
+  },
+  {
+    "semester": "4上",
+    "lesson": 2,
+    "lessonTitle": "請到我的家鄉來",
+    "idiom": "不足掛齒",
+    "meaning": "不值得一提，表示事情很小，常用來謙虛。",
+    "sentence": "我只不過是幫忙指引了一下景點路線，這點小事＿＿＿＿，不用客氣。",
+    "originalSentence": "我只不過是幫忙指引了一下景點路線，這點小事「不足掛齒」，不用客氣。"
+  },
+  {
+    "semester": "4上",
+    "lesson": 2,
+    "lessonTitle": "請到我的家鄉來",
+    "idiom": "疊床架屋",
+    "meaning": "比喻重複累積，顯得贅餘、不簡潔。",
+    "sentence": "介紹家鄉景點要精簡，如果重複介紹相同的內容，就會顯得＿＿＿＿。",
+    "originalSentence": "介紹家鄉景點要精簡，如果重複介紹相同的內容，就會顯得「疊床架屋」。"
+  },
+  {
+    "semester": "4上",
+    "lesson": 2,
+    "lessonTitle": "請到我的家鄉來",
+    "idiom": "爭先恐後",
+    "meaning": "競相搶先，害怕落後。",
+    "sentence": "觀光遊覽車一到站，遊客們便＿＿＿＿地擠上前，很不安全。",
+    "originalSentence": "觀光遊覽車一到站，遊客們便「爭先恐後」地擠上前，很不安全。"
+  },
+  {
+    "semester": "4上",
+    "lesson": 2,
+    "lessonTitle": "請到我的家鄉來",
+    "idiom": "聚精會神",
+    "meaning": "集中精神，專心致志。",
+    "sentence": "小鴿子＿＿＿＿地查看世界地圖，規劃最佳的旅遊路線。",
+    "originalSentence": "小鴿子「聚精會神」地查看世界地圖，規劃最佳的旅遊路線。"
+  },
+  {
+    "semester": "4上",
+    "lesson": 3,
+    "lessonTitle": "鏡頭下的家鄉",
+    "idiom": "明鏡高懸",
+    "meaning": "比喻辦事明察無私，執法公正嚴明。",
+    "sentence": "攝影比賽的評判長＿＿＿＿，每一次評分都非常公平。",
+    "originalSentence": "攝影比賽的評判長「明鏡高懸」，每一次評分都非常公平。"
+  },
+  {
+    "semester": "4上",
+    "lesson": 3,
+    "lessonTitle": "鏡頭下的家鄉",
+    "idiom": "人去樓空",
+    "meaning": "人已離去，只留下空空的屋子，多用於舊地重遊時的感慨。",
+    "sentence": "小貓咪回到當初拍過照的老老屋，發現這裡早已＿＿＿＿。",
+    "originalSentence": "小貓咪回到當初拍過照的老老屋，發現這裡早已「人去樓空」。"
+  },
+  {
+    "semester": "4上",
+    "lesson": 3,
+    "lessonTitle": "鏡頭下的家鄉",
+    "idiom": "無與倫比",
+    "meaning": "非常完美，沒有任何東西可以跟它相比。",
+    "sentence": "這張夕陽餘暉下的家鄉照，美得＿＿＿＿，奪得了攝影金獎。",
+    "originalSentence": "這張夕陽餘暉下的家鄉照，美得「無與倫比」，奪得了攝影金獎。"
+  },
+  {
+    "semester": "4上",
+    "lesson": 3,
+    "lessonTitle": "鏡頭下的家鄉",
+    "idiom": "柳暗花明",
+    "meaning": "比喻在陷入絕境、毫無辦法時，突然出現了新的轉機和希望。",
+    "sentence": "正當找不到拍攝題材時，眼前突然出現了一片花海，真是＿＿＿＿。",
+    "originalSentence": "正當找不到拍攝題材時，眼前突然出現了一片花海，真是「柳暗花明」。"
+  },
+  {
+    "semester": "4上",
+    "lesson": 3,
+    "lessonTitle": "鏡頭下的家鄉",
+    "idiom": "網開一面",
+    "meaning": "比喻寬大處理犯錯的人，給對方留一條改過自新的路。",
+    "sentence": "雖然小松鼠不小心踩壞了腳架，但小貓咪決定＿＿＿＿，原諒牠並教牠攝影知識。",
+    "originalSentence": "雖然小松鼠不小心踩壞了腳架，但小貓咪決定「網開一面」，原諒牠並教牠攝影知識。"
+  },
+  {
+    "semester": "4上",
+    "lesson": 3,
+    "lessonTitle": "鏡頭下的家鄉",
+    "idiom": "目不識丁",
+    "meaning": "形容人不識字，或完全沒有學問。",
+    "sentence": "來到這異國都市，面對滿街外文，我變成＿＿＿＿的人了。",
+    "originalSentence": "來到這異國都市，面對滿街外文，我變成「目不識丁」的人了。"
+  },
+  {
+    "semester": "4上",
+    "lesson": 4,
+    "lessonTitle": "飛行夢",
+    "idiom": "高談闊論",
+    "meaning": "大聲地、沒有邊際地發表議論。",
+    "sentence": "不明白事情發生的起源和結果，一堆人就在現場＿＿＿＿起來。",
+    "originalSentence": "不明白事情發生的起源和結果，一堆人就在現場「高談闊論」起來。"
+  },
+  {
+    "semester": "4上",
+    "lesson": 4,
+    "lessonTitle": "飛行夢",
+    "idiom": "先發制人",
+    "meaning": "主動採取行動以取得先機，制服對方。",
+    "sentence": "這場飛行競賽，我們一定要＿＿＿＿，起飛時就佔據領先位置。",
+    "originalSentence": "這場飛行競賽，我們一定要「先發制人」，起飛時就佔據領先位置。"
+  },
+  {
+    "semester": "4上",
+    "lesson": 4,
+    "lessonTitle": "飛行夢",
+    "idiom": "耳提面命",
+    "meaning": "形容非常懇切、有耐心地教導和叮嚀。",
+    "sentence": "臨飛前，老隊長對小熊飛行員＿＿＿＿，叮嚀安全檢查的重要性。",
+    "originalSentence": "臨飛前，老隊長對小熊飛行員「耳提面命」，叮嚀安全檢查的重要性。"
+  },
+  {
+    "semester": "4上",
+    "lesson": 4,
+    "lessonTitle": "飛行夢",
+    "idiom": "義無反顧",
+    "meaning": "為了正義或有意義的事，勇往直前，絕不退縮。",
+    "sentence": "看到同伴的小飛機遇到氣流，小熊＿＿＿＿地開著救難機衝上前幫忙穩定。",
+    "originalSentence": "看到同伴的小飛機遇到氣流，小熊「義無反顧」地開著救難機衝上前幫忙穩定。"
+  },
+  {
+    "semester": "4上",
+    "lesson": 4,
+    "lessonTitle": "飛行夢",
+    "idiom": "標新立異",
+    "meaning": "創立新奇的主張，呈現與眾不同的風格。",
+    "sentence": "她把滿頭的黑髮染成了金色，為的就是追求＿＿＿＿、特立獨行。",
+    "originalSentence": "她把滿頭的黑髮染成了金色，為的就是追求「標新立異」、特立獨行。"
+  },
+  {
+    "semester": "4上",
+    "lesson": 4,
+    "lessonTitle": "飛行夢",
+    "idiom": "良藥苦口",
+    "meaning": "比喻有益的勸告聽起來雖然不舒服，但卻對自己有好處。",
+    "sentence": "雖然同伴的批評很直接，但＿＿＿＿，這能幫你改善飛行的姿勢。",
+    "originalSentence": "雖然同伴的批評很直接，但「良藥苦口」，這能幫你改善飛行的姿勢。"
+  },
+  {
+    "semester": "4上",
+    "lesson": 4,
+    "lessonTitle": "飛行夢",
+    "idiom": "升堂入室",
+    "meaning": "比喻學問、技藝已經達到了高深、純熟的境界。",
+    "sentence": "經過多年苦練，小熊的飛行特技已經達到了＿＿＿＿的最高水準。",
+    "originalSentence": "經過多年苦練，小熊的飛行特技已經達到了「升堂入室」的最高水準。"
+  },
+  {
+    "semester": "4上",
+    "lesson": 5,
+    "lessonTitle": "月光下",
+    "idiom": "美輪美奐",
+    "meaning": "形容房屋裝飾得非常華麗美麗，也指事物精美無比。",
+    "sentence": "月光下的精靈城堡看起來＿＿＿＿，散發著柔和的銀色光芒。",
+    "originalSentence": "月光下的精靈城堡看起來「美輪美奐」，散發著柔和的銀色光芒。"
+  },
+  {
+    "semester": "4上",
+    "lesson": 5,
+    "lessonTitle": "月光下",
+    "idiom": "循規蹈矩",
+    "meaning": "行為非常守規矩，不隨便亂來，禮貌且守法。",
+    "sentence": "小貓頭鷹在夜間飛行時一向＿＿＿＿，嚴格遵守夜空航道。",
+    "originalSentence": "小貓頭鷹在夜間飛行時一向「循規蹈矩」，嚴格遵守夜空航道。"
+  },
+  {
+    "semester": "4上",
+    "lesson": 5,
+    "lessonTitle": "月光下",
+    "idiom": "拍案叫絕",
+    "meaning": "形容因為極其精彩而拍手大力讚賞。",
+    "sentence": "看到螢火蟲樂團演奏出動聽的夜曲，台下的觀眾不禁＿＿＿＿。",
+    "originalSentence": "看到螢火蟲樂團演奏出動聽的夜曲，台下的觀眾不禁「拍案叫絕」。"
+  },
+  {
+    "semester": "4上",
+    "lesson": 5,
+    "lessonTitle": "月光下",
+    "idiom": "牽腸掛肚",
+    "meaning": "非常掛念、放心不下，內心充滿了擔憂。",
+    "sentence": "小貓頭鷹在黑夜中太晚回家，讓樹洞裡的媽媽＿＿＿＿。",
+    "originalSentence": "小貓頭鷹在黑夜中太晚回家，讓樹洞裡的媽媽「牽腸掛肚」。"
+  },
+  {
+    "semester": "4上",
+    "lesson": 5,
+    "lessonTitle": "月光下",
+    "idiom": "金科玉律",
+    "meaning": "形容絕對不能修改的守則、規律或法律。",
+    "sentence": "「夜間飛車必須開啟夜行燈」，這是森林飛行隊的＿＿＿＿。",
+    "originalSentence": "「夜間飛車必須開啟夜行燈」，這是森林飛行隊的「金科玉律」。"
+  },
+  {
+    "semester": "4上",
+    "lesson": 5,
+    "lessonTitle": "月光下",
+    "idiom": "登峰造極",
+    "meaning": "比喻學問、技藝或事物達到了最高、最完美的境界。",
+    "sentence": "林小弟年紀雖小，但棋藝已＿＿＿＿，在國際棋賽中屢得名次。",
+    "originalSentence": "林小弟年紀雖小，但棋藝已「登峰造極」，在國際棋賽中屢得名次。"
+  },
+  {
+    "semester": "4上",
+    "lesson": 6,
+    "lessonTitle": "又遠又近的月亮",
+    "idiom": "鵬程萬里",
+    "meaning": "祝賀別人前途非常遠大，前程似錦。",
+    "sentence": "在＿＿＿＿的祝福聲中，我們終於要離開朝夕相處的校園。",
+    "originalSentence": "在「鵬程萬里」的祝福聲中，我們終於要離開朝夕相處的校園。"
+  },
+  {
+    "semester": "4上",
+    "lesson": 6,
+    "lessonTitle": "又遠又近的月亮",
+    "idiom": "騎虎難下",
+    "meaning": "比喻陷入兩難、尷尬的境地，想停也停不下來，只能硬著頭皮做下去。",
+    "sentence": "氣球已經升到了半空中，現在是＿＿＿＿，只能硬著頭皮繼續往上了。",
+    "originalSentence": "氣球已經升到了半空中，現在是「騎虎難下」，只能硬著頭皮繼續往上了。"
+  },
+  {
+    "semester": "4上",
+    "lesson": 6,
+    "lessonTitle": "又遠又近的月亮",
+    "idiom": "畫餅充飢",
+    "meaning": "比喻用空想來安慰自己，但實際上沒辦法解決問題。",
+    "sentence": "口渴時光看著梅子照片只是＿＿＿＿，還是喝水最實際。",
+    "originalSentence": "口渴時光看著梅子照片只是「畫餅充飢」，還是喝水最實際。"
+  },
+  {
+    "semester": "4上",
+    "lesson": 6,
+    "lessonTitle": "又遠又近的月亮",
+    "idiom": "包羅萬象",
+    "meaning": "內容非常豐富，什麼都有，無所不包。",
+    "sentence": "這座天文館展出的隕石標本＿＿＿＿，非常豐富。",
+    "originalSentence": "這座天文館展出的隕石標本「包羅萬象」，非常豐富。"
+  },
+  {
+    "semester": "4上",
+    "lesson": 6,
+    "lessonTitle": "又遠又近的月亮",
+    "idiom": "勢均力敵",
+    "meaning": "雙方的實力相當，不分高下，比賽或競爭十分激烈。",
+    "sentence": "這兩隻小猴子拉繩比賽實力＿＿＿＿，誰也拉不動誰。",
+    "originalSentence": "這兩隻小猴子拉繩比賽實力「勢均力敵」，誰也拉不動誰。"
+  },
+  {
+    "semester": "4上",
+    "lesson": 6,
+    "lessonTitle": "又遠又近的月亮",
+    "idiom": "無懈可擊",
+    "meaning": "防守或計畫非常嚴密完美，找不到任何漏洞或缺點。",
+    "sentence": "小猴子搭建的賞月觀測臺＿＿＿＿，結構非常堅固。",
+    "originalSentence": "小猴子搭建的賞月觀測臺「無懈可擊」，結構非常堅固。"
+  },
+  {
+    "semester": "4上",
+    "lesson": 6,
+    "lessonTitle": "又遠又近的月亮",
+    "idiom": "招搖撞騙",
+    "meaning": "假借別人的名義或名聲，到處去欺騙別人的財物或信任。",
+    "sentence": "那隻狐狸假裝自己是太空英雄四處＿＿＿＿，最後被警察拆穿了。",
+    "originalSentence": "那隻狐狸假裝自己是太空英雄四處「招搖撞騙」，最後被警察拆穿了。"
+  },
+  {
+    "semester": "4上",
+    "lesson": 7,
+    "lessonTitle": "松鼠先生的麵包",
+    "idiom": "焦頭爛額",
+    "meaning": "比喻做事非常忙亂、困窘，手忙腳亂的樣子。",
+    "sentence": "為了應付湧入麵包店的大批顧客，松鼠先生忙得＿＿＿＿。",
+    "originalSentence": "為了應付湧入麵包店的大批顧客，松鼠先生忙得「焦頭爛額」。"
+  },
+  {
+    "semester": "4上",
+    "lesson": 7,
+    "lessonTitle": "松鼠先生的麵包",
+    "idiom": "爐火純青",
+    "meaning": "比喻學問、技藝已經達到了成熟、完美的最高境界。",
+    "sentence": "松鼠先生烤麵包的手藝已達＿＿＿＿的地步，烤出來的麵包又香又軟。",
+    "originalSentence": "松鼠先生烤麵包的手藝已達「爐火純青」的地步，烤出來的麵包又香又軟。"
+  },
+  {
+    "semester": "4上",
+    "lesson": 7,
+    "lessonTitle": "松鼠先生的麵包",
+    "idiom": "矯揉造作",
+    "meaning": "形容裝腔作勢、極不自然，故意做給別人看。",
+    "sentence": "松鼠先生做麵包態度很實在，從不＿＿＿＿。",
+    "originalSentence": "松鼠先生做麵包態度很實在，從不「矯揉造作」。"
+  },
+  {
+    "semester": "4上",
+    "lesson": 7,
+    "lessonTitle": "松鼠先生的麵包",
+    "idiom": "弱不禁風",
+    "meaning": "形容身體非常虛弱，連風吹都禁受不住。",
+    "sentence": "這棵剛發芽的麥苗看起來＿＿＿＿，需要細心照顧。",
+    "originalSentence": "這棵剛發芽的麥苗看起來「弱不禁風」，需要細心照顧。"
+  },
+  {
+    "semester": "4上",
+    "lesson": 7,
+    "lessonTitle": "松鼠先生的麵包",
+    "idiom": "置之度外",
+    "meaning": "把個人生死、利益都不放在心上，置生死於不顧。",
+    "sentence": "松鼠先生為了救出困在火場裡的小伙伴，把個人安危＿＿＿＿。",
+    "originalSentence": "松鼠先生為了救出困在火場裡的小伙伴，把個人安危「置之度外」。"
+  },
+  {
+    "semester": "4上",
+    "lesson": 7,
+    "lessonTitle": "松鼠先生的麵包",
+    "idiom": "沾沾自喜",
+    "meaning": "形容因為一點小小的進步或成就就得意洋洋、自滿的樣子。",
+    "sentence": "我們不能因為烤好了一個麵包就＿＿＿＿，還是要繼續精進。",
+    "originalSentence": "我們不能因為烤好了一個麵包就「沾沾自喜」，還是要繼續精進。"
+  },
+  {
+    "semester": "4上",
+    "lesson": 8,
+    "lessonTitle": "平凡的大俠",
+    "idiom": "茅塞頓開",
+    "meaning": "比喻閉塞的心思，因為受到啟發而頓時豁然開朗、想通了。",
+    "sentence": "聽了老大俠的指點，小狗大俠頓時＿＿＿＿，悟出了招式的奧秘。",
+    "originalSentence": "聽了老大俠的指點，小狗大俠頓時「茅塞頓開」，悟出了招式的奧秘。"
+  },
+  {
+    "semester": "4上",
+    "lesson": 8,
+    "lessonTitle": "平凡的大俠",
+    "idiom": "愣頭愣腦",
+    "meaning": "形容人粗魯、冒冒失失的樣子。",
+    "sentence": "他＿＿＿＿地衝進茶館，撞倒了桌子。",
+    "originalSentence": "他「愣頭愣腦」地衝進茶館，撞倒了桌子。"
+  },
+  {
+    "semester": "4上",
+    "lesson": 8,
+    "lessonTitle": "平凡的大俠",
+    "idiom": "江郎才盡",
+    "meaning": "比喻才思枯竭，無法再創作出好詩文或新招式。",
+    "sentence": "這位畫師畫了幾幅好畫後，似乎有些＿＿＿＿了。",
+    "originalSentence": "這位畫師畫了幾幅好畫後，似乎有些「江郎才盡」了。"
+  },
+  {
+    "semester": "4上",
+    "lesson": 8,
+    "lessonTitle": "平凡的大俠",
+    "idiom": "百折不撓",
+    "meaning": "意志堅強，遇到許多困難和挫折也絕對不退縮、不屈服。",
+    "sentence": "小狗大俠憑著＿＿＿＿的精神，終於練成了絕技。",
+    "originalSentence": "小狗大俠憑著「百折不撓」的精神，終於練成了絕技。"
+  },
+  {
+    "semester": "4上",
+    "lesson": 8,
+    "lessonTitle": "平凡的大俠",
+    "idiom": "手足無措",
+    "meaning": "形容因為驚慌害怕而手腳不知道該放哪裡，不知如何是好。",
+    "sentence": "看到老奶奶的水果籃翻倒了，小狗大俠一時緊張得＿＿＿＿。",
+    "originalSentence": "看到老奶奶的水果籃翻倒了，小狗大俠一時緊張得「手足無措」。"
+  },
+  {
+    "semester": "4上",
+    "lesson": 8,
+    "lessonTitle": "平凡的大俠",
+    "idiom": "望梅止渴",
+    "meaning": "比喻以空想來安慰自己，實際上無法解決眼前的問題。",
+    "sentence": "口渴時光看著梅子照片只是＿＿＿＿，還是喝水最實際。",
+    "originalSentence": "口渴時光看著梅子照片只是「望梅止渴」，還是喝水最實際。"
+  },
+  {
+    "semester": "4上",
+    "lesson": 9,
+    "lessonTitle": "王子折箭",
+    "idiom": "杯弓蛇影",
+    "meaning": "比喻因疑神疑鬼、自己嚇自己而感到驚慌害怕。",
+    "sentence": "你別笑我＿＿＿＿，遇過小偷的人，一有風吹草動便覺惶惶不安。",
+    "originalSentence": "你別笑我「杯弓蛇影」，遇過小偷的人，一有風吹草動便覺惶惶不安。"
+  },
+  {
+    "semester": "4上",
+    "lesson": 9,
+    "lessonTitle": "王子折箭",
+    "idiom": "博古通今",
+    "meaning": "形容學問非常淵博，通曉古代和現代的事情。",
+    "sentence": "老師的學問淵博，不愧是＿＿＿＿的學者。",
+    "originalSentence": "老師的學問淵博，不愧是「博古通今」的學者。"
+  },
+  {
+    "semester": "4上",
+    "lesson": 9,
+    "lessonTitle": "王子折箭",
+    "idiom": "苦盡甘來",
+    "meaning": "比喻艱難的日子終於過去，美好的日子到來。",
+    "sentence": "經歷了多年的奮鬥，他終於＿＿＿＿，取得了事業的成功。",
+    "originalSentence": "經歷了多年的奮鬥，他終於「苦盡甘來」，取得了事業的成功。"
+  },
+  {
+    "semester": "4上",
+    "lesson": 9,
+    "lessonTitle": "王子折箭",
+    "idiom": "困獸猶鬥",
+    "meaning": "比喻雖然處於絕境中，但依然作垂死的頑強掙扎。",
+    "sentence": "敵人雖然已經被包圍了，但他們仍在作＿＿＿＿的掙扎。",
+    "originalSentence": "敵人雖然已經被包圍了，但他們仍在作「困獸猶鬥」的掙扎。"
+  },
+  {
+    "semester": "4上",
+    "lesson": 9,
+    "lessonTitle": "王子折箭",
+    "idiom": "從善如流",
+    "meaning": "比喻非常樂意、迅速地接受別人的正確意見。",
+    "sentence": "賢明的君主都會＿＿＿＿，聽取大臣的善意提醒。",
+    "originalSentence": "賢明的君主都會「從善如流」，聽取大臣的善意提醒。"
+  },
+  {
+    "semester": "4上",
+    "lesson": 9,
+    "lessonTitle": "王子折箭",
+    "idiom": "力爭上游",
+    "meaning": "努力奮鬥，爭取更好的成績或進步。",
+    "sentence": "我們應該在學業上＿＿＿＿，不可安於現狀。",
+    "originalSentence": "我們應該在學業上「力爭上游」，不可安於現狀。"
+  },
+  {
+    "semester": "4上",
+    "lesson": 9,
+    "lessonTitle": "王子折箭",
+    "idiom": "惱羞成怒",
+    "meaning": "因為羞愧或發窘、被拆穿謊言而生氣發怒。",
+    "sentence": "被揭穿謊言後，他竟然＿＿＿＿地大吼大叫。",
+    "originalSentence": "被揭穿謊言後，他竟然「惱羞成怒」地大吼大叫。"
+  },
+  {
+    "semester": "4上",
+    "lesson": 10,
+    "lessonTitle": "海中的熱帶雨林",
+    "idiom": "守株待兔",
+    "meaning": "比喻死守狹隘經驗，不知變通，或妄想不勞而獲。",
+    "sentence": "學習不能只靠＿＿＿＿，必須主動尋找答案。",
+    "originalSentence": "學習不能只靠「守株待兔」，必須主動尋找答案。"
+  },
+  {
+    "semester": "4上",
+    "lesson": 10,
+    "lessonTitle": "海中的熱帶雨林",
+    "idiom": "處心積慮",
+    "meaning": "形容千方百計，想盡各種辦法，蓄意已久（多用於貶義）。",
+    "sentence": "大白鯊＿＿＿＿地想要抓到美味的魚群。",
+    "originalSentence": "大白鯊「處心積慮」地想要抓到美味的魚群。"
+  },
+  {
+    "semester": "4上",
+    "lesson": 10,
+    "lessonTitle": "海中的熱帶雨林",
+    "idiom": "螳螂捕蟬",
+    "meaning": "比喻只顧眼前的利益，而忽略了身後隱藏的巨大危險。",
+    "sentence": "小偷只顧著偷東西，卻沒想到＿＿＿＿，黃雀在後。",
+    "originalSentence": "小偷只顧著偷東西，卻沒想到「螳螂捕蟬」，黃雀在後。"
+  },
+  {
+    "semester": "4上",
+    "lesson": 10,
+    "lessonTitle": "海中的熱帶雨林",
+    "idiom": "同流合汙",
+    "meaning": "指跟壞人一起做壞事，隨世俗浮沉。",
+    "sentence": "我們應該堅持正義，絕不與壞人＿＿＿＿。",
+    "originalSentence": "我們應該堅持正義，絕不與壞人「同流合汙」。"
+  },
+  {
+    "semester": "4上",
+    "lesson": 10,
+    "lessonTitle": "海中的熱帶雨林",
+    "idiom": "碩果僅存",
+    "meaning": "比喻經過淘汰後，極少數留存下來的可貴事物。",
+    "sentence": "這株粉紅珊瑚是這片海域＿＿＿＿的珍寶。",
+    "originalSentence": "這株粉紅珊瑚是這片海域「碩果僅存」的珍寶。"
+  },
+  {
+    "semester": "4上",
+    "lesson": 10,
+    "lessonTitle": "海中的熱帶雨林",
+    "idiom": "天衣無縫",
+    "meaning": "比喻計畫、配合非常完美，毫無漏洞與破綻。",
+    "sentence": "這兩條小魚的雙人舞蹈配合得＿＿＿＿。",
+    "originalSentence": "這兩條小魚的雙人舞蹈配合得「天衣無縫」。"
+  },
+  {
+    "semester": "4上",
+    "lesson": 10,
+    "lessonTitle": "海中的熱帶雨林",
+    "idiom": "海底撈針",
+    "meaning": "比喻在廣闊範圍內尋找極難找的東西，非常困難。",
+    "sentence": "要在這片大洋裡找一枚小貝殼，簡直像＿＿＿＿。",
+    "originalSentence": "要在這片大洋裡找一枚小貝殼，簡直像「海底撈針」。"
+  },
+  {
+    "semester": "4上",
+    "lesson": 11,
+    "lessonTitle": "美食島",
+    "idiom": "大刀闊斧",
+    "meaning": "形容做事果斷、有魄力，不拖泥帶水。",
+    "sentence": "企鵝小廚師上任後，＿＿＿＿地改造廚房環境。",
+    "originalSentence": "企鵝小廚師上任後，「大刀闊斧」地改造廚房環境。"
+  },
+  {
+    "semester": "4上",
+    "lesson": 11,
+    "lessonTitle": "美食島",
+    "idiom": "破釜沉舟",
+    "meaning": "比喻下定決心，義無反顧，不給自己留退路。",
+    "sentence": "我們必須抱著＿＿＿＿的決心，才能贏得這次美食大賽。",
+    "originalSentence": "我們必須抱著「破釜沉舟」的決心，才能贏得這次美食大賽。"
+  },
+  {
+    "semester": "4上",
+    "lesson": 11,
+    "lessonTitle": "美食島",
+    "idiom": "虎視眈眈",
+    "meaning": "比喻心懷不軌，像老虎盯著獵物一樣，伺機掠奪。",
+    "sentence": "大灰狼對企鵝小廚師剛做好的魚派＿＿＿＿。",
+    "originalSentence": "大灰狼對企鵝小廚師剛做好的魚派「虎視眈眈」。"
+  },
+  {
+    "semester": "4上",
+    "lesson": 11,
+    "lessonTitle": "美食島",
+    "idiom": "腰纏萬貫",
+    "meaning": "形容非常富有，擁有極多的錢財。",
+    "sentence": "別看他穿著樸素，他可是個＿＿＿＿的島主。",
+    "originalSentence": "別看他穿著樸素，他可是個「腰纏萬貫」的島主。"
+  },
+  {
+    "semester": "4上",
+    "lesson": 11,
+    "lessonTitle": "美食島",
+    "idiom": "臥薪嘗膽",
+    "meaning": "比喻刻苦自勵，發憤圖強，忍受磨練以達成目標。",
+    "sentence": "失敗後，他＿＿＿＿，每天苦練廚藝。",
+    "originalSentence": "失敗後，他「臥薪嘗膽」，每天苦練廚藝。"
+  },
+  {
+    "semester": "4上",
+    "lesson": 11,
+    "lessonTitle": "美食島",
+    "idiom": "鑽牛角尖",
+    "meaning": "比喻人固執不知變通，只去研究無謂的死胡同問題。",
+    "sentence": "問題解決了，他卻偏要＿＿＿＿，真浪費時間。",
+    "originalSentence": "問題解決了，他卻偏要「鑽牛角尖」，真浪費時間。"
+  },
+  {
+    "semester": "4上",
+    "lesson": 12,
+    "lessonTitle": "寧靜的音樂會",
+    "idiom": "息事寧人",
+    "meaning": "平息紛爭，讓彼此相安無事，不再追究。",
+    "sentence": "樂手小樹蛙彈奏起溫柔的樂曲，讓吵架的小鳥們＿＿＿＿。",
+    "originalSentence": "樂手小樹蛙彈奏起溫柔的樂曲，讓吵架的小鳥們「息事寧人」。"
+  },
+  {
+    "semester": "4上",
+    "lesson": 12,
+    "lessonTitle": "寧靜的音樂會",
+    "idiom": "脣亡齒寒",
+    "meaning": "比喻關係非常密切，利害相關，失去了一方，另一方也會受難。",
+    "sentence": "池塘和小樹林關係密切，如果不保護樹林，就會＿＿＿＿。",
+    "originalSentence": "池塘和小樹林關係密切，如果不保護樹林，就會「脣亡齒寒」。"
+  },
+  {
+    "semester": "4上",
+    "lesson": 12,
+    "lessonTitle": "寧靜的音樂會",
+    "idiom": "四通八達",
+    "meaning": "形容交通非常發達、便利，可以通往各個地方。",
+    "sentence": "森林裡的水道＿＿＿＿，小樹蛙划著荷葉船去哪裡都很方便。",
+    "originalSentence": "森林裡的水道「四通八達」，小樹蛙划著荷葉船去哪裡都很方便。"
+  },
+  {
+    "semester": "4上",
+    "lesson": 12,
+    "lessonTitle": "寧靜的音樂會",
+    "idiom": "約法三章",
+    "meaning": "指事先共同約定好、必須遵守的幾條簡單規則。",
+    "sentence": "音樂會開演前，小樹蛙與聽眾＿＿＿＿，請大家保持安靜。",
+    "originalSentence": "音樂會開演前，小樹蛙與聽眾「約法三章」，請大家保持安靜。"
+  },
+  {
+    "semester": "4上",
+    "lesson": 12,
+    "lessonTitle": "寧靜的音樂會",
+    "idiom": "賓至如歸",
+    "meaning": "形容主人招待親切周到，使人有在家的舒適感。",
+    "sentence": "小樹蛙熱情接待每一位聽眾，讓人有＿＿＿＿的感覺。",
+    "originalSentence": "小樹蛙熱情接待每一位聽眾，讓人有「賓至如歸」的感覺。"
+  },
+  {
+    "semester": "4上",
+    "lesson": 12,
+    "lessonTitle": "寧靜的音樂會",
+    "idiom": "賞心悅目",
+    "meaning": "因欣賞美好的景物而心情舒暢愉快。",
+    "sentence": "聽著琴聲，看著美麗的夜空，真是令人＿＿＿＿。",
+    "originalSentence": "聽著琴聲，看著美麗的夜空，真是令人「賞心悅目」。"
+  },
+  {
+    "semester": "4上",
+    "lesson": 12,
+    "lessonTitle": "寧靜的音樂會",
+    "idiom": "並駕齊驅",
+    "meaning": "比喻彼此實力相當，並肩前進，不分上下。",
+    "sentence": "這兩位演奏家的水平相當，可以＿＿＿＿。",
+    "originalSentence": "這兩位演奏家的水平相當，可以「並駕齊驅」。"
+  }
 ];
 
 // --- 輔助函式 ---
-// 陣列隨機洗牌
+// 陣列隨機洗牌 (Fisher-Yates Shuffle)
 const shuffleArray = (array) => {
   const newArr = [...array];
   for (let i = newArr.length - 1; i > 0; i--) {
@@ -144,30 +1451,30 @@ const playAudioEffect = (type) => {
     if (type === 'correct') {
       osc.type = 'sine';
       osc.frequency.setValueAtTime(523.25, ctx.currentTime); // C5
-      osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.1); // E5
-      osc.frequency.setValueAtTime(783.99, ctx.currentTime + 0.2); // G5
-      gainNode.gain.setValueAtTime(0.1, ctx.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.00001, ctx.currentTime + 0.5);
+      osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.08); // E5
+      osc.frequency.setValueAtTime(783.99, ctx.currentTime + 0.16); // G5
+      gainNode.gain.setValueAtTime(0.12, ctx.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.00001, ctx.currentTime + 0.45);
       osc.start(ctx.currentTime);
-      osc.stop(ctx.currentTime + 0.5);
+      osc.stop(ctx.currentTime + 0.45);
     } else if (type === 'wrong') {
-      osc.type = 'square';
-      osc.frequency.setValueAtTime(150, ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(50, ctx.currentTime + 0.3);
-      gainNode.gain.setValueAtTime(0.05, ctx.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.00001, ctx.currentTime + 0.3);
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(180, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(60, ctx.currentTime + 0.25);
+      gainNode.gain.setValueAtTime(0.08, ctx.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.00001, ctx.currentTime + 0.25);
       osc.start(ctx.currentTime);
-      osc.stop(ctx.currentTime + 0.3);
+      osc.stop(ctx.currentTime + 0.25);
     } else if (type === 'cheer') {
       osc.type = 'triangle';
       osc.frequency.setValueAtTime(523.25, ctx.currentTime); // C5
       osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.1); // E5
       osc.frequency.setValueAtTime(783.99, ctx.currentTime + 0.2); // G5
       osc.frequency.setValueAtTime(1046.50, ctx.currentTime + 0.3); // C6
-      gainNode.gain.setValueAtTime(0.1, ctx.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.00001, ctx.currentTime + 1.0);
+      gainNode.gain.setValueAtTime(0.15, ctx.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.00001, ctx.currentTime + 0.8);
       osc.start(ctx.currentTime);
-      osc.stop(ctx.currentTime + 1.0);
+      osc.stop(ctx.currentTime + 0.8);
     }
   } catch (e) {
     console.warn('Audio play failed', e);
@@ -181,23 +1488,23 @@ const speakText = (text) => {
     const processedText = text.replace(/＿+/g, "空格");
     const utterance = new SpeechSynthesisUtterance(processedText);
     utterance.lang = 'zh-TW'; // 台灣繁體中文
-    utterance.rate = 0.85; // 放慢語速，便於學習
+    utterance.rate = 0.88; // 適合國小學童的適中語速
     window.speechSynthesis.speak(utterance);
   } else {
     console.warn('您的瀏覽器不支援語音合成功能');
   }
 };
 
-
 // --- 遊戲狀態管理 ---
-let gameState = 'menu'; // 'menu', 'playing', 'result'
+let currentSemester = '4上'; // '3下', '4上', 'all'
 let gameMode = 'meaning'; // 'meaning' (看解釋猜成語) 或 'sentence' (情境填空挑戰)
 let selectedLessons = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]; // 預設全選
-let questionCount = 'all'; // 'all', 10, 20
+let questionCount = 'all'; // 'all', 10, 20, 30
 let questions = [];
 let currentIndex = 0;
 let score = 0;
-let isAnswering = false; // 鎖定作答按鈕
+let isAnswering = false;
+let userAnswers = []; // 儲存作答紀錄供結算檢討
 
 // --- DOM 元素參考 ---
 const views = {
@@ -207,59 +1514,148 @@ const views = {
 };
 
 const elements = {
+  // 冊次切換按鈕
+  btnSem3Down: document.getElementById('btn-sem-3down'),
+  btnSem4Up: document.getElementById('btn-sem-4up'),
+  btnSemAll: document.getElementById('btn-sem-all'),
+  menuTitle: document.getElementById('menu-title'),
+  menuSubtitle: document.getElementById('menu-subtitle'),
+
+  // 題型按鈕
   btnModeMeaning: document.getElementById('btn-mode-meaning'),
   btnModeSentence: document.getElementById('btn-mode-sentence'),
+
+  // 課次選擇
   lessonGrid: document.getElementById('lesson-selector-grid'),
   selectedInfo: document.getElementById('selected-info'),
   btnSelectAll: document.getElementById('btn-select-all'),
+  btnSelectFirstHalf: document.getElementById('btn-select-first-half'),
+  btnSelectSecondHalf: document.getElementById('btn-select-second-half'),
   btnSelectNone: document.getElementById('btn-select-none'),
+
+  // 題數選擇
   qcountContainer: document.getElementById('qcount-selector-container'),
   btnQcountAll: document.getElementById('btn-qcount-all'),
   btnQcount10: document.getElementById('btn-qcount-10'),
   btnQcount20: document.getElementById('btn-qcount-20'),
+  btnQcount30: document.getElementById('btn-qcount-30'),
   btnStartGame: document.getElementById('btn-start-game'),
-  
+
+  // 遊戲進行中元素
+  playingBadgeSemester: document.getElementById('playing-badge-semester'),
+  playingBadgeMode: document.getElementById('playing-badge-mode'),
   playingProgressText: document.getElementById('playing-progress-text'),
   playingTotalText: document.getElementById('playing-total-text'),
   playingScoreText: document.getElementById('playing-score-text'),
   playingProgressBar: document.getElementById('playing-progress-bar'),
   playingProgressCar: document.getElementById('playing-progress-car'),
+  playingLessonTag: document.getElementById('playing-lesson-tag'),
   playingQuestionText: document.getElementById('playing-question-text'),
   btnSpeakQuestion: document.getElementById('btn-speak-question'),
   playingOptionsGrid: document.getElementById('playing-options-grid'),
-  
+  explanationBox: document.getElementById('explanation-box'),
+  explanationIdiom: document.getElementById('explanation-idiom'),
+  explanationMeaning: document.getElementById('explanation-meaning'),
+  explanationSentence: document.getElementById('explanation-sentence'),
+  btnNextQuestion: document.getElementById('btn-next-question'),
+
+  // 結算畫面元素
   resultScoreText: document.getElementById('result-score-text'),
   resultTotalText: document.getElementById('result-total-text'),
+  resultPercentageText: document.getElementById('result-percentage-text'),
   resultFeedbackText: document.getElementById('result-feedback-text'),
+  reviewListContainer: document.getElementById('review-list-container'),
+  btnFilterAllReview: document.getElementById('btn-filter-all-review'),
+  btnFilterWrongReview: document.getElementById('btn-filter-wrong-review'),
   btnRestartGame: document.getElementById('btn-restart-game'),
-  
-  feedbackOverlay: document.getElementById('feedback-overlay'),
-  feedbackEmoji: document.getElementById('feedback-emoji')
+  btnBackToMenu: document.getElementById('btn-back-to-menu')
 };
 
-// --- 初始化選單範圍選取區 ---
+// 依當前冊次取得題庫池
+const getCurrentPool = () => {
+  if (currentSemester === 'all') {
+    return idiomsDatabase;
+  }
+  return idiomsDatabase.filter(item => item.semester === currentSemester);
+};
+
+// 取得課次名稱對照
+const getLessonTitle = (lessonNum) => {
+  const pool = getCurrentPool();
+  const found = pool.find(item => item.lesson === lessonNum);
+  if (found && found.lessonTitle && found.lessonTitle !== `第${lessonNum}課`) {
+    return found.lessonTitle;
+  }
+  return '';
+};
+
+// --- 初始化主選單 UI ---
 const initMenu = () => {
-  // 建立 1-12 課按鈕
+  renderSemesterUI();
+  renderLessonGrid();
+  updateSelectedInfo();
+  setupEventListeners();
+};
+
+// 渲染冊次按鈕狀態
+const renderSemesterUI = () => {
+  const activeClass = 'bg-orange-500 text-white shadow-md border-orange-500';
+  const inactiveClass = 'bg-white text-gray-700 border-gray-200 hover:bg-orange-50 hover:text-orange-600';
+
+  elements.btnSem3Down.className = `py-2.5 px-3 md:px-4 rounded-xl font-extrabold text-sm md:text-base transition-all border-2 active-scale ${currentSemester === '3下' ? activeClass : inactiveClass}`;
+  elements.btnSem4Up.className = `py-2.5 px-3 md:px-4 rounded-xl font-extrabold text-sm md:text-base transition-all border-2 active-scale ${currentSemester === '4上' ? activeClass : inactiveClass}`;
+  elements.btnSemAll.className = `py-2.5 px-3 md:px-4 rounded-xl font-extrabold text-sm md:text-base transition-all border-2 active-scale ${currentSemester === 'all' ? activeClass : inactiveClass}`;
+
+  if (currentSemester === '3下') {
+    elements.menuTitle.textContent = '翰林國語 三下成語練習';
+    elements.menuSubtitle.textContent = '共收錄 12 課、86 個生字延伸成語與習作補充！';
+  } else if (currentSemester === '4上') {
+    elements.menuTitle.textContent = '翰林國語 四上成語練習';
+    elements.menuSubtitle.textContent = '共收錄 12 課、77 個生字延伸成語精選！';
+  } else {
+    elements.menuTitle.textContent = '翰林國語 三下＋四上 成語大挑戰';
+    elements.menuSubtitle.textContent = '跨年級綜合大會考，共收錄 163 個精選成語！';
+  }
+};
+
+// 渲染課次選擇按鈕
+const renderLessonGrid = () => {
   elements.lessonGrid.innerHTML = '';
   for (let lesson = 1; lesson <= 12; lesson++) {
     const btn = document.createElement('button');
-    btn.textContent = `第 ${lesson} 課`;
+    const lessonTitle = getLessonTitle(lesson);
+    
     btn.dataset.lesson = lesson;
-    btn.className = `py-2 px-1 rounded-xl font-bold text-sm transition-all transform active-scale ${
-      selectedLessons.includes(lesson)
-        ? 'bg-orange-500 text-white shadow-md'
-        : 'bg-gray-100 text-gray-400 border border-gray-200 hover:bg-gray-200'
+    const isSelected = selectedLessons.includes(lesson);
+    
+    btn.className = `p-2 rounded-xl font-bold text-xs md:text-sm transition-all transform active-scale flex flex-col items-center justify-center border ${
+      isSelected
+        ? 'bg-orange-500 text-white shadow-md border-orange-600'
+        : 'bg-gray-50 text-gray-500 border-gray-200 hover:bg-gray-100 hover:text-gray-700'
     }`;
+
+    btn.innerHTML = `
+      <span class="font-extrabold">第 ${lesson} 課</span>
+      ${lessonTitle ? `<span class="text-[11px] opacity-90 truncate max-w-full font-normal">${lessonTitle}</span>` : ''}
+    `;
+
     btn.addEventListener('click', () => toggleLesson(lesson));
     elements.lessonGrid.appendChild(btn);
   }
+};
+
+// 切換冊次
+const switchSemester = (sem) => {
+  currentSemester = sem;
+  selectedLessons = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+  renderSemesterUI();
+  renderLessonGrid();
   updateSelectedInfo();
 };
 
 // 切換單個課次
 const toggleLesson = (lesson) => {
   if (selectedLessons.length === 12) {
-    // 若原先全選，點擊其中一個就變成只選擇該課
     selectedLessons = [lesson];
   } else {
     if (selectedLessons.includes(lesson)) {
@@ -268,293 +1664,395 @@ const toggleLesson = (lesson) => {
       selectedLessons.push(lesson);
     }
   }
-  
-  // 重新渲染課次按鈕樣式
-  Array.from(elements.lessonGrid.children).forEach(btn => {
-    const l = parseInt(btn.dataset.lesson, 10);
-    if (selectedLessons.includes(l)) {
-      btn.className = 'py-2 px-1 rounded-xl font-bold text-sm transition-all transform active-scale bg-orange-500 text-white shadow-md';
-    } else {
-      btn.className = 'py-2 px-1 rounded-xl font-bold text-sm transition-all transform active-scale bg-gray-100 text-gray-400 border border-gray-200 hover:bg-gray-200';
-    }
-  });
-
-  // 控制題數選擇器是否顯示 (課次數 >= 2 才顯示，否則一律使用該課的題數)
-  if (selectedLessons.length >= 2) {
-    elements.qcountContainer.classList.remove('hidden');
-  } else {
-    elements.qcountContainer.classList.add('hidden');
-    questionCount = 'all'; // 回歸全部
-    updateQcountUI();
-  }
-
+  renderLessonGrid();
   updateSelectedInfo();
 };
 
-// 更新已選擇的狀態說明
+// 更新選擇資訊與題數按鈕
 const updateSelectedInfo = () => {
-  const total = idiomsData.filter(item => selectedLessons.includes(item.lesson)).length;
-  elements.selectedInfo.textContent = `已選 ${selectedLessons.length} 課 (共 ${total} 題)`;
-  
-  // 若沒選任何課，停用開始按鈕
+  const pool = getCurrentPool();
+  const availableItems = pool.filter(item => selectedLessons.includes(item.lesson));
+  const totalCount = availableItems.length;
+
+  elements.selectedInfo.textContent = `已選 ${selectedLessons.length} 課 (共 ${totalCount} 題)`;
+  elements.btnQcountAll.textContent = `全部 (${totalCount}題)`;
+
   if (selectedLessons.length === 0) {
     elements.btnStartGame.disabled = true;
-    elements.btnStartGame.className = 'w-full max-w-md p-4 rounded-2xl shadow-lg transition-all font-bold text-xl md:text-2xl flex justify-center items-center bg-gray-300 text-gray-500 cursor-not-allowed';
+    elements.btnStartGame.className = 'w-full max-w-md p-4 rounded-2xl shadow-none font-bold text-xl md:text-2xl flex justify-center items-center bg-gray-300 text-gray-500 cursor-not-allowed';
+    elements.btnStartGame.textContent = '請先選擇至少一課';
   } else {
     elements.btnStartGame.disabled = false;
-    elements.btnStartGame.className = 'w-full max-w-md p-4 rounded-2xl shadow-lg transition-all font-bold text-xl md:text-2xl flex justify-center items-center bg-red-500 hover:bg-red-600 text-white hover:scale-105 active-scale animate-pulse-slow';
+    elements.btnStartGame.className = 'w-full max-w-md p-4 rounded-2xl shadow-lg transition-all font-bold text-xl md:text-2xl flex justify-center items-center bg-red-500 hover:bg-red-600 text-white hover:scale-105 active-scale animate-pulse-slow cursor-pointer';
+    elements.btnStartGame.textContent = '🚀 開始測驗';
   }
 };
 
-// 全選或清除
-const selectRange = (all) => {
-  if (all) {
-    selectedLessons = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
-  } else {
-    selectedLessons = [];
-  }
-  
-  Array.from(elements.lessonGrid.children).forEach(btn => {
-    const l = parseInt(btn.dataset.lesson, 10);
-    if (selectedLessons.includes(l)) {
-      btn.className = 'py-2 px-1 rounded-xl font-bold text-sm transition-all transform active-scale bg-orange-500 text-white shadow-md';
-    } else {
-      btn.className = 'py-2 px-1 rounded-xl font-bold text-sm transition-all transform active-scale bg-gray-100 text-gray-400 border border-gray-200 hover:bg-gray-200';
-    }
-  });
-
-  if (selectedLessons.length >= 2) {
-    elements.qcountContainer.classList.remove('hidden');
-  } else {
-    elements.qcountContainer.classList.add('hidden');
-    questionCount = 'all';
-    updateQcountUI();
-  }
-
-  updateSelectedInfo();
-};
-
-// 切換題型
-const setGameMode = (mode) => {
-  gameMode = mode;
-  if (mode === 'meaning') {
-    elements.btnModeMeaning.className = 'p-4 rounded-xl font-bold text-base md:text-lg flex flex-col items-center transition-all border border-blue-200 bg-blue-500 text-white shadow-md active-scale';
-    elements.btnModeSentence.className = 'p-4 rounded-xl font-bold text-base md:text-lg flex flex-col items-center transition-all border border-green-200 bg-green-50 text-green-500 hover:bg-green-100/50 active-scale';
-  } else {
-    elements.btnModeMeaning.className = 'p-4 rounded-xl font-bold text-base md:text-lg flex flex-col items-center transition-all border border-blue-200 bg-blue-50 text-blue-500 hover:bg-blue-100/50 active-scale';
-    elements.btnModeSentence.className = 'p-4 rounded-xl font-bold text-base md:text-lg flex flex-col items-center transition-all border border-green-200 bg-green-500 text-white shadow-md active-scale';
-  }
-};
-
-// 切換題數
-const setQuestionCount = (count) => {
-  questionCount = count;
-  updateQcountUI();
-};
-
+// 題數按鈕狀態更新
 const updateQcountUI = () => {
-  const activeClass = 'py-2 px-6 rounded-xl font-bold bg-orange-500 text-white shadow-md active-scale';
-  const inactiveClass = 'py-2 px-6 rounded-xl font-bold bg-gray-100 text-gray-500 hover:bg-gray-200 active-scale';
-  
-  elements.btnQcountAll.className = questionCount === 'all' ? activeClass : inactiveClass;
-  elements.btnQcount10.className = questionCount === 10 ? activeClass : inactiveClass;
-  elements.btnQcount20.className = questionCount === 20 ? activeClass : inactiveClass;
+  const activeClass = 'bg-orange-500 text-white shadow-md';
+  const inactiveClass = 'bg-gray-100 text-gray-600 hover:bg-gray-200';
+
+  elements.btnQcountAll.className = `py-2 px-3 md:px-5 rounded-xl font-bold text-sm transition-all active-scale ${questionCount === 'all' ? activeClass : inactiveClass}`;
+  elements.btnQcount10.className = `py-2 px-3 md:px-5 rounded-xl font-bold text-sm transition-all active-scale ${questionCount === 10 ? activeClass : inactiveClass}`;
+  elements.btnQcount20.className = `py-2 px-3 md:px-5 rounded-xl font-bold text-sm transition-all active-scale ${questionCount === 20 ? activeClass : inactiveClass}`;
+  elements.btnQcount30.className = `py-2 px-3 md:px-5 rounded-xl font-bold text-sm transition-all active-scale ${questionCount === 30 ? activeClass : inactiveClass}`;
 };
 
+// 題型切換
+const switchMode = (mode) => {
+  gameMode = mode;
+  const activeClass = 'border-2 border-blue-500 bg-blue-500 text-white shadow-md';
+  const inactiveClass = 'border border-gray-200 bg-gray-50 text-gray-600 hover:bg-blue-50 hover:text-blue-600';
 
-// --- 遊戲流程邏輯 ---
-const switchView = (targetView) => {
-  Object.keys(views).forEach(key => {
-    if (key === targetView) {
-      views[key].classList.remove('hidden');
-    } else {
-      views[key].classList.add('hidden');
-    }
-  });
+  if (mode === 'meaning') {
+    elements.btnModeMeaning.className = `p-4 rounded-2xl font-extrabold text-base md:text-lg flex flex-col items-center transition-all active-scale ${activeClass}`;
+    elements.btnModeSentence.className = `p-4 rounded-2xl font-extrabold text-base md:text-lg flex flex-col items-center transition-all active-scale ${inactiveClass}`;
+  } else {
+    elements.btnModeMeaning.className = `p-4 rounded-2xl font-extrabold text-base md:text-lg flex flex-col items-center transition-all active-scale ${inactiveClass}`;
+    elements.btnModeSentence.className = `p-4 rounded-2xl font-extrabold text-base md:text-lg flex flex-col items-center transition-all active-scale ${activeClass}`;
+  }
 };
 
-const startGame = () => {
-  if (selectedLessons.length === 0) return;
+// --- 建立測驗題目清單 ---
+const generateQuestions = () => {
+  const pool = getCurrentPool();
+  const candidateItems = pool.filter(item => selectedLessons.includes(item.lesson));
   
-  score = 0;
-  currentIndex = 0;
-  isAnswering = false;
+  if (candidateItems.length === 0) return [];
 
-  // 1. 篩選符合課次的題目
-  let targetIdioms = idiomsData.filter(item => selectedLessons.includes(item.lesson));
-  targetIdioms = shuffleArray(targetIdioms); // 洗牌
+  // 洗牌
+  const shuffledItems = shuffleArray(candidateItems);
   
-  // 2. 裁切題數
-  if (selectedLessons.length >= 2 && questionCount !== 'all') {
-    const limit = parseInt(questionCount, 10);
-    if (targetIdioms.length > limit) {
-      targetIdioms = targetIdioms.slice(0, limit);
-    }
+  // 決定總題數
+  let targetCount = shuffledItems.length;
+  if (questionCount !== 'all' && typeof questionCount === 'number') {
+    targetCount = Math.min(questionCount, shuffledItems.length);
   }
 
-  // 3. 選項生成，避免選項超綱
-  questions = targetIdioms.map(target => {
-    const scopeIdioms = idiomsData.filter(item => selectedLessons.includes(item.lesson));
-    let wrongOptions = scopeIdioms.filter(item => item.idiom !== target.idiom);
-    wrongOptions = shuffleArray(wrongOptions).slice(0, 3);
-    const options = shuffleArray([target, ...wrongOptions].map(item => item.idiom));
+  const selectedQuestions = shuffledItems.slice(0, targetCount);
+
+  // 為每道題生成 4 個選項 (1 正確 + 3 干擾項)
+  return selectedQuestions.map(item => {
+    // 從同冊 (或全部) 庫中選取干擾成語
+    const distractorPool = pool.filter(other => other.idiom !== item.idiom);
+    const shuffledDistractors = shuffleArray(distractorPool);
     
+    // 取 3 個不重複的干擾成語
+    const distractorIdioms = [];
+    for (const d of shuffledDistractors) {
+      if (!distractorIdioms.includes(d.idiom) && d.idiom !== item.idiom) {
+        distractorIdioms.push(d.idiom);
+      }
+      if (distractorIdioms.length === 3) break;
+    }
+
+    // 若干擾項不足3個（極端情況），從全資料庫補足
+    if (distractorIdioms.length < 3) {
+      const fallbackPool = idiomsDatabase.filter(other => other.idiom !== item.idiom && !distractorIdioms.includes(other.idiom));
+      for (const d of shuffleArray(fallbackPool)) {
+        distractorIdioms.push(d.idiom);
+        if (distractorIdioms.length === 3) break;
+      }
+    }
+
+    // 4 個選項洗牌
+    const options = shuffleArray([item.idiom, ...distractorIdioms]);
+
     return {
-      ...target,
-      options
+      target: item,
+      options: options,
+      correctAnswer: item.idiom,
+      questionText: gameMode === 'meaning' ? item.meaning : item.sentence
     };
   });
-
-  switchView('playing');
-  showQuestion();
 };
 
-const showQuestion = () => {
-  const currentQ = questions[currentIndex];
-  const questionText = gameMode === 'meaning' ? currentQ.meaning : currentQ.sentence;
-  
-  // 更新進度與得分
-  elements.playingProgressText.textContent = currentIndex + 1;
+// --- 開始遊戲 ---
+const startGame = () => {
+  questions = generateQuestions();
+  if (questions.length === 0) return;
+
+  currentIndex = 0;
+  score = 0;
+  userAnswers = [];
+  isAnswering = false;
+
+  // 切換畫面
+  views.menu.classList.add('hidden');
+  views.result.classList.add('hidden');
+  views.playing.classList.remove('hidden');
+
+  // 設定頂部標籤
+  const semText = currentSemester === '3下' ? '三下' : (currentSemester === '4上' ? '四上' : '三下+四上');
+  elements.playingBadgeSemester.textContent = `【${semText}】`;
+  elements.playingBadgeMode.textContent = gameMode === 'meaning' ? '📖 看解釋猜成語' : '✍️ 情境填空挑戰';
   elements.playingTotalText.textContent = questions.length;
+
+  loadQuestion(currentIndex);
+};
+
+// 載入指定題目
+const loadQuestion = (index) => {
+  isAnswering = false;
+  const q = questions[index];
+
+  // 更新題號與分數
+  elements.playingProgressText.textContent = index + 1;
   elements.playingScoreText.textContent = score;
 
   // 更新小汽車進度條
-  const percent = ((currentIndex + 1) / questions.length) * 100;
-  elements.playingProgressBar.style.width = `${percent}%`;
-  elements.playingProgressCar.style.left = `${percent}%`;
+  const progressPercent = (index / questions.length) * 100;
+  elements.playingProgressBar.style.width = `${progressPercent}%`;
+  elements.playingProgressCar.style.left = `${progressPercent}%`;
 
-  // 更新題目文字
-  elements.playingQuestionText.textContent = questionText;
+  // 課次標籤
+  const semLabel = q.target.semester ? `${q.target.semester} ` : '';
+  elements.playingLessonTag.textContent = `${semLabel}第 ${q.target.lesson} 課 ${q.target.lessonTitle ? `· ${q.target.lessonTitle}` : ''}`;
 
-  // 綁定喇叭播放題目音檔
-  elements.btnSpeakQuestion.onclick = () => speakText(questionText);
+  // 題目內容
+  elements.playingQuestionText.textContent = q.questionText;
 
-  // 渲染選項按鈕
+  // 隱藏詳解區
+  elements.explanationBox.classList.add('hidden');
+  elements.btnNextQuestion.classList.add('hidden');
+
+  // 生成選項按鈕
   elements.playingOptionsGrid.innerHTML = '';
-  currentQ.options.forEach(option => {
-    // 包裹 div 方便排列喇叭與選項
-    const wrap = document.createElement('div');
-    wrap.className = 'relative flex w-full animate-fade-in';
-    
-    // 主選項按鈕
+  const optionLabels = ['A', 'B', 'C', 'D'];
+  
+  q.options.forEach((opt, i) => {
     const btn = document.createElement('button');
-    btn.textContent = option;
-    btn.className = 'w-full p-4 text-xl md:text-2xl font-bold rounded-2xl transition-all duration-300 pr-12 bg-white hover:bg-orange-50 border-2 border-gray-200 text-gray-700 active-scale shadow-sm';
-    btn.addEventListener('click', () => handleOptionClick(option, btn));
-    
-    // 選項喇叭按鈕
-    const spk = document.createElement('button');
-    spk.textContent = '🔊';
-    spk.className = 'absolute right-3 top-1/2 transform -translate-y-1/2 p-2 hover:scale-110 transition-transform text-lg opacity-70 hover:opacity-100';
-    spk.title = `播放選項：${option}`;
-    spk.addEventListener('click', (e) => {
-      e.stopPropagation(); // 防止點擊發音時觸發作答
-      speakText(option);
-    });
-
-    wrap.appendChild(btn);
-    wrap.appendChild(spk);
-    elements.playingOptionsGrid.appendChild(wrap);
+    btn.className = 'option-btn p-4 md:p-5 rounded-2xl bg-white border-2 border-orange-100 hover:border-orange-400 shadow-md font-extrabold text-xl md:text-2xl text-gray-800 transition-all flex items-center justify-start text-left active-scale hover:bg-orange-50/50';
+    btn.innerHTML = `
+      <span class="w-8 h-8 rounded-full bg-orange-100 text-orange-600 inline-flex items-center justify-center text-sm font-black mr-3 flex-shrink-0">${optionLabels[i]}</span>
+      <span class="truncate">${opt}</span>
+    `;
+    btn.addEventListener('click', () => handleOptionClick(opt, btn, q));
+    elements.playingOptionsGrid.appendChild(btn);
   });
+
+  // 自動發音或點擊發音
+  elements.btnSpeakQuestion.onclick = () => speakText(q.questionText);
 };
 
-const handleOptionClick = (option, selectedBtn) => {
+// 處理選項點擊
+const handleOptionClick = (selectedOpt, clickedBtn, q) => {
   if (isAnswering) return;
   isAnswering = true;
-  
-  const currentQ = questions[currentIndex];
-  const isCorrect = option === currentQ.idiom;
 
-  // 全螢幕 ⭕ ❌ 特效
-  elements.feedbackEmoji.textContent = isCorrect ? '⭕' : '❌';
-  elements.feedbackOverlay.classList.remove('hidden');
-  elements.feedbackOverlay.classList.add('flex');
-
+  const isCorrect = selectedOpt === q.correctAnswer;
   if (isCorrect) {
-    score++;
-    playAudioEffect('correct');
-  } else {
-    playAudioEffect('wrong');
+    score += 10;
   }
 
-  // 選項色彩高亮標記
-  const wraps = Array.from(elements.playingOptionsGrid.children);
-  wraps.forEach(wrap => {
-    const btn = wrap.querySelector('button');
-    const optText = btn.textContent;
-    btn.disabled = true; // 鎖定作答
+  // 記錄作答
+  userAnswers.push({
+    question: q,
+    userSelected: selectedOpt,
+    isCorrect: isCorrect
+  });
+
+  // 音效
+  playAudioEffect(isCorrect ? 'correct' : 'wrong');
+
+  // 標記選項按鈕狀態
+  const optionButtons = elements.playingOptionsGrid.querySelectorAll('.option-btn');
+  optionButtons.forEach(btn => {
+    const textSpan = btn.querySelector('span:last-child');
+    const optText = textSpan ? textSpan.textContent.trim() : '';
+    btn.classList.remove('hover:border-orange-400', 'hover:bg-orange-50/50', 'active-scale');
     
-    if (optText === currentQ.idiom) {
-      // 正確選項高亮為綠色
-      btn.className = 'w-full p-4 text-xl md:text-2xl font-bold rounded-2xl transition-all duration-300 pr-12 text-white bg-green-500 border-2 border-green-600 shadow-inner';
-    } else if (optText === option) {
-      // 若選錯，該選項高亮為紅色
-      btn.className = 'w-full p-4 text-xl md:text-2xl font-bold rounded-2xl transition-all duration-300 pr-12 text-white bg-red-500 border-2 border-red-600 shadow-inner';
+    if (optText === q.correctAnswer) {
+      btn.className = 'p-4 md:p-5 rounded-2xl bg-green-500 text-white border-2 border-green-600 shadow-lg font-extrabold text-xl md:text-2xl flex items-center justify-start text-left animate-correct-pulse';
+      const label = btn.querySelector('span:first-child');
+      if (label) label.className = 'w-8 h-8 rounded-full bg-white text-green-700 inline-flex items-center justify-center text-sm font-black mr-3 flex-shrink-0';
+    } else if (btn === clickedBtn && !isCorrect) {
+      btn.className = 'p-4 md:p-5 rounded-2xl bg-red-500 text-white border-2 border-red-600 shadow-md font-extrabold text-xl md:text-2xl flex items-center justify-start text-left animate-wrong-shake';
+      const label = btn.querySelector('span:first-child');
+      if (label) label.className = 'w-8 h-8 rounded-full bg-white text-red-700 inline-flex items-center justify-center text-sm font-black mr-3 flex-shrink-0';
     } else {
-      // 其他無關選項變暗
-      btn.className = 'w-full p-4 text-xl md:text-2xl font-bold rounded-2xl transition-all duration-300 pr-12 text-gray-400 bg-gray-100 border-2 border-gray-200 opacity-50';
+      btn.classList.add('opacity-40');
     }
   });
 
-  // 1.5 秒後關閉特效並進入下一題或結算
-  setTimeout(() => {
-    elements.feedbackOverlay.classList.add('hidden');
-    elements.feedbackOverlay.classList.remove('flex');
-    
-    if (currentIndex + 1 < questions.length) {
-      currentIndex++;
-      isAnswering = false;
-      showQuestion();
-    } else {
-      showResult();
-    }
-  }, 1500);
+  // 顯示詳解卡片
+  elements.explanationIdiom.textContent = `【${q.target.idiom}】`;
+  elements.explanationMeaning.textContent = q.target.meaning;
+  elements.explanationSentence.textContent = q.target.sentence.replace(/＿＿＿＿/g, `『${q.target.idiom}』`);
+  elements.explanationBox.classList.remove('hidden');
+
+  // 顯示下一題按鈕
+  elements.btnNextQuestion.classList.remove('hidden');
+  elements.btnNextQuestion.onclick = () => {
+    advanceQuestion();
+  };
+
+  // 朗讀成語詳解
+  speakText(`${isCorrect ? '答對了！' : '答錯囉！'} 正確答案是：${q.target.idiom}。${q.target.meaning}`);
 };
 
+// 進入下一題或結算
+const advanceQuestion = () => {
+  if (currentIndex < questions.length - 1) {
+    currentIndex++;
+    loadQuestion(currentIndex);
+  } else {
+    showResult();
+  }
+};
+
+// --- 結算畫面 ---
 const showResult = () => {
-  switchView('result');
-  
-  // 播放歡呼音效與中文語音
+  views.playing.classList.add('hidden');
+  views.result.classList.remove('hidden');
+
   playAudioEffect('cheer');
-  speakText('恭喜你，成功了！');
+
+  const totalQuestions = questions.length;
+  const correctCount = userAnswers.filter(a => a.isCorrect).length;
+  const percentage = Math.round((correctCount / totalQuestions) * 100);
 
   elements.resultScoreText.textContent = score;
-  elements.resultTotalText.textContent = questions.length;
+  elements.resultTotalText.textContent = totalQuestions * 10;
+  elements.resultPercentageText.textContent = `${correctCount} / ${totalQuestions} 題 (${percentage}%)`;
 
-  // 顯示評價
-  let feedback = '';
-  if (score === questions.length) {
-    feedback = '太厲害了！您是真正的成語大師！🏆';
-  } else if (score >= questions.length * 0.8) {
-    feedback = '表現得非常棒！繼續保持！🌟';
-  } else if (score >= questions.length * 0.6) {
-    feedback = '不錯喔！再多練習一定會更好！👍';
+  // 評語給分
+  if (percentage === 100) {
+    elements.resultFeedbackText.textContent = '🌟 太不可思議了！滿分過關！你是名副其實的成語大宗師！🏆';
+  } else if (percentage >= 80) {
+    elements.resultFeedbackText.textContent = '🎉 太棒了！表現非常優異！成語實力爐火純青！✨';
+  } else if (percentage >= 60) {
+    elements.resultFeedbackText.textContent = '💪 還不錯唷！再多複習幾次，一定能百尺竿頭、更進一步！📖';
   } else {
-    feedback = '別氣餒，多複習幾次就能掌握囉！💪';
+    elements.resultFeedbackText.textContent = '🌱 別灰心！只要持之以恆、專心致志，下次一定會更厲害！🔥';
   }
-  elements.resultFeedbackText.textContent = feedback;
+
+  // 渲染檢討清單
+  renderReviewList('all');
 };
 
-
-// --- 事件綁定 ---
-const bindEvents = () => {
-  elements.btnModeMeaning.addEventListener('click', () => setGameMode('meaning'));
-  elements.btnModeSentence.addEventListener('click', () => setGameMode('sentence'));
-  elements.btnSelectAll.addEventListener('click', () => selectRange(true));
-  elements.btnSelectNone.addEventListener('click', () => selectRange(false));
-  elements.btnQcountAll.addEventListener('click', () => setQuestionCount('all'));
-  elements.btnQcount10.addEventListener('click', () => setQuestionCount(10));
-  elements.btnQcount20.addEventListener('click', () => setQuestionCount(20));
+// 渲染作答檢討清單
+const renderReviewList = (filter = 'all') => {
+  elements.reviewListContainer.innerHTML = '';
   
+  const activeClass = 'bg-orange-500 text-white font-bold';
+  const inactiveClass = 'bg-gray-100 text-gray-600 hover:bg-gray-200';
+  elements.btnFilterAllReview.className = `px-4 py-1.5 rounded-lg text-xs md:text-sm ${filter === 'all' ? activeClass : inactiveClass}`;
+  elements.btnFilterWrongReview.className = `px-4 py-1.5 rounded-lg text-xs md:text-sm ${filter === 'wrong' ? activeClass : inactiveClass}`;
+
+  const itemsToRender = filter === 'wrong' ? userAnswers.filter(a => !a.isCorrect) : userAnswers;
+
+  if (itemsToRender.length === 0) {
+    elements.reviewListContainer.innerHTML = `
+      <div class="text-center py-6 text-gray-400 font-bold">
+        ${filter === 'wrong' ? '太棒了！本次測驗沒有任何錯題！🎉' : '無作答紀錄'}
+      </div>
+    `;
+    return;
+  }
+
+  itemsToRender.forEach((ans, idx) => {
+    const itemDiv = document.createElement('div');
+    const isCorrect = ans.isCorrect;
+    
+    itemDiv.className = `p-4 rounded-2xl border-2 text-left ${
+      isCorrect ? 'bg-green-50/60 border-green-200' : 'bg-red-50/60 border-red-200'
+    } mb-3`;
+
+    itemDiv.innerHTML = `
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-xs font-black px-2.5 py-0.5 rounded-full ${
+          isCorrect ? 'bg-green-200 text-green-800' : 'bg-red-200 text-red-800'
+        }">
+          ${isCorrect ? '⭕ 答對' : '❌ 答錯'} · 第 ${ans.question.target.semester} 第 ${ans.question.target.lesson} 課
+        </span>
+        <span class="text-sm font-extrabold text-orange-600">【${ans.question.target.idiom}】</span>
+      </div>
+      
+      <p class="text-gray-700 text-sm font-bold mb-1.5">${ans.question.questionText}</p>
+      
+      <div class="text-xs space-y-1 pt-2 border-t border-gray-200/70">
+        ${!isCorrect ? `<p class="text-red-600 font-bold">您的選擇：${ans.userSelected}</p>` : ''}
+        <p class="text-green-700 font-bold">正確成語：${ans.question.target.idiom}</p>
+        <p class="text-gray-600"><span class="font-bold">釋義：</span>${ans.question.target.meaning}</p>
+        <p class="text-gray-600"><span class="font-bold">例句：</span>${ans.question.target.sentence.replace(/＿＿＿＿/g, `『${ans.question.target.idiom}』`)}</p>
+      </div>
+    `;
+
+    elements.reviewListContainer.appendChild(itemDiv);
+  });
+};
+
+// --- 綁定主選單與所有事件 ---
+const setupEventListeners = () => {
+  // 冊次切換
+  elements.btnSem3Down.addEventListener('click', () => switchSemester('3下'));
+  elements.btnSem4Up.addEventListener('click', () => switchSemester('4上'));
+  elements.btnSemAll.addEventListener('click', () => switchSemester('all'));
+
+  // 題型切換
+  elements.btnModeMeaning.addEventListener('click', () => switchMode('meaning'));
+  elements.btnModeSentence.addEventListener('click', () => switchMode('sentence'));
+
+  // 範圍快速選擇
+  elements.btnSelectAll.addEventListener('click', () => {
+    selectedLessons = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+    renderLessonGrid();
+    updateSelectedInfo();
+  });
+
+  elements.btnSelectFirstHalf.addEventListener('click', () => {
+    selectedLessons = [1, 2, 3, 4, 5, 6];
+    renderLessonGrid();
+    updateSelectedInfo();
+  });
+
+  elements.btnSelectSecondHalf.addEventListener('click', () => {
+    selectedLessons = [7, 8, 9, 10, 11, 12];
+    renderLessonGrid();
+    updateSelectedInfo();
+  });
+
+  elements.btnSelectNone.addEventListener('click', () => {
+    selectedLessons = [];
+    renderLessonGrid();
+    updateSelectedInfo();
+  });
+
+  // 題數選擇
+  elements.btnQcountAll.addEventListener('click', () => {
+    questionCount = 'all';
+    updateQcountUI();
+  });
+  elements.btnQcount10.addEventListener('click', () => {
+    questionCount = 10;
+    updateQcountUI();
+  });
+  elements.btnQcount20.addEventListener('click', () => {
+    questionCount = 20;
+    updateQcountUI();
+  });
+  elements.btnQcount30.addEventListener('click', () => {
+    questionCount = 30;
+    updateQcountUI();
+  });
+
+  // 開始遊戲按鈕
   elements.btnStartGame.addEventListener('click', startGame);
-  elements.btnRestartGame.addEventListener('click', () => switchView('menu'));
+
+  // 結算畫面檢討篩選
+  elements.btnFilterAllReview.addEventListener('click', () => renderReviewList('all'));
+  elements.btnFilterWrongReview.addEventListener('click', () => renderReviewList('wrong'));
+
+  // 重新開始
+  elements.btnRestartGame.addEventListener('click', startGame);
+  elements.btnBackToMenu.addEventListener('click', () => {
+    views.result.classList.add('hidden');
+    views.playing.classList.add('hidden');
+    views.menu.classList.remove('hidden');
+  });
 };
 
-// --- 初始化執行 ---
-const init = () => {
-  initMenu();
-  bindEvents();
-  switchView('menu');
-};
-
-document.addEventListener('DOMContentLoaded', init);
+// 頁面加載完成後啟動
+document.addEventListener('DOMContentLoaded', initMenu);
