@@ -1534,7 +1534,8 @@ const elements = {
   btnSelectNone: document.getElementById('btn-select-none'),
 
   // 題數選擇
-  qcountContainer: document.getElementById('qcount-selector-container'),
+  btnExitGame: document.getElementById('btn-exit-game'),
+  btnTopHome: document.getElementById('btn-top-home'),
   btnQcountAll: document.getElementById('btn-qcount-all'),
   btnQcount10: document.getElementById('btn-qcount-10'),
   btnQcount20: document.getElementById('btn-qcount-20'),
@@ -1888,6 +1889,11 @@ const handleOptionClick = (selectedOpt, clickedBtn, q) => {
     advanceQuestion();
   };
 
+  // 自動平滑滾動至詳解區
+  setTimeout(() => {
+    elements.explanationBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }, 100);
+
   // 朗讀成語詳解
   speakText(`${isCorrect ? '答對了！' : '答錯囉！'} 正確答案是：${q.target.idiom}。${q.target.meaning}`);
 };
@@ -2045,12 +2051,29 @@ const setupEventListeners = () => {
   elements.btnFilterAllReview.addEventListener('click', () => renderReviewList('all'));
   elements.btnFilterWrongReview.addEventListener('click', () => renderReviewList('wrong'));
 
+  // 中途退出 / 重新選擇按鈕
+  if (elements.btnExitGame) {
+    elements.btnExitGame.addEventListener('click', () => {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+      views.playing.classList.add('hidden');
+      views.result.classList.add('hidden');
+      views.menu.classList.remove('hidden');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  }
+
   // 重新開始
   elements.btnRestartGame.addEventListener('click', startGame);
   elements.btnBackToMenu.addEventListener('click', () => {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
     views.result.classList.add('hidden');
     views.playing.classList.add('hidden');
     views.menu.classList.remove('hidden');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   });
 };
 

@@ -15,8 +15,19 @@
 </head>
 <body class="min-h-screen bg-amber-50/40 p-3 md:p-6 flex flex-col items-center justify-center transition-colors duration-300">
   
-  <div id="app" class="w-full max-w-2xl mx-auto py-4">
+  <div id="app" class="w-full max-w-2xl mx-auto py-2">
     
+    <!-- 頂部通用導覽列 (Top Navigation Bar) -->
+    <div class="w-full flex items-center justify-between mb-3 px-1">
+      <a href="../../index.html" class="inline-flex items-center space-x-1.5 py-1.5 px-3.5 bg-white/90 hover:bg-orange-500 hover:text-white text-gray-700 rounded-full shadow-sm border border-orange-200/80 font-bold text-xs md:text-sm transition-all duration-200 hover:shadow-md active-scale">
+        <span>🏠</span>
+        <span>回工具箱首頁</span>
+      </a>
+      <span class="text-xs font-black text-orange-600/80 bg-orange-100/70 px-3 py-1 rounded-full border border-orange-200/50">
+        ✨ 翰林版三下 & 四上
+      </span>
+    </div>
+
     <!-- 1. 主選單畫面 (Menu View) -->
     <div id="menu-view" class="flex flex-col items-center justify-center space-y-5 text-center w-full animate-fade-in">
       <div class="text-6xl mb-1 animate-bounce">🏆</div>
@@ -119,10 +130,21 @@
             <span id="playing-badge-semester" class="bg-orange-100 text-orange-700 text-xs font-black px-2.5 py-1 rounded-full">【四上】</span>
             <span id="playing-badge-mode" class="bg-blue-100 text-blue-700 text-xs font-black px-2.5 py-1 rounded-full">📖 看解釋猜成語</span>
           </div>
-          <div class="flex items-center space-x-4 text-sm md:text-base font-bold text-gray-600">
-            <div>題號：<span id="playing-progress-text" class="text-orange-500 text-lg font-black">1</span> / <span id="playing-total-text">77</span></div>
-            <div>得分：<span id="playing-score-text" class="text-green-600 text-lg font-black">0</span> 分</div>
+          <div class="flex items-center space-x-2">
+            <button id="btn-exit-game" class="text-xs font-extrabold text-amber-800 hover:text-white bg-amber-100 hover:bg-orange-500 px-3 py-1.5 rounded-full transition-all border border-amber-200 shadow-sm active-scale flex items-center space-x-1">
+              <span>📋</span>
+              <span>回選單重選</span>
+            </button>
+            <a href="../../index.html" class="text-xs font-extrabold text-gray-700 hover:text-white bg-gray-100 hover:bg-gray-800 px-3 py-1.5 rounded-full transition-all border border-gray-200 shadow-sm active-scale flex items-center space-x-1">
+              <span>🏠</span>
+              <span>回首頁</span>
+            </a>
           </div>
+        </div>
+
+        <div class="flex justify-between items-center mb-2 px-1 text-sm md:text-base font-bold text-gray-600">
+          <div>題號：<span id="playing-progress-text" class="text-orange-500 text-lg font-black">1</span> / <span id="playing-total-text">77</span></div>
+          <div>得分：<span id="playing-score-text" class="text-green-600 text-lg font-black">0</span> 分</div>
         </div>
 
         <!-- 小汽車進度條 -->
@@ -216,13 +238,16 @@
         </div>
       </div>
       
-      <div class="grid grid-cols-2 gap-3 w-full">
-        <button id="btn-restart-game" class="p-4 bg-orange-500 hover:bg-orange-600 text-white rounded-2xl shadow-md transition-transform hover:scale-105 active-scale font-extrabold text-lg">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3 w-full">
+        <button id="btn-restart-game" class="p-3.5 bg-orange-500 hover:bg-orange-600 text-white rounded-2xl shadow-md transition-transform hover:scale-105 active-scale font-extrabold text-base">
           🔄 再測驗一次
         </button>
-        <button id="btn-back-to-menu" class="p-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-2xl shadow-md transition-transform hover:scale-105 active-scale font-extrabold text-lg border border-gray-200">
-          🏠 回到主選單
+        <button id="btn-back-to-menu" class="p-3.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-2xl shadow-md transition-transform hover:scale-105 active-scale font-extrabold text-base border border-gray-200">
+          📋 回測驗選單
         </button>
+        <a href="../../index.html" class="p-3.5 bg-amber-100 hover:bg-amber-200 text-amber-900 rounded-2xl shadow-md transition-transform hover:scale-105 active-scale font-extrabold text-base flex items-center justify-center border border-amber-300">
+          🏠 回工具箱首頁
+        </a>
       </div>
     </div>
     
