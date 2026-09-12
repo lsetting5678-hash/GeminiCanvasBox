@@ -2870,11 +2870,12 @@ const views = {
 };
 
 const elements = {
-  // 字體切換
   btnToggleFont: document.getElementById('btn-toggle-font'),
   fontLabel: document.getElementById('font-label'),
+  fontIcon: document.getElementById('font-icon'),
+  btnTopHome: document.getElementById('btn-top-home'),
 
-  // 冊次按鈕
+  // 冊次切換
   btnSem3Down: document.getElementById('btn-sem-3down'),
   btnSem4Up: document.getElementById('btn-sem-4up'),
   btnSemAll: document.getElementById('btn-sem-all'),
@@ -2932,6 +2933,7 @@ const elements = {
   explanationIdiom: document.getElementById('explanation-idiom'),
   explanationMeaning: document.getElementById('explanation-meaning'),
   explanationSentence: document.getElementById('explanation-sentence'),
+  btnSpeakExplanation: document.getElementById('btn-speak-explanation'),
   btnNextQuestion: document.getElementById('btn-next-question'),
 
   // 結算畫面
@@ -2995,10 +2997,10 @@ const renderSemesterUI = () => {
     elements.menuSubtitle.textContent = '共收錄 12 課、86 個生字延伸成語與習作補充！';
   } else if (currentSemester === '4上') {
     elements.menuTitle.textContent = '翰林國語 四上成語練習';
-    elements.menuSubtitle.textContent = '共收錄 12 課、77 個生字延伸成語精選！';
+    elements.menuSubtitle.textContent = '共收錄 12 課、91 個生字延伸成語與習作詞彙精選！';
   } else {
     elements.menuTitle.textContent = '翰林國語 三下＋四上 成語大挑戰';
-    elements.menuSubtitle.textContent = '跨年級綜合大會考，共收錄 163 個精選成語！';
+    elements.menuSubtitle.textContent = '跨年級綜合大會考，共收錄 177 個精選成語與習作詞彙！';
   }
 };
 
@@ -3214,21 +3216,20 @@ const renderMultipleChoiceOptions = (q) => {
 
   q.options.forEach((opt, i) => {
     const btn = document.createElement('div');
-    btn.className = 'option-card p-4 md:p-5 rounded-2xl bg-white border-2 border-orange-100 hover:border-orange-400 shadow-md font-extrabold text-xl md:text-2xl text-gray-800 transition-all flex items-center justify-between cursor-pointer active-scale hover:bg-orange-50/50';
+    btn.className = 'option-card p-4 sm:p-5 md:p-6 rounded-2xl bg-white border-2 border-orange-100 hover:border-orange-400 shadow-md font-black text-xl sm:text-2xl md:text-3xl text-gray-800 transition-all flex items-center justify-between cursor-pointer active-scale hover:bg-orange-50/50 min-h-[75px] md:min-h-[90px]';
     
     btn.innerHTML = `
-      <div class="flex items-center space-x-3 overflow-hidden">
-        <span class="w-8 h-8 rounded-full bg-orange-100 text-orange-600 inline-flex items-center justify-center text-sm font-black flex-shrink-0">${optionLabels[i]}</span>
-        <span class="truncate option-text">${opt}</span>
+      <div class="flex items-center space-x-3 sm:space-x-4 overflow-hidden">
+        <span class="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-orange-100 text-orange-600 inline-flex items-center justify-center text-sm sm:text-base font-black flex-shrink-0">${optionLabels[i]}</span>
+        <span class="truncate option-text leading-tight">${opt}</span>
       </div>
-      <button class="btn-speak-opt p-2 rounded-full hover:bg-orange-200/60 text-lg flex-shrink-0 ml-2 transition-transform hover:scale-125" title="朗讀此成語">
+      <button class="btn-speak-opt p-2.5 sm:p-3 rounded-full hover:bg-orange-200/70 text-xl sm:text-2xl flex-shrink-0 ml-2 transition-transform hover:scale-125" title="朗讀此成語">
         🔊
       </button>
     `;
 
     // 點擊成語卡片作答
     btn.addEventListener('click', (e) => {
-      // 若點擊的是小喇叭，不觸發作答
       if (e.target.closest('.btn-speak-opt')) return;
       handleOptionClick(opt, btn, q);
     });
@@ -3268,9 +3269,9 @@ const handleOptionClick = (selectedOpt, clickedCard, q) => {
     card.classList.remove('hover:border-orange-400', 'hover:bg-orange-50/50', 'active-scale', 'cursor-pointer');
     
     if (optText === q.correctAnswer) {
-      card.className = 'p-4 md:p-5 rounded-2xl bg-green-500 text-white border-2 border-green-600 shadow-lg font-extrabold text-xl md:text-2xl flex items-center justify-between animate-correct-pulse';
+      card.className = 'p-4 sm:p-5 md:p-6 rounded-2xl bg-green-500 text-white border-2 border-green-600 shadow-lg font-black text-xl sm:text-2xl md:text-3xl flex items-center justify-between animate-correct-pulse min-h-[75px] md:min-h-[90px]';
     } else if (card === clickedCard && !isCorrect) {
-      card.className = 'p-4 md:p-5 rounded-2xl bg-red-500 text-white border-2 border-red-600 shadow-md font-extrabold text-xl md:text-2xl flex items-center justify-between animate-wrong-shake';
+      card.className = 'p-4 sm:p-5 md:p-6 rounded-2xl bg-red-500 text-white border-2 border-red-600 shadow-md font-black text-xl sm:text-2xl md:text-3xl flex items-center justify-between animate-wrong-shake min-h-[75px] md:min-h-[90px]';
     } else {
       card.classList.add('opacity-40');
     }
@@ -3303,10 +3304,10 @@ const renderUnscrambleUI = () => {
     elements.slotEmptyHint.classList.add('hidden');
     unscrambleCurrentAssembled.forEach((item, idx) => {
       const chunkBtn = document.createElement('div');
-      chunkBtn.className = 'chunk-btn px-3.5 py-2.5 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-extrabold text-sm md:text-base shadow-sm border border-orange-600 flex items-center space-x-1.5 cursor-pointer active-scale';
+      chunkBtn.className = 'chunk-btn px-4 sm:px-6 py-3 sm:py-4 bg-orange-500 hover:bg-orange-600 text-white rounded-2xl font-black text-lg sm:text-xl md:text-2xl lg:text-3xl shadow-md border-2 border-orange-600 flex items-center space-x-2 cursor-pointer active-scale';
       chunkBtn.innerHTML = `
         <span>${item.text}</span>
-        <span class="text-xs opacity-75 ml-1">✕</span>
+        <span class="text-xs md:text-sm opacity-80 ml-1.5 bg-orange-700/60 rounded-full w-5 h-5 inline-flex items-center justify-center">✕</span>
       `;
       chunkBtn.title = '點擊退回下方';
       chunkBtn.addEventListener('click', () => removeChunkFromAssembled(item));
@@ -3317,14 +3318,14 @@ const renderUnscrambleUI = () => {
   // 2. 渲染待選詞庫區 (Pool)
   elements.availablePool.innerHTML = '';
   if (unscrambleAvailablePool.length === 0) {
-    elements.availablePool.innerHTML = '<span class="text-xs text-green-600 font-bold py-2 w-full text-center">🎉 所有詞塊已全部放入上方！請點擊「送出檢查」！</span>';
+    elements.availablePool.innerHTML = '<span class="text-sm md:text-base text-green-600 font-black py-3 w-full text-center">🎉 所有詞塊已全部放入上方！請點擊「送出檢查」！</span>';
   } else {
     unscrambleAvailablePool.forEach(item => {
       const card = document.createElement('div');
-      card.className = 'chunk-btn px-3.5 py-2.5 bg-white hover:bg-blue-50 text-gray-800 rounded-xl font-extrabold text-sm md:text-base shadow-sm border-2 border-blue-200 hover:border-blue-400 flex items-center space-x-2 cursor-pointer active-scale';
+      card.className = 'chunk-btn px-4 sm:px-6 py-3 sm:py-4 bg-white hover:bg-blue-50 text-gray-800 rounded-2xl font-black text-lg sm:text-xl md:text-2xl lg:text-3xl shadow-md border-2 border-blue-200 hover:border-blue-400 flex items-center space-x-2.5 cursor-pointer active-scale';
       card.innerHTML = `
         <span class="chunk-text">${item.text}</span>
-        <button class="btn-speak-chunk p-1 hover:bg-blue-200/70 rounded-full text-sm flex-shrink-0" title="朗讀此詞塊">
+        <button class="btn-speak-chunk p-1.5 sm:p-2 hover:bg-blue-200/80 rounded-full text-base sm:text-xl flex-shrink-0 ml-1" title="朗讀此詞塊">
           🔊
         </button>
       `;
@@ -3349,10 +3350,10 @@ const renderUnscrambleUI = () => {
   // 3. 按鈕狀態：當全部詞塊都放上時啟用送出
   if (unscrambleAvailablePool.length === 0 && unscrambleCurrentAssembled.length > 0) {
     elements.btnSubmitUnscramble.disabled = false;
-    elements.btnSubmitUnscramble.className = 'w-full max-w-md p-4 rounded-2xl shadow-lg font-extrabold text-xl bg-orange-500 hover:bg-orange-600 text-white hover:scale-105 active-scale transition-all cursor-pointer';
+    elements.btnSubmitUnscramble.className = 'w-full max-w-lg p-4 md:p-5 rounded-2xl shadow-lg font-black text-xl md:text-2xl bg-orange-500 hover:bg-orange-600 text-white hover:scale-[1.02] active-scale transition-all cursor-pointer';
   } else {
     elements.btnSubmitUnscramble.disabled = true;
-    elements.btnSubmitUnscramble.className = 'w-full max-w-md p-4 rounded-2xl shadow-none font-extrabold text-xl bg-gray-200 text-gray-400 transition-all cursor-not-allowed';
+    elements.btnSubmitUnscramble.className = 'w-full max-w-lg p-4 md:p-5 rounded-2xl shadow-none font-black text-xl md:text-2xl bg-gray-200 text-gray-400 transition-all cursor-not-allowed';
   }
 };
 
@@ -3417,11 +3418,12 @@ const checkUnscrambleAnswer = () => {
   }
 };
 
-// 顯示詳解卡片
+// 顯示詳解卡片 (並在句子重組時朗讀完整句子)
 const showExplanationCard = (q, isCorrect) => {
   elements.explanationIdiom.textContent = `【${q.target.idiom}】`;
   elements.explanationMeaning.textContent = q.target.meaning;
-  elements.explanationSentence.textContent = q.target.fullSentence || q.target.sentence.replace(/＿＿＿＿/g, `『${q.target.idiom}』`);
+  const fullSent = q.target.fullSentence || q.target.sentence.replace(/＿＿＿＿/g, `『${q.target.idiom}』`);
+  elements.explanationSentence.textContent = fullSent;
   elements.explanationBox.classList.remove('hidden');
 
   elements.btnNextQuestion.classList.remove('hidden');
@@ -3429,11 +3431,22 @@ const showExplanationCard = (q, isCorrect) => {
     advanceQuestion();
   };
 
+  if (elements.btnSpeakExplanation) {
+    elements.btnSpeakExplanation.onclick = () => {
+      speakText(`${q.target.idiom}。${fullSent}`);
+    };
+  }
+
   setTimeout(() => {
     elements.explanationBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }, 100);
 
-  speakText(`${isCorrect ? '答對了！太棒了！' : '答錯囉！'} 正確答案是：${q.target.idiom}。${q.target.meaning}`);
+  if (gameMode === 'unscramble') {
+    // 重組成功：唸讀完整句子一遍！
+    speakText(`太棒了，答對了！${fullSent}`);
+  } else {
+    speakText(`${isCorrect ? '答對了！太棒了！' : '答錯囉！'} 正確答案是：${q.target.idiom}。${q.target.meaning}`);
+  }
 };
 
 const advanceQuestion = () => {
@@ -3535,6 +3548,11 @@ const setupEventListeners = () => {
   // 字體切換
   elements.btnToggleFont.addEventListener('click', toggleZhuyinFont);
 
+  // 頂部回挑戰首頁
+  if (elements.btnTopHome) {
+    elements.btnTopHome.addEventListener('click', returnToChallengeHome);
+  }
+
   // 冊次切換
   elements.btnSem3Down.addEventListener('click', () => switchSemester('3下'));
   elements.btnSem4Up.addEventListener('click', () => switchSemester('4上'));
@@ -3595,32 +3613,26 @@ const setupEventListeners = () => {
   elements.btnResetChunks.addEventListener('click', resetUnscrambleChunks);
   elements.btnSubmitUnscramble.addEventListener('click', checkUnscrambleAnswer);
 
-  // 中途退出
+  // 中途退出回首頁
   if (elements.btnExitGame) {
-    elements.btnExitGame.addEventListener('click', () => {
-      if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-      }
-      views.playing.classList.add('hidden');
-      views.result.classList.add('hidden');
-      views.menu.classList.remove('hidden');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    });
+    elements.btnExitGame.addEventListener('click', returnToChallengeHome);
   }
 
   // 結算畫面
   elements.btnFilterAllReview.addEventListener('click', () => renderReviewList('all'));
   elements.btnFilterWrongReview.addEventListener('click', () => renderReviewList('wrong'));
   elements.btnRestartGame.addEventListener('click', startGame);
-  elements.btnBackToMenu.addEventListener('click', () => {
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-    }
-    views.result.classList.add('hidden');
-    views.playing.classList.add('hidden');
-    views.menu.classList.remove('hidden');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  });
+  elements.btnBackToMenu.addEventListener('click', returnToChallengeHome);
+};
+
+const returnToChallengeHome = () => {
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.cancel();
+  }
+  views.playing.classList.add('hidden');
+  views.result.classList.add('hidden');
+  views.menu.classList.remove('hidden');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
 document.addEventListener('DOMContentLoaded', initMenu);
