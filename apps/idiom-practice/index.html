@@ -10,8 +10,8 @@
   <title>翰林國語成語大師 - 三下與四上成語精熟練習</title>
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Custom Stylesheet -->
-  <link rel="stylesheet" href="style.css">
+  <!-- Custom Stylesheet with cache busting -->
+  <link rel="stylesheet" href="style.css?v=20260912_v4">
 </head>
 <body class="font-zhuyin min-h-screen bg-amber-50/40 p-2 sm:p-4 md:p-6 lg:p-8 flex flex-col items-center justify-center transition-colors duration-300">
   
@@ -19,14 +19,14 @@
     
     <!-- 頂部通用導覽列 (Top Navigation Bar) -->
     <div class="w-full flex items-center justify-between mb-4 px-1">
-      <button id="btn-top-home" class="inline-flex items-center space-x-1.5 py-2 px-4 bg-white hover:bg-orange-500 hover:text-white text-orange-700 rounded-full shadow-sm border border-orange-200 font-black text-sm md:text-base transition-all duration-200 hover:shadow-md active-scale">
+      <button id="btn-top-home" class="inline-flex items-center space-x-1.5 py-2 px-4 bg-white hover:bg-orange-500 hover:text-white text-orange-700 rounded-full shadow-sm border border-orange-200 font-black text-sm md:text-base transition-all duration-200 hover:shadow-md active-scale cursor-pointer" title="隨時返回首頁重新選擇題型與課次">
         <span>🏠</span>
-        <span>回挑戰首頁</span>
+        <span>回首頁重新設定（換年級／題型）</span>
       </button>
       
       <div class="flex items-center space-x-2 sm:space-x-3">
         <!-- 注音切換按鈕 -->
-        <button id="btn-toggle-font" class="inline-flex items-center space-x-1 py-2 px-3.5 bg-white hover:bg-amber-100 text-amber-800 rounded-full shadow-sm border border-amber-200 font-extrabold text-xs md:text-sm transition-all active-scale" title="點擊切換注音字體/一般字體">
+        <button id="btn-toggle-font" class="inline-flex items-center space-x-1 py-2 px-3.5 bg-white hover:bg-amber-100 text-amber-800 rounded-full shadow-sm border border-amber-200 font-extrabold text-xs md:text-sm transition-all active-scale cursor-pointer" title="點擊切換注音字體/一般字體">
           <span id="font-icon">🔤</span>
           <span id="font-label">芫荽注音體 (開)</span>
         </button>
@@ -34,7 +34,7 @@
         <!-- 工具箱次要連結 -->
         <a href="../../index.html" class="inline-flex items-center space-x-1 py-2 px-3 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-full font-bold text-xs md:text-sm transition-all active-scale" title="離開本遊戲返回Canvas工具箱總頁">
           <span>🚪</span>
-          <span class="hidden sm:inline">回工具箱</span>
+          <span class="hidden sm:inline">回工具箱總頁</span>
         </a>
       </div>
     </div>
@@ -59,13 +59,13 @@
           <span class="text-xs md:text-sm text-orange-500 font-bold">可自由切換年級</span>
         </h2>
         <div class="grid grid-cols-3 gap-3 md:gap-4">
-          <button id="btn-sem-4up" class="py-3 px-3 md:px-5 rounded-2xl font-black text-base md:text-lg transition-all border-2 active-scale bg-orange-500 text-white shadow-md border-orange-500">
+          <button id="btn-sem-4up" class="py-3 px-3 md:px-5 rounded-2xl font-black text-base md:text-lg transition-all border-2 active-scale bg-orange-500 text-white shadow-md border-orange-500 cursor-pointer">
             📙 四上國語
           </button>
-          <button id="btn-sem-3down" class="py-3 px-3 md:px-5 rounded-2xl font-black text-base md:text-lg transition-all border-2 active-scale bg-white text-gray-700 border-gray-200 hover:bg-orange-50 hover:text-orange-600">
+          <button id="btn-sem-3down" class="py-3 px-3 md:px-5 rounded-2xl font-black text-base md:text-lg transition-all border-2 active-scale bg-white text-gray-700 border-gray-200 hover:bg-orange-50 hover:text-orange-600 cursor-pointer">
             📘 三下國語
           </button>
-          <button id="btn-sem-all" class="py-3 px-2 md:px-4 rounded-2xl font-black text-base md:text-lg transition-all border-2 active-scale bg-white text-gray-700 border-gray-200 hover:bg-orange-50 hover:text-orange-600">
+          <button id="btn-sem-all" class="py-3 px-2 md:px-4 rounded-2xl font-black text-base md:text-lg transition-all border-2 active-scale bg-white text-gray-700 border-gray-200 hover:bg-orange-50 hover:text-orange-600 cursor-pointer">
             🌟 跨年級挑戰
           </button>
         </div>
@@ -82,21 +82,21 @@
         </h2>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-3.5">
           <!-- 題型 1: 看解釋猜成語 -->
-          <button id="btn-mode-meaning" class="p-4 md:p-5 rounded-2xl font-black text-base md:text-lg flex flex-col items-center justify-center transition-all border-2 border-blue-500 bg-blue-500 text-white shadow-md active-scale">
+          <button id="btn-mode-meaning" class="p-4 md:p-5 rounded-2xl font-black text-base md:text-lg flex flex-col items-center justify-center transition-all border-2 border-blue-500 bg-blue-500 text-white shadow-md active-scale cursor-pointer">
             <span class="text-3xl mb-1.5">📖</span>
             <span>看解釋選成語</span>
             <span class="text-xs opacity-90 mt-1">理解成語字義</span>
           </button>
           
           <!-- 題型 2: 成語造句 · 初階 -->
-          <button id="btn-mode-sentence" class="p-4 md:p-5 rounded-2xl font-black text-base md:text-lg flex flex-col items-center justify-center transition-all border border-gray-200 bg-gray-50 text-gray-600 hover:bg-blue-50 hover:text-blue-600 active-scale">
+          <button id="btn-mode-sentence" class="p-4 md:p-5 rounded-2xl font-black text-base md:text-lg flex flex-col items-center justify-center transition-all border border-gray-200 bg-gray-50 text-gray-600 hover:bg-blue-50 hover:text-blue-600 active-scale cursor-pointer">
             <span class="text-3xl mb-1.5">✍️</span>
             <span>成語造句(初階)</span>
             <span class="text-xs opacity-90 mt-1">情境填空選成語</span>
           </button>
 
           <!-- 題型 3: 成語造句 · 進階 -->
-          <button id="btn-mode-unscramble" class="p-4 md:p-5 rounded-2xl font-black text-base md:text-lg flex flex-col items-center justify-center transition-all border border-gray-200 bg-gray-50 text-gray-600 hover:bg-blue-50 hover:text-blue-600 active-scale">
+          <button id="btn-mode-unscramble" class="p-4 md:p-5 rounded-2xl font-black text-base md:text-lg flex flex-col items-center justify-center transition-all border border-gray-200 bg-gray-50 text-gray-600 hover:bg-blue-50 hover:text-blue-600 active-scale cursor-pointer">
             <span class="text-3xl mb-1.5">🧩</span>
             <span>成語造句(進階)</span>
             <span class="text-xs opacity-90 mt-1">詞塊重組造句(含語音)</span>
@@ -118,11 +118,11 @@
         </div>
         <div class="flex flex-wrap justify-between items-center gap-2 pt-3 border-t border-gray-100 px-1">
           <div class="space-x-1.5">
-            <button id="btn-select-all" class="text-xs md:text-sm px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-xl font-black active-scale">全選</button>
-            <button id="btn-select-first-half" class="text-xs md:text-sm px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-xl font-black active-scale">1~6課</button>
-            <button id="btn-select-second-half" class="text-xs md:text-sm px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-xl font-black active-scale">7~12課</button>
+            <button id="btn-select-all" class="text-xs md:text-sm px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-xl font-black active-scale cursor-pointer">全選</button>
+            <button id="btn-select-first-half" class="text-xs md:text-sm px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-xl font-black active-scale cursor-pointer">1~6課</button>
+            <button id="btn-select-second-half" class="text-xs md:text-sm px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-xl font-black active-scale cursor-pointer">7~12課</button>
           </div>
-          <button id="btn-select-none" class="text-xs md:text-sm px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-500 rounded-xl font-black active-scale">清除</button>
+          <button id="btn-select-none" class="text-xs md:text-sm px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-500 rounded-xl font-black active-scale cursor-pointer">清除</button>
         </div>
       </div>
 
@@ -133,10 +133,10 @@
           選擇測驗題數
         </h2>
         <div class="grid grid-cols-4 gap-2.5 md:gap-4">
-          <button id="btn-qcount-all" class="py-2.5 px-2 md:px-4 rounded-2xl font-black text-sm md:text-base bg-orange-500 text-white shadow-md active-scale">全部</button>
-          <button id="btn-qcount-10" class="py-2.5 px-2 md:px-4 rounded-2xl font-black text-sm md:text-base bg-gray-100 text-gray-600 hover:bg-gray-200 active-scale">10 題</button>
-          <button id="btn-qcount-20" class="py-2.5 px-2 md:px-4 rounded-2xl font-black text-sm md:text-base bg-gray-100 text-gray-600 hover:bg-gray-200 active-scale">20 題</button>
-          <button id="btn-qcount-30" class="py-2.5 px-2 md:px-4 rounded-2xl font-black text-sm md:text-base bg-gray-100 text-gray-600 hover:bg-gray-200 active-scale">30 題</button>
+          <button id="btn-qcount-all" class="py-2.5 px-2 md:px-4 rounded-2xl font-black text-sm md:text-base bg-orange-500 text-white shadow-md active-scale cursor-pointer">全部</button>
+          <button id="btn-qcount-10" class="py-2.5 px-2 md:px-4 rounded-2xl font-black text-sm md:text-base bg-gray-100 text-gray-600 hover:bg-gray-200 active-scale cursor-pointer">10 題</button>
+          <button id="btn-qcount-20" class="py-2.5 px-2 md:px-4 rounded-2xl font-black text-sm md:text-base bg-gray-100 text-gray-600 hover:bg-gray-200 active-scale cursor-pointer">20 題</button>
+          <button id="btn-qcount-30" class="py-2.5 px-2 md:px-4 rounded-2xl font-black text-sm md:text-base bg-gray-100 text-gray-600 hover:bg-gray-200 active-scale cursor-pointer">30 題</button>
         </div>
       </div>
 
@@ -157,9 +157,9 @@
             <span id="playing-badge-mode" class="bg-blue-100 text-blue-700 text-xs sm:text-sm font-black px-3 py-1.5 rounded-full">📖 看解釋選成語</span>
           </div>
           <div class="flex items-center space-x-2">
-            <button id="btn-exit-game" class="text-xs sm:text-sm font-black text-orange-700 hover:text-white bg-orange-100 hover:bg-orange-500 px-4 py-1.5 rounded-full transition-all border border-orange-200 shadow-sm active-scale flex items-center space-x-1.5 cursor-pointer">
-              <span>🏠</span>
-              <span>回挑戰首頁</span>
+            <button id="btn-exit-game" class="text-xs sm:text-base font-black text-orange-800 hover:text-white bg-orange-100 hover:bg-orange-500 px-4 py-2 rounded-full transition-all border-2 border-orange-300 shadow-sm active-scale flex items-center space-x-1.5 cursor-pointer" title="發現設定錯誤？點擊立即返回首頁重新選擇！">
+              <span>🔙</span>
+              <span>回首頁重新設定（換範圍／題型）</span>
             </button>
           </div>
         </div>
@@ -311,7 +311,7 @@
           🔄 再測驗一次
         </button>
         <button id="btn-back-to-menu" class="p-4 bg-amber-500 hover:bg-amber-600 text-white rounded-2xl shadow-md transition-transform hover:scale-105 active-scale font-black text-base md:text-lg border border-amber-400 cursor-pointer">
-          🏠 回挑戰首頁
+          🏠 回首頁重新設定
         </button>
         <a href="../../index.html" class="p-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-2xl shadow-md transition-transform hover:scale-105 active-scale font-bold text-base flex items-center justify-center border border-gray-300">
           🚪 回工具箱總覽
@@ -321,7 +321,7 @@
     
   </div>
 
-  <!-- JavaScript App Logic -->
-  <script src="app.js"></script>
+  <!-- JavaScript App Logic with cache busting -->
+  <script src="app.js?v=20260912_v4"></script>
 </body>
 </html>
