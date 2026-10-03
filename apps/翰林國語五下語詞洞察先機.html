@@ -1,13 +1,14 @@
 <!doctype html>
 <html lang="zh-TW">
  <head>
-    <meta name="category" content="國語文">
-    <meta name="description" content="配合翰林版國語三下課本的語詞學習工具，增強詞彙識字能力。">
-    <meta name="icon" content="📖">
-    <meta name="tags" content="國語文,三下,翰林,詞彙">
-  <meta charset="UTF-8">
+  <meta name="category" content="國語文">
+  <meta name="description" content="配合翰林版國語五下課本的語詞洞察學習工具，提升中高年級閱讀理解與詞語辨析。">
+  <meta name="icon" content="📚">
+  <meta name="tags" content="國語文,五下,翰林,閱讀理解">
+
+                  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>翰林國語三下語詞洞察先機(改編來源：Hao Sun老師)</title>
+  <title>翰林國語五下語詞洞察先機 (改編來源：Hao Sun老師)</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
         /* 避免雙擊縮放等觸控問題 */
@@ -18,8 +19,7 @@
 
         body {
             font-family: 'Microsoft JhengHei', sans-serif;
-            /* 三下維持柔和粉嫩色系 */
-            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            background: linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%);
             margin: 0;
             padding: 10px; /* 手機版邊距縮小 */
             min-height: 100vh;
@@ -39,16 +39,17 @@
             max-width: 1000px;
             width: 100%;
             transition: all 0.3s ease;
+            /* 確保內容不會溢出 */
             overflow-x: hidden;
         }
 
         /* 標題樣式 */
         .main-title {
-            font-size: 1.8rem; /* 手機版字體 */
+            font-size: 1.8rem; /* 手機版字體縮小 */
             font-weight: bold;
-            color: #2d3748;
+            color: #2c3e50;
             margin-bottom: 5px; /* 縮小與副標題的距離 */
-            background: linear-gradient(45deg, #ff9a9e, #a18cd1);
+            background: linear-gradient(45deg, #66a6ff, #89f7fe);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
@@ -84,13 +85,13 @@
         }
 
         .lesson-toggle {
-            background: #f7fafc;
-            border: 2px solid #e2e8f0;
+            background: #f8f9fa;
+            border: 2px solid #dee2e6;
             border-radius: 12px;
             padding: 10px 5px;
             font-size: 0.95rem;
             font-weight: bold;
-            color: #4a5568;
+            color: #495057;
             cursor: pointer;
             transition: all 0.2s ease;
             user-select: none;
@@ -100,7 +101,7 @@
             justify-content: center;
             gap: 4px;
             height: 80px;
-            width: 100%;
+            width: 100%; /* 確保填滿格子 */
         }
 
         .lesson-title-small {
@@ -114,17 +115,11 @@
             padding: 0 2px;
         }
 
-        .lesson-toggle:hover {
-            transform: translateY(-2px);
-            background: #edf2f7;
-            border-color: #cbd5e0;
-        }
-
         .lesson-toggle.selected {
-            background: linear-gradient(45deg, #a18cd1, #fbc2eb);
+            background: linear-gradient(45deg, #66a6ff, #4facfe);
             color: white;
-            border-color: #a18cd1;
-            box-shadow: 0 4px 10px rgba(161, 140, 209, 0.4);
+            border-color: #66a6ff;
+            box-shadow: 0 4px 10px rgba(102, 166, 255, 0.4);
         }
 
         .lesson-toggle.selected .lesson-title-small {
@@ -132,22 +127,22 @@
         }
 
         .start-btn {
-            background: linear-gradient(45deg, #84fab0, #8fd3f4);
-            color: #2d3748;
+            background: linear-gradient(45deg, #00c6ff, #0072ff);
+            color: #fff;
             font-size: 1.3rem;
             padding: 12px 40px;
             border-radius: 50px;
             border: none;
             cursor: pointer;
             font-weight: bold;
-            box-shadow: 0 4px 15px rgba(132, 250, 176, 0.4);
+            box-shadow: 0 4px 15px rgba(0, 114, 255, 0.4);
             transition: all 0.3s ease;
             width: 100%;
-            max-width: 300px;
+            max-width: 300px; /* 手機版最大寬度 */
         }
         
         .start-btn:disabled {
-            background: #cbd5e0;
+            background: #ced4da;
             color: #fff;
             cursor: not-allowed;
             transform: none;
@@ -163,9 +158,9 @@
 
         .select-all-btn {
             background: transparent;
-            border: 1px solid #cbd5e0;
-            color: #718096;
-            padding: 8px 15px;
+            border: 1px solid #ced4da;
+            color: #6c757d;
+            padding: 8px 15px; /* 加大觸控區域 */
             border-radius: 20px;
             font-size: 0.9rem;
             cursor: pointer;
@@ -176,7 +171,7 @@
         
         .info-bar {
             display: flex;
-            justify-content: space-between;
+            justify-content: space-between; /* 左右分佈 */
             align-items: center;
             gap: 10px;
             margin-bottom: 20px;
@@ -185,27 +180,27 @@
 
         .progress-info {
             font-size: 1rem;
-            color: #4a5568;
+            color: #495057;
             padding: 8px 15px;
             background: #fff;
             border-radius: 12px;
-            border: 2px solid #e2e8f0;
+            border: 2px solid #dee2e6;
             display: flex;
             align-items: center;
             height: 45px;
             box-sizing: border-box;
-            flex-grow: 1;
+            flex-grow: 1; /* 填滿剩餘空間 */
             justify-content: center;
         }
 
         .slot-machine {
-            background: linear-gradient(45deg, #ffecd2, #fcb69f);
-            border: 3px solid #ff9a9e;
+            background: linear-gradient(45deg, #fbc2eb, #a6c1ee);
+            border: 3px solid #b39ddb;
             border-radius: 12px;
             padding: 0 15px;
             font-size: 1rem;
             font-weight: bold;
-            color: #c7454a;
+            color: #5e35b1;
             cursor: pointer;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
             transition: all 0.2s;
@@ -220,26 +215,27 @@
             opacity: 0.6;
             cursor: not-allowed;
             filter: grayscale(1);
-            background: #cbd5e0;
-            border-color: #a0aec0;
-            color: #4a5568;
+            background: #e9ecef;
+            border-color: #adb5bd;
+            color: #6c757d;
         }
 
-        /* --- 響應式字卡 --- */
+        /* --- 響應式字卡 (核心修改) --- */
         .word-card {
             position: relative;
             width: 100%;
             max-width: 600px;
+            /* 使用 aspect-ratio 保持 2:1 比例 */
             aspect-ratio: 2 / 1; 
-            height: auto;
-            background: linear-gradient(45deg, #fff, #f3f4f6);
+            height: auto; /* 高度自動 */
+            background: linear-gradient(45deg, #fdfbfb, #ebedee);
             border-radius: 20px; 
             display: flex;
             align-items: center;
             justify-content: center;
             box-shadow: 0 8px 20px rgba(0,0,0,0.1);
             border: 4px solid #fff;
-            outline: 2px solid #e2e8f0;
+            outline: 2px solid #dee2e6;
             overflow: hidden;
             margin: 0 auto 20px;
         }
@@ -253,19 +249,26 @@
             align-items: center;
             justify-content: center;
             font-weight: bold;
-            color: #2d3748;
+            color: #343a40;
             cursor: pointer;
             transition: transform 0.2s ease;
             box-shadow: 0 3px 10px rgba(0,0,0,0.15);
             z-index: 3;
+            /* 使用百分比設定大小，隨卡片縮放 */
             width: 15%; 
+            height: 30%; /* 2:1 比例下，寬高比約為 15% : 30% 視覺上接近圓形 */
+            aspect-ratio: 1/1; /* 強制正圓 */
             height: auto;
-            aspect-ratio: 1/1;
+            
+            /* 字體響應式 */
             font-size: clamp(1rem, 4vw, 2.2rem);
         }
         
-        .number-circle:active { transform: scale(0.95); }
+        .number-circle:active {
+            transform: scale(0.95);
+        }
 
+        /* 位置百分比不變 */
         .number-circle.pos-1 { top: 30%; left: 15%; transform: translate(-50%, -50%); }
         .number-circle.pos-2 { top: 25%; left: 32%; transform: translate(-50%, -50%); }
         .number-circle.pos-3 { top: 30%; left: 50%; transform: translate(-50%, -50%); }
@@ -289,8 +292,11 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(120deg, #f6d365 0%, #fda085 100%);
+            background: linear-gradient(120deg, #84fab0 0%, #8fd3f4 100%);
             z-index: 2;
+            
+            /* 響應式遮罩：使用 calc 和 vw/percent 來計算洞的大小 */
+            /* 桌面版預設 (較大螢幕) */
              -webkit-mask-image: 
                 radial-gradient(circle at 15% 30%, transparent 6.5%, black 7%),
                 radial-gradient(circle at 32% 25%, transparent 6.5%, black 7%),
@@ -304,12 +310,30 @@
                 radial-gradient(circle at 85% 70%, transparent 6.5%, black 7%);
             mask-image: 
                 radial-gradient(circle at 15% 30%, transparent 6.5%, black 7%),
-                radial-gradient(circle at 85% 70%, transparent 6.5%, black 7%); /* 簡寫 */
+                /* ...重複... */
+                radial-gradient(circle at 85% 70%, transparent 6.5%, black 7%);
             mask-composite: intersect;
-            -webkit-mask-composite: source-in;
-            mask-composite: add;
+            -webkit-mask-composite: source-in; /* 修正 Chrome 行動版相容性 */
+            mask-composite: add; /* 標準語法 */
+            
             cursor: pointer;
             transition: opacity 0.5s ease;
+        }
+
+        /* 簡單寫法以確保相容性 */
+        .cover-card {
+            -webkit-mask-image: 
+                radial-gradient(circle at 15% 30%, transparent 6.5%, black 7%),
+                radial-gradient(circle at 32% 25%, transparent 6.5%, black 7%),
+                radial-gradient(circle at 50% 30%, transparent 6.5%, black 7%),
+                radial-gradient(circle at 68% 25%, transparent 6.5%, black 7%),
+                radial-gradient(circle at 85% 30%, transparent 6.5%, black 7%),
+                radial-gradient(circle at 15% 70%, transparent 6.5%, black 7%),
+                radial-gradient(circle at 32% 65%, transparent 6.5%, black 7%),
+                radial-gradient(circle at 50% 70%, transparent 6.5%, black 7%),
+                radial-gradient(circle at 68% 65%, transparent 6.5%, black 7%),
+                radial-gradient(circle at 85% 70%, transparent 6.5%, black 7%);
+            /* 針對不同瀏覽器的 mask-composite 處理較為複雜，這裡使用基本透明度遮罩即可 */
         }
 
         .cover-card.hidden {
@@ -318,14 +342,17 @@
         }
 
         .word {
-            font-size: clamp(2rem, 18vw, 9rem);
+            /* 使用 container query 概念或 vw 單位 */
+            font-size: 15cqw; /* 如果瀏覽器支援 container queries */
+            font-size: clamp(2rem, 18vw, 9rem); /* 響應式字體 */
             font-weight: normal;
-            color: #2d3748;
+            color: #2c3e50;
             font-family: 'DFKai-SB', '標楷體', 'BiauKai', serif;
             transition: opacity 0.3s ease;
-            white-space: nowrap;
+            white-space: nowrap; /* 不換行 */
         }
-        
+
+        /* 針對字數調整大小 */
         .word.medium-word { font-size: clamp(2rem, 15vw, 7rem); }
         .word.long-word { font-size: clamp(1.5rem, 12vw, 5.5rem); }
         .word.very-long-word { font-size: clamp(1rem, 10vw, 4rem); }
@@ -336,45 +363,46 @@
             gap: 10px;
             justify-content: center;
             margin-bottom: 20px;
-            flex-wrap: wrap;
+            flex-wrap: wrap; /* 小螢幕自動換行 */
         }
 
         .helper-btn {
             background: #fff;
-            border: 2px solid #cbd5e0;
-            padding: 10px 25px;
+            border: 2px solid #ced4da;
+            padding: 10px 25px; /* 加大 */
             border-radius: 25px;
             font-size: 1rem;
             font-weight: bold;
-            color: #4a5568;
+            color: #495057;
             cursor: pointer;
             display: flex;
             align-items: center;
             gap: 8px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            flex: 1;
+            flex: 1; /* 手機版均分寬度 */
             justify-content: center;
             min-width: 140px;
         }
 
         .helper-btn:active {
-            background: #edf2f7;
+            background: #f8f9fa;
             transform: scale(0.98);
         }
 
-        .tts-btn { border-color: #63b3ed; color: #3182ce; }
-        .hint-btn { border-color: #f6ad55; color: #dd6b20; }
+        .tts-btn { border-color: #66a6ff; color: #007bff; }
+        .hint-btn { border-color: #ffc107; color: #d39e00; }
 
         /* --- 選項按鈕區域 --- */
         .options-grid {
             display: grid;
-            grid-template-columns: 1fr; /* 手機預設單欄 */
+            grid-template-columns: 1fr; /* 手機版預設單欄 */
             gap: 12px;
             width: 100%;
             max-width: 600px;
             margin: 0 auto 25px;
         }
 
+        /* 平板以上改為3欄 */
         @media (min-width: 768px) {
             .options-grid {
                 grid-template-columns: repeat(3, 1fr);
@@ -383,17 +411,17 @@
 
         .option-btn {
             background: white;
-            border: 3px solid #e2e8f0;
+            border: 3px solid #dee2e6;
             border-radius: 15px;
             padding: 10px;
-            font-size: 1.3rem;
+            font-size: 1.3rem; /* 適合閱讀的大小 */
             font-weight: bold;
-            color: #4a5568;
+            color: #495057;
             cursor: pointer;
             transition: all 0.2s;
             font-family: 'DFKai-SB', '標楷體', 'BiauKai', serif;
             box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            min-height: 60px;
+            min-height: 60px; /* 確保足夠的點擊高度 */
             display: flex;
             align-items: center;
             justify-content: center;
@@ -401,7 +429,7 @@
         }
 
         .option-btn:active {
-            background: #edf2f7;
+            background: #f8f9fa;
             transform: scale(0.98);
         }
         
@@ -413,21 +441,21 @@
         
         .option-btn.eliminated {
             opacity: 0.3;
-            background: #cbd5e0;
-            border-color: #a0aec0;
+            background: #e9ecef;
+            border-color: #ced4da;
             text-decoration: line-through;
         }
 
         .option-btn.correct {
-            background: #48bb78;
+            background: #28a745;
             color: white;
-            border-color: #2f855a;
+            border-color: #218838;
         }
 
         .option-btn.wrong {
-            background: #f56565;
+            background: #dc3545;
             color: white;
-            border-color: #c53030;
+            border-color: #c82333;
             opacity: 0.6;
         }
 
@@ -449,19 +477,19 @@
             font-weight: bold;
             cursor: pointer;
             box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            flex: 1;
-            min-width: 100px;
+            flex: 1; /* 按鈕均分寬度 */
+            min-width: 100px; /* 最小寬度 */
             max-width: 150px;
         }
 
-        .restart-btn { background: #63b3ed; color: white; }
-        .next-btn { background: #68d391; color: white; }
-        .prev-btn { background: #f6ad55; color: white; }
+        .restart-btn { background: #17a2b8; color: white; }
+        .next-btn { background: #28a745; color: white; }
+        .prev-btn { background: #ffc107; color: #212529; }
         
         .back-menu-btn {
             background: transparent;
-            border: 2px solid #cbd5e0;
-            color: #718096;
+            border: 2px solid #ced4da;
+            color: #6c757d;
             margin-top: 10px;
             width: 100%;
             padding: 12px;
@@ -476,7 +504,7 @@
 
   <!-- 第一層：主選單 -->
   <div id="menuScreen" class="card-container">
-      <h1 class="main-title">翰林國語三下 語詞洞察先機</h1>
+      <h1 class="main-title">翰林國語五下 語詞洞察先機</h1>
       <p class="subtitle">改編來源: Hao sun老師</p>
       
       <div class="action-buttons">
@@ -486,40 +514,40 @@
       
       <div class="lesson-grid">
           <div class="lesson-toggle" onclick="toggleLesson(1)" id="lesson-1">
-              <div>第一課</div><div class="lesson-title-small">拔不起來的筆</div>
+              <div>第一課</div><div class="lesson-title-small">鵝鑾鼻詩</div>
           </div>
           <div class="lesson-toggle" onclick="toggleLesson(2)" id="lesson-2">
-              <div>第二課</div><div class="lesson-title-small">還差一點</div>
+              <div>第二課</div><div class="lesson-title-small">山與海的交響樂</div>
           </div>
           <div class="lesson-toggle" onclick="toggleLesson(3)" id="lesson-3">
-              <div>第三課</div><div class="lesson-title-small">用膝蓋跳舞的女孩</div>
+              <div>第三課</div><div class="lesson-title-small">我眼中的東方之最</div>
           </div>
           <div class="lesson-toggle" onclick="toggleLesson(4)" id="lesson-4">
-              <div>第四課</div><div class="lesson-title-small">靜靜的淡水河</div>
+              <div>第四課</div><div class="lesson-title-small">滿修女採訪記</div>
           </div>
           <div class="lesson-toggle" onclick="toggleLesson(5)" id="lesson-5">
-              <div>第五課</div><div class="lesson-title-small">茶鄉鹿谷</div>
+              <div>第五課</div><div class="lesson-title-small">誰該被派去非洲</div>
           </div>
           <div class="lesson-toggle" onclick="toggleLesson(6)" id="lesson-6">
-              <div>第六課</div><div class="lesson-title-small">月世界之旅</div>
+              <div>第六課</div><div class="lesson-title-small">幸福的味道</div>
           </div>
           <div class="lesson-toggle" onclick="toggleLesson(7)" id="lesson-7">
-              <div>第七課</div><div class="lesson-title-small">做泡菜</div>
+              <div>第七課</div><div class="lesson-title-small">生活有感(詩選)</div>
           </div>
           <div class="lesson-toggle" onclick="toggleLesson(8)" id="lesson-8">
-              <div>第八課</div><div class="lesson-title-small">行人的守護者</div>
+              <div>第八課</div><div class="lesson-title-small">懶人包大解密</div>
           </div>
           <div class="lesson-toggle" onclick="toggleLesson(9)" id="lesson-9">
-              <div>第九課</div><div class="lesson-title-small">就愛兩兩在一起</div>
+              <div>第九課</div><div class="lesson-title-small">良言一句三冬暖</div>
           </div>
           <div class="lesson-toggle" onclick="toggleLesson(10)" id="lesson-10">
-              <div>第十課</div><div class="lesson-title-small">飛行員和小王子</div>
+              <div>第十課</div><div class="lesson-title-small">擅長推理的人</div>
           </div>
           <div class="lesson-toggle" onclick="toggleLesson(11)" id="lesson-11">
-              <div>第十一課</div><div class="lesson-title-small">畫龍點睛</div>
+              <div>第十一課</div><div class="lesson-title-small">草船借箭</div>
           </div>
           <div class="lesson-toggle" onclick="toggleLesson(12)" id="lesson-12">
-              <div>第十二課</div><div class="lesson-title-small">掉進一個兔子洞</div>
+              <div>第十二課</div><div class="lesson-title-small">三個問題</div>
           </div>
       </div>
 
@@ -539,7 +567,7 @@
        </button>
    </div>
    
-   <!-- 語詞卡片區域 -->
+   <!-- 語詞卡片區域 (響應式) -->
    <div class="word-card">
     <div class="word" id="currentWord">語詞</div>
     <div class="cover-card" onclick="revealWord()"></div>
@@ -566,7 +594,7 @@
        </button>
    </div>
 
-   <!-- 選項區域 -->
+   <!-- 選項區域 (3個選項) -->
    <div id="optionsGrid" class="options-grid">
        <!-- 選項按鈕會由 JS 動態產生 -->
    </div>
@@ -581,35 +609,35 @@
   </div>
 
   <script>
-        // 翰林版三下國語 全冊 (1-12課) 語詞資料
+        // 翰林版五下國語 全冊 (1-12課) 語詞資料
         const lessonData = {
-            1: ['牆壁', '大膽', '處罰', '放棄', '指導', '專注', '練習', '成就', '手勁', '書法'],
-            2: ['肯定', '祕訣', '水缸', '興奮', '視線', '示範', '讚美', '決心', '模樣', '服氣'],
-            3: ['欣賞', '舞姿', '樂曲', '膝蓋', '截斷', '放棄', '挑戰', '克服', '疼痛', '腕骨'],
-            4: ['氣息', '苔蘚', '柔媚', '奮勉', '祥和', '晚霞', '安泰', '潔淨', '閃耀', '凝視'],
-            5: ['茶香', '氣候', '發酵', '乾燥', '烘焙', '講究', '品味', '體驗', '師傅', '溫差'],
-            6: ['神祕', '仙境', '懷抱', '山丘', '泥漿', '驚呼', '難忘', '景象', '表面', '紋路'],
-            7: ['回收', '醃漬', '疑惑', '發酵', '腸道', '興奮', '愛惜', '環保', '行為', '美味', '承認', '貪吃'],
-            8: ['引導', '倒數', '展現', '活潑', '同伴', '守護', '秩序', '邁出', '打扮', '馬路', '安全', '行人'],
-            9: ['謎底', '習慣', '圓桌', '套餐', '傳統', '滾動', '扁平', '化學', '平凡', '學問', '一雙', '好處'],
-            10: ['沙漠', '適合', '既然', '食量', '豎起', '胃口', '吃驚', '發呆', '寵物', '飛行', '畫圖'],
-            11: ['神似', '困擾', '邀請', '見識', '逼真', '讚嘆', '烏雲', '雷電', '奮力', '蹤影', '牆壁'],
-            12: ['無聊', '午覺', '奇幻', '池塘', '中央', '消失', '刺蝟', '紙牌', '脾氣', '命令', '士兵', '夢境']
+            1: ['坎坷', '澎湃', '無垠', '丘陵', '瞭望', '足跡', '仰望', '俯視', '碧波盪漾', '歷史', '隱喻', '變遷'],
+            2: ['山巒', '屏障', '喧鬧', '翅膀', '姿態', '翱翔', '隧道', '潑灑', '綻放', '掠過', '轟隆', '震顫', '覆蓋', '低吟'],
+            3: ['寺廟', '拾級', '點綴', '山峰', '杜鵑', '皇室', '宇宙', '簽証', '擅自', '拘留', '欲望', '返璞歸真', '專屬'],
+            4: ['採訪', '殘障', '和藹', '爽朗', '震撼', '慈愛', '驕傲', '尷尬', '恢復', '光輝', '佩服', '無怨無悔', '偏遠', '奉獻', '無私'],
+            5: ['派遣', '囑咐', '比武', '富裕', '哲學', '領悟', '可憐', '演講', '服役', '末尾', '慎重', '瞄準', '手錶', '障礙', '攔阻', '乞討'],
+            6: ['瀰漫', '暫時', '玩耍', '猛然', '思索', '煞有介事', '嚴肅', '不置可否', '厲鬼', '草蓆', '嗅覺', '一股', '聯絡簿', '塗滿'],
+            7: ['金縷衣', '勸告', '莫惜', '不堪', '編織', '光禿禿', '枝椏', '半畝', '鑑', '渠道', '清澈', '光陰', '遺憾', '描繪', '枯竭', '絕'],
+            8: ['媒體', '所謂', '詳細', '廣泛', '繁多', '哏圖', '詼諧', '瀏覽', '省略', '刪除', '篇幅', '婦女', '網頁', '價值', '擷取', '誤解', '澄清', '謠言', '妨礙'],
+            9: ['疏失', '謹慎', '誠懇', '友誼', '訓練', '委婉', '懈怠', '單刀直入', '迥然', '恰好', '鼓勵', '渾然不覺', '收獲', '敵軍', '打仗', '光榮', '利劍'],
+            10: ['六呎', '鷹鉤鼻', '輪廓', '藥劑', '娓娓道來', '邏輯', '瀑布', '謬論', '透露', '解釋', '黝黑', '手腕', '白皙', '手臂'],
+            11: ['軍帳', '推辭', '督促', '殺盡', '侍衛', '酬勞', '耍詐', '軍匠', '拖延', '布幔', '紮成', '牽連', '吶喊', '率領', '抵擋', '恍然大悟', '丞相', '庫房'],
+            12: ['最佳', '躲避', '儘管', '茅屋', '睿智', '鏟子', '鬍子', '虛弱', '呻吟', '止血', '疲累', '門檻', '原諒', '財產', '發誓', '報仇', '王宮', '豁然開朗']
         };
 
         const lessonTitles = {
-            1: '拔不起來的筆',
-            2: '還差一點',
-            3: '用膝蓋跳舞的女孩',
-            4: '靜靜的淡水河',
-            5: '茶鄉鹿谷',
-            6: '月世界之旅',
-            7: '做泡菜',
-            8: '行人的守護者',
-            9: '就愛兩兩在一起',
-            10: '飛行員和小王子',
-            11: '畫龍點睛',
-            12: '掉進一個兔子洞'
+            1: '鵝鑾鼻詩',
+            2: '山與海的交響樂',
+            3: '我眼中的東方之最',
+            4: '滿修女採訪記',
+            5: '誰該被派去非洲',
+            6: '幸福的味道',
+            7: '生活有感(詩選)',
+            8: '懶人包大解密',
+            9: '良言一句三冬暖',
+            10: '擅長推理的人',
+            11: '草船借箭',
+            12: '三個問題'
         };
         
         let selectedLessons = new Set();
@@ -622,6 +650,7 @@
             const currentWord = gameWords[currentWordIndex];
             let pool = [];
             
+            // 建立誘答選項池
             if (gameWords.length >= 4) {
                 pool = [...gameWords];
             } else {
@@ -633,7 +662,9 @@
             pool = [...new Set(pool)].filter(w => w !== currentWord);
             pool.sort(() => Math.random() - 0.5);
 
+            // 3 個選項 (1正2誤)
             const distractors = pool.slice(0, 2);
+            
             const options = [currentWord, ...distractors];
             options.sort(() => Math.random() - 0.5);
 
@@ -654,6 +685,7 @@
                 container.appendChild(btn);
             });
 
+            // 重置提示按鈕狀態
             document.getElementById('hintBtn').disabled = false;
         }
 
@@ -661,15 +693,18 @@
             const currentWord = document.getElementById('currentWord').textContent;
             
             if (selectedWord === currentWord) {
+                // 答對
                 btn.classList.add('correct');
                 revealWord(); 
             } else {
+                // 答錯
                 btn.classList.add('wrong');
                 btn.disabled = true; 
             }
         }
 
         // --- 輔助功能 ---
+        
         function speakCurrentWord() {
             const currentWord = document.getElementById('currentWord').textContent;
             if ('speechSynthesis' in window) {
@@ -686,6 +721,7 @@
             const currentWord = document.getElementById('currentWord').textContent;
             const optionBtns = document.querySelectorAll('.option-btn');
             
+            // 找出所有錯誤且尚未被刪除的選項
             const wrongOptions = [];
             optionBtns.forEach(btn => {
                 if (btn.dataset.word !== currentWord && !btn.disabled) {
@@ -694,12 +730,14 @@
             });
 
             if (wrongOptions.length > 0) {
+                // 隨機刪除一個
                 const randomIndex = Math.floor(Math.random() * wrongOptions.length);
                 const btnToRemove = wrongOptions[randomIndex];
                 
                 btnToRemove.classList.add('eliminated');
                 btnToRemove.disabled = true;
                 
+                // 每個字限用一次提示
                 document.getElementById('hintBtn').disabled = true;
             }
         }
@@ -793,7 +831,7 @@
             const sortedLessons = Array.from(selectedLessons).sort((a,b) => a-b);
             let titleText = "";
             if (sortedLessons.length === 12) {
-                titleText = "翰林國語三下 綜合複習"; 
+                titleText = "翰林國語五下 綜合複習"; 
             } else if (sortedLessons.length > 3) {
                 titleText = `第 ${sortedLessons[0]}~${sortedLessons[sortedLessons.length-1]} 課 綜合練習`;
             } else {
@@ -818,6 +856,7 @@
             wordElement.textContent = currentWord;
             wordElement.classList.remove('medium-word', 'long-word', 'very-long-word');
             
+            // 響應式字體類別保留，但主要依賴 CSS clamp()
             if (currentWord.length >= 5) {
                 wordElement.classList.add('very-long-word');
             } else if (currentWord.length === 4) {
