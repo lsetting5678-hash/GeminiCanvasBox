@@ -42,6 +42,7 @@ meta_desc_re = re.compile(r'<meta\s+name=["\']description["\']\s+content=["\'](.
 meta_cat_re = re.compile(r'<meta\s+name=["\']category["\']\s+content=["\'](.*?)["\']', re.IGNORECASE)
 meta_icon_re = re.compile(r'<meta\s+name=["\']icon["\']\s+content=["\'](.*?)["\']', re.IGNORECASE)
 meta_tags_re = re.compile(r'<meta\s+name=["\']tags["\']\s+content=["\'](.*?)["\']', re.IGNORECASE)
+meta_url_re = re.compile(r'<meta\s+name=["\'](?:url|external_url|redirect)["\']\s+content=["\'](.*?)["\']', re.IGNORECASE)
 
 for root, dirs, files in os.walk(APPS_DIR):
     # 排除 Git 與 Python 暫存資料夾
@@ -78,6 +79,10 @@ for root, dirs, files in os.walk(APPS_DIR):
                     tags_match = meta_tags_re.search(content)
                     tags = [t.strip() for t in tags_match.group(1).split(",")] if tags_match else []
                     tags = [html.escape(t) for t in tags]
+
+                    url_match = meta_url_re.search(content)
+                    target_url = url_match.group(1).strip() if url_match else ""
+                    is_external = bool(target_url and target_url.startswith("http"))
                     
                     scanned_apps.append({
                         "filename": file,
@@ -86,7 +91,9 @@ for root, dirs, files in os.walk(APPS_DIR):
                         "category": category,
                         "icon": icon,
                         "tags": tags,
-                        "path": rel_path
+                        "path": rel_path,
+                        "target_url": target_url or rel_path,
+                        "is_external": is_external
                     })
             except Exception as e:
                 print(f"解析 {file} 失敗: {e}")
@@ -817,8 +824,12 @@ else:
         if not tags_html:
             tags_html = '<span class="tag">#小工具</span>'
             
+        link_url = app.get("target_url") or app["path"]
+        target_attr = ' target="_blank" rel="noopener noreferrer"' if app.get("is_external") else ""
+        gemini_badge = '<span class="tag" style="background:#e0e7ff;color:#4338ca;font-weight:700;">✨ Gemini 官方</span>' if app.get("is_external") else ""
+        
         app_cards_html += f"""
-        <a class="card" href="{app["path"]}" data-category="{app["category"]}">
+        <a class="card" href="{link_url}"{target_attr} data-category="{app["category"]}">
             <div>
                 <div class="card-header">
                     <div class="card-icon">{app["icon"]}</div>
@@ -830,8 +841,9 @@ else:
                 <p class="card-desc">{app["description"]}</p>
             </div>
             <div class="card-footer">
+                {gemini_badge}
                 {tags_html}
-                <button class="qr-btn" onclick="showQR(event, '{app["path"]}', '{app["title"]}')">📱 QR Code</button>
+                <button class="qr-btn" onclick="showQR(event, '{link_url}', '{app["title"]}')">📱 QR Code</button>
             </div>
         </a>
         """
