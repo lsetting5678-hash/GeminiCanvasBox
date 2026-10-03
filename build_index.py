@@ -16,7 +16,7 @@ default_config = {
     "site_title": "我的 Gemini 特教與互動工具箱",
     "default_redirect": "",
     "redirect_delay_seconds": 3,
-    "categories": ["國語文", "數學", "行政工具", "特需領域", "輔助科技", "學生專區"]
+    "categories": ["特教教師專區", "國語文", "數學", "特教行政工具", "班經小工具"]
 }
 
 if os.path.exists(CONFIG_FILE):
@@ -43,6 +43,10 @@ meta_cat_re = re.compile(r'<meta\s+name=["\']category["\']\s+content=["\'](.*?)[
 meta_icon_re = re.compile(r'<meta\s+name=["\']icon["\']\s+content=["\'](.*?)["\']', re.IGNORECASE)
 meta_tags_re = re.compile(r'<meta\s+name=["\']tags["\']\s+content=["\'](.*?)["\']', re.IGNORECASE)
 meta_url_re = re.compile(r'<meta\s+name=["\'](?:url|external_url|redirect)["\']\s+content=["\'](.*?)["\']', re.IGNORECASE)
+meta_btn_re = re.compile(r'<meta\s+name=["\']button_text["\']\s+content=["\'](.*?)["\']', re.IGNORECASE)
+meta_user_notice_re = re.compile(r'<meta\s+name=["\']user_notice["\']\s+content=["\'](.*?)["\']', re.IGNORECASE)
+meta_ext_notice_re = re.compile(r'<meta\s+name=["\']external_notice["\']\s+content=["\'](.*?)["\']', re.IGNORECASE)
+meta_privacy_re = re.compile(r'<meta\s+name=["\']privacy_warning["\']\s+content=["\'](.*?)["\']', re.IGNORECASE)
 
 for root, dirs, files in os.walk(APPS_DIR):
     # 排除 Git 與 Python 暫存資料夾
@@ -56,7 +60,7 @@ for root, dirs, files in os.walk(APPS_DIR):
             
             try:
                 with open(path, "r", encoding="utf-8") as f:
-                    content = f.read(8192)
+                    content = f.read(16384)
                     
                     # 解析 Title
                     title_match = title_re.search(content)
@@ -69,7 +73,7 @@ for root, dirs, files in os.walk(APPS_DIR):
                     desc = html.escape(desc)
                     
                     cat_match = meta_cat_re.search(content)
-                    category = cat_match.group(1).strip() if cat_match else "學生專區"
+                    category = cat_match.group(1).strip() if cat_match else "特教行政工具"
                     category = html.escape(category)
                     
                     icon_match = meta_icon_re.search(content)
@@ -83,6 +87,18 @@ for root, dirs, files in os.walk(APPS_DIR):
                     url_match = meta_url_re.search(content)
                     target_url = url_match.group(1).strip() if url_match else ""
                     is_external = bool(target_url and target_url.startswith("http"))
+
+                    btn_match = meta_btn_re.search(content)
+                    button_text = html.escape(btn_match.group(1).strip()) if btn_match else ""
+
+                    user_notice_match = meta_user_notice_re.search(content)
+                    user_notice = html.escape(user_notice_match.group(1).strip()) if user_notice_match else ""
+
+                    ext_notice_match = meta_ext_notice_re.search(content)
+                    ext_notice = html.escape(ext_notice_match.group(1).strip()) if ext_notice_match else ""
+
+                    privacy_match = meta_privacy_re.search(content)
+                    privacy_warning = html.escape(privacy_match.group(1).strip()) if privacy_match else ""
                     
                     scanned_apps.append({
                         "filename": file,
@@ -93,10 +109,18 @@ for root, dirs, files in os.walk(APPS_DIR):
                         "tags": tags,
                         "path": rel_path,
                         "target_url": target_url or rel_path,
-                        "is_external": is_external
+                        "is_external": is_external,
+                        "button_text": button_text,
+                        "user_notice": user_notice,
+                        "external_notice": ext_notice,
+                        "privacy_warning": privacy_warning
                     })
             except Exception as e:
                 print(f"解析 {file} 失敗: {e}")
+
+# 排序工具：特教教師專區排在最前，其餘依分類與名稱排序
+cat_order = {cat: idx for idx, cat in enumerate(config["categories"])}
+scanned_apps.sort(key=lambda x: (cat_order.get(x["category"], 999), x["title"]))
 
 # 生成 HTML 模板
 html_template = """<!DOCTYPE html>
@@ -116,8 +140,9 @@ html_template = """<!DOCTYPE html>
             --primary-blue: #a8dadc;
             --primary-yellow: #ffe5b4;
             --primary-mint: #b5e2b9;
+            --primary-purple: #c7d2fe;
             --text-color: #4a4a4a;
-            --card-bg: rgba(255, 255, 255, 0.85);
+            --card-bg: rgba(255, 255, 255, 0.9);
             --card-shadow: 0 10px 25px rgba(168, 218, 220, 0.25);
             --card-hover-shadow: 0 15px 35px rgba(255, 183, 178, 0.45);
         }}
@@ -187,7 +212,7 @@ html_template = """<!DOCTYPE html>
             align-items: center;
             gap: 1.5rem;
             margin-bottom: 3rem;
-            background: rgba(255, 255, 255, 0.5);
+            background: rgba(255, 255, 255, 0.6);
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
             padding: 2rem;
@@ -269,7 +294,7 @@ html_template = """<!DOCTYPE html>
         /* 卡片網格 */
         .grid {{
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
             gap: 2rem;
         }}
 
@@ -279,7 +304,7 @@ html_template = """<!DOCTYPE html>
             border-radius: 28px;
             border: 3px solid rgba(255, 255, 255, 0.9);
             box-shadow: var(--card-shadow);
-            padding: 2rem;
+            padding: 1.8rem;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
@@ -308,7 +333,7 @@ html_template = """<!DOCTYPE html>
         }}
 
         .card:hover {{
-            transform: translateY(-12px) scale(1.03);
+            transform: translateY(-8px) scale(1.02);
             box-shadow: var(--card-hover-shadow);
             border-color: var(--primary-pink);
         }}
@@ -321,13 +346,14 @@ html_template = """<!DOCTYPE html>
             display: flex;
             align-items: center;
             gap: 1.2rem;
-            margin-bottom: 1.2rem;
+            margin-bottom: 1rem;
         }}
 
         .card-icon {{
-            font-size: 2.8rem;
-            width: 65px;
-            height: 65px;
+            font-size: 2.5rem;
+            width: 60px;
+            height: 60px;
+            min-width: 60px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -338,10 +364,11 @@ html_template = """<!DOCTYPE html>
         }}
 
         .card:hover .card-icon {{
-            transform: rotate(-10deg) scale(1.1);
+            transform: rotate(-8deg) scale(1.08);
         }}
 
         /* 不同分類卡片的 icon 配色 */
+        .card[data-category="特教教師專區"] .card-icon {{ background: #ffd6e0; }}
         .card[data-category="國語文"] .card-icon {{ background: var(--primary-pink); }}
         .card[data-category="數學"] .card-icon {{ background: var(--primary-blue); }}
         .card[data-category="行政工具"] .card-icon {{ background: var(--primary-yellow); }}
@@ -356,10 +383,11 @@ html_template = """<!DOCTYPE html>
         }}
 
         .card-title {{
-            font-size: 1.3rem;
+            font-size: 1.25rem;
             font-weight: 700;
             color: #4f5b66;
             margin-bottom: 0.2rem;
+            line-height: 1.3;
         }}
 
         .card-category {{
@@ -372,24 +400,95 @@ html_template = """<!DOCTYPE html>
             color: #7f8c8d;
         }}
 
+        .card[data-category="特教教師專區"] .card-category {{
+            background: #ffe4e6;
+            color: #be123c;
+        }}
+
         .card-desc {{
+            font-size: 0.92rem;
+            color: #64748b;
+            margin-bottom: 0.8rem;
+            line-height: 1.5;
+        }}
+
+        /* 提示框與警語區塊 */
+        .card-notices {{
+            margin: 0.75rem 0;
+            display: flex;
+            flex-direction: column;
+            gap: 0.45rem;
+        }}
+
+        .notice-box {{
+            font-size: 0.82rem;
+            line-height: 1.45;
+            padding: 0.55rem 0.75rem;
+            border-radius: 12px;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.4rem;
+        }}
+
+        .notice-box.user-notice {{
+            background: #fff1f2;
+            border: 1px solid #fecdd3;
+            color: #9f1239;
+        }}
+
+        .notice-box.ext-notice {{
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            color: #1e40af;
+        }}
+
+        .card-action-wrapper {{
+            margin: 0.8rem 0 0.4rem 0;
+        }}
+
+        .action-btn-primary {{
+            display: block;
+            width: 100%;
+            text-align: center;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: white !important;
+            text-decoration: none;
             font-size: 0.95rem;
-            color: #7f8c8d;
-            margin-bottom: 1.5rem;
-            flex-grow: 1;
-            display: -webkit-box;
-            -webkit-line-clamp: 3;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            font-weight: 700;
+            padding: 0.75rem 1rem;
+            border-radius: 50px;
+            box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }}
+
+        .action-btn-primary:hover {{
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(99, 102, 241, 0.5);
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+        }}
+
+        .privacy-warning-box {{
+            font-size: 0.78rem;
+            line-height: 1.4;
+            color: #b91c1c;
+            background: #fef2f2;
+            border: 1px dashed #fca5a5;
+            border-radius: 10px;
+            padding: 0.5rem 0.65rem;
+            margin-top: 0.5rem;
+            text-align: center;
         }}
 
         .card-footer {{
             display: flex;
             flex-wrap: wrap;
+            align-items: center;
             gap: 0.5rem;
-            border-top: 1.5px dashed rgba(0, 0, 0, 0.05);
-            padding-top: 1rem;
+            border-top: 1.5px dashed rgba(0, 0, 0, 0.06);
+            padding-top: 0.85rem;
+            margin-top: 0.5rem;
         }}
 
         .tag {{
@@ -397,6 +496,15 @@ html_template = """<!DOCTYPE html>
             font-weight: 600;
             background: rgba(168, 218, 220, 0.2);
             color: #457b9d;
+            padding: 0.15rem 0.5rem;
+            border-radius: 12px;
+        }}
+
+        .badge-gemini {{
+            font-size: 0.75rem;
+            font-weight: 700;
+            background: #e0e7ff;
+            color: #4338ca;
             padding: 0.15rem 0.5rem;
             border-radius: 12px;
         }}
@@ -651,7 +759,10 @@ html_template = """<!DOCTYPE html>
             e.stopPropagation();
             e.preventDefault();
             
-            const fullUrl = new URL(path, window.location.href).href;
+            let fullUrl = path;
+            if (!path.startsWith('http://') && !path.startsWith('https://')) {{
+                fullUrl = new URL(path, window.location.href).href;
+            }}
             const qrImgUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${{encodeURIComponent(fullUrl)}}`;
             
             document.getElementById('qrModalTitle').textContent = `📱 ${{title}}`;
@@ -665,6 +776,7 @@ html_template = """<!DOCTYPE html>
         function closeQR() {{
             document.getElementById('qrModal').classList.remove('show');
         }}
+
         // 資料載入
         const apps = {apps_json};
         const defaultRedirect = "{default_redirect}";
@@ -693,21 +805,53 @@ html_template = """<!DOCTYPE html>
             }}
 
             list.forEach(app => {{
-                const card = document.createElement('a');
+                const card = document.createElement('div');
                 card.className = 'card';
-                card.href = app.path;
                 card.setAttribute('data-category', app.category);
                 
-                // 點擊事件：跳出可愛氣泡提示，延遲跳轉
+                const linkUrl = app.target_url || app.path;
+                const isExt = app.is_external || linkUrl.startsWith('http');
+
+                // 點擊卡片本體 (非內部按鈕/連結) 時的跳轉行為
                 card.addEventListener('click', (e) => {{
-                    e.preventDefault();
-                    showCuteAlert(`即將前往「${{app.category}}」工具區！準備出發～`);
-                    setTimeout(() => {{
-                        window.location.href = app.path;
-                    }}, 900);
+                    if (e.target.closest('a, button')) return;
+                    
+                    if (isExt) {{
+                        window.open(linkUrl, '_blank', 'noopener,noreferrer');
+                    }} else {{
+                        showCuteAlert(`即將前往「${{app.category}}」工具區！準備出發～`);
+                        setTimeout(() => {{
+                            window.location.href = app.path;
+                        }}, 800);
+                    }}
                 }});
 
                 const tagsHtml = app.tags.map(tag => `<span class="tag">#${{tag}}</span>`).join('');
+                const geminiBadge = isExt ? '<span class="badge-gemini">✨ Gemini 官方</span>' : '';
+
+                let noticesHtml = '';
+                if (app.user_notice || app.external_notice) {{
+                    noticesHtml += '<div class="card-notices">';
+                    if (app.user_notice) {{
+                        noticesHtml += `<div class="notice-box user-notice"><span style="flex-shrink:0;">🔒</span><span>${{app.user_notice}}</span></div>`;
+                    }}
+                    if (app.external_notice) {{
+                        noticesHtml += `<div class="notice-box ext-notice"><span style="flex-shrink:0;">💡</span><span>${{app.external_notice}}</span></div>`;
+                    }}
+                    noticesHtml += '</div>';
+                }}
+
+                let actionHtml = '';
+                if (app.button_text) {{
+                    actionHtml += `
+                    <div class="card-action-wrapper">
+                        <a href="${{linkUrl}}" target="_blank" rel="noopener noreferrer" class="action-btn-primary">
+                            🚀 ${{app.button_text}} ↗
+                        </a>
+                        ${{app.privacy_warning ? `<div class="privacy-warning-box">⚠️ ${{app.privacy_warning}}</div>` : ''}}
+                    </div>
+                    `;
+                }}
 
                 card.innerHTML = `
                     <div>
@@ -719,10 +863,13 @@ html_template = """<!DOCTYPE html>
                             </div>
                         </div>
                         <p class="card-desc">${{app.description}}</p>
+                        ${{noticesHtml}}
+                        ${{actionHtml}}
                     </div>
                     <div class="card-footer">
+                        ${{geminiBadge}}
                         ${{tagsHtml || '<span class="tag">#小工具</span>'}}
-                        <button class="qr-btn" onclick="showQR(event, '${{app.path}}', '${{app.title}}')">📱 QR Code</button>
+                        <button class="qr-btn" onclick="showQR(event, '${{linkUrl}}', '${{app.title}}')">📱 QR Code</button>
                     </div>
                 `;
                 grid.appendChild(card);
@@ -825,11 +972,32 @@ else:
             tags_html = '<span class="tag">#小工具</span>'
             
         link_url = app.get("target_url") or app["path"]
-        target_attr = ' target="_blank" rel="noopener noreferrer"' if app.get("is_external") else ""
-        gemini_badge = '<span class="tag" style="background:#e0e7ff;color:#4338ca;font-weight:700;">✨ Gemini 官方</span>' if app.get("is_external") else ""
+        is_ext = app.get("is_external") or link_url.startswith("http")
+        gemini_badge = '<span class="badge-gemini">✨ Gemini 官方</span>' if is_ext else ""
+
+        notices_html = ""
+        if app.get("user_notice") or app.get("external_notice"):
+            notices_html += '<div class="card-notices">'
+            if app.get("user_notice"):
+                notices_html += f'<div class="notice-box user-notice"><span style="flex-shrink:0;">🔒</span><span>{app["user_notice"]}</span></div>'
+            if app.get("external_notice"):
+                notices_html += f'<div class="notice-box ext-notice"><span style="flex-shrink:0;">💡</span><span>{app["external_notice"]}</span></div>'
+            notices_html += '</div>'
+
+        action_html = ""
+        if app.get("button_text"):
+            privacy_html = f'<div class="privacy-warning-box">⚠️ {app["privacy_warning"]}</div>' if app.get("privacy_warning") else ""
+            action_html += f"""
+            <div class="card-action-wrapper">
+                <a href="{link_url}" target="_blank" rel="noopener noreferrer" class="action-btn-primary">
+                    🚀 {app["button_text"]} ↗
+                </a>
+                {privacy_html}
+            </div>
+            """
         
         app_cards_html += f"""
-        <a class="card" href="{link_url}"{target_attr} data-category="{app["category"]}">
+        <div class="card" data-category="{app["category"]}">
             <div>
                 <div class="card-header">
                     <div class="card-icon">{app["icon"]}</div>
@@ -839,13 +1007,15 @@ else:
                     </div>
                 </div>
                 <p class="card-desc">{app["description"]}</p>
+                {notices_html}
+                {action_html}
             </div>
             <div class="card-footer">
                 {gemini_badge}
                 {tags_html}
                 <button class="qr-btn" onclick="showQR(event, '{link_url}', '{app["title"]}')">📱 QR Code</button>
             </div>
-        </a>
+        </div>
         """
 
 # 渲染完整 HTML
