@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#dff7f3">
+  <meta name="description" content="國小特教友善校園安全互動教材，包含七個安全關卡、人物情境動畫、34 題圈叉練習、繁體中文語音與無個資通關獎狀。">
+  <meta name="category" content="班經小工具">
+  <meta name="icon" content="🛡️">
+  <meta name="tags" content="特教,校園安全,互動教材,語音,圈叉練習">
+  <meta name="button_text" content="開啟安全教材">
+  <title>安全守護隊｜互動安全教材</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <main class="app-shell" id="app">
+    <header class="app-header">
+      <button class="brand" id="brandHomeButton" type="button" aria-label="回到安全守護隊主選單">
+        <span class="brand-shield" aria-hidden="true">★</span>
+        <span class="brand-copy"><span class="eyebrow">安全守護隊</span><span class="brand-title" id="brandTitle">互動安全教材</span></span>
+      </button>
+      <div class="progress-wrap" id="progressWrap" aria-label="學習進度">
+        <span id="progressText">選擇一個安全關卡</span>
+        <div class="progress-track" aria-hidden="true"><span id="progressBar"></span></div>
+      </div>
+      <button class="teacher-toggle" id="teacherToggle" type="button" aria-expanded="false" aria-controls="teacherPanel" hidden><span aria-hidden="true">⚙</span><span>教師</span></button>
+    </header>
+
+    <aside class="teacher-panel" id="teacherPanel" hidden aria-label="教師控制列">
+      <div class="teacher-title-row"><h2>教師控制</h2><button class="icon-button" id="teacherClose" type="button" aria-label="收合教師控制">×</button></div>
+      <div class="teacher-grid">
+        <button type="button" id="previousButton">← 上一題</button><button type="button" id="teacherNextButton">下一題 →</button>
+        <button type="button" id="teacherReplayButton">↻ 重播</button><button type="button" id="teacherPauseButton">⏸ 暫停</button>
+        <button type="button" id="voiceToggleButton" aria-pressed="true">🔊 語音開</button><button type="button" id="soundToggleButton" aria-pressed="true">✨ 音效開</button>
+        <button type="button" id="musicToggleButton" aria-pressed="false">🎵 配樂關</button><button type="button" id="lowLiteracyToggleButton" aria-pressed="false">👁 低識字模式關</button>
+        <button type="button" id="resetButton">重新作答</button>
+      </div>
+      <label class="rate-control" for="rateSelect"><span>語速</span><select id="rateSelect"><option value="0.65">慢慢唸</option><option value="0.8" selected>一般</option><option value="0.95">稍快</option></select></label>
+      <details class="question-list-wrap"><summary>本關題目</summary><div class="question-list" id="questionList"></div></details>
+      <p class="music-credit">背景配樂：Promise — Keith Adler（公有領域）</p>
+    </aside>
+
+    <section class="view menu-view" id="menuView" aria-labelledby="menuTitle">
+      <div class="menu-hero">
+        <div class="menu-campus"><img src="./assets/menu-campus-map-v2.png" alt="中原國小校園導覽圖：左側樓梯直上二樓，昆蟲牆位於樓梯下方的一樓川堂旁，花園與外側走廊各自獨立。"></div>
+        <div class="menu-hero-copy"><p class="menu-kicker">中原國小安全任務</p><h1 id="menuTitle">今天要挑戰哪一關？</h1><p>教師可以自由選關，不必按照順序。</p></div>
+        <div class="medal-summary" aria-label="完成進度"><span aria-hidden="true">🏅</span><strong id="medalCount">0／7</strong><small>已完成</small></div>
+      </div>
+      <div class="level-grid" id="levelGrid" aria-label="安全關卡列表"></div>
+      <section class="completion-entry" id="completionEntry" hidden aria-label="全部通關獎狀入口"><div><strong>🏆 七關全部完成！</strong><span>可以再次查看通關慶祝畫面並產生空白獎狀。</span></div><button type="button" id="openFinalButton">查看通關獎狀 →</button></section>
+    </section>
+
+    <section class="view flow-view" id="lessonView" hidden aria-labelledby="lessonTitle">
+      <nav class="flow-nav" aria-label="教學頁導覽"><button type="button" id="lessonBackButton">← 上一步</button><button type="button" id="lessonHomeButton">🏠 回主選單</button><button class="primary-nav" type="button" id="lessonNextButton">進入情境動畫 →</button></nav>
+      <article class="lesson-card">
+        <div class="lesson-visual"><img id="lessonImage" src="" alt=""><span class="stage-chip">第 1 步｜先看教學</span></div>
+        <div class="lesson-copy"><p class="level-name" id="lessonLevelName"></p><h2 id="lessonTitle"></h2><p id="lessonText"></p><div class="slogan-card"><span aria-hidden="true">💡</span><strong id="lessonSlogan"></strong></div><div class="lesson-actions"><button class="speak-button" id="lessonSpeakButton" type="button">🔊 重聽教學</button><button class="lesson-scenario-button" id="lessonScenarioButton" type="button">🎬 進入情境動畫</button></div></div>
+      </article>
+    </section>
+
+    <section class="view flow-view" id="scenarioView" hidden aria-labelledby="scenarioPrompt">
+      <nav class="flow-nav compact-nav" aria-label="情境動畫導覽"><button type="button" id="scenarioBackButton">← 回教學頁</button><button type="button" id="scenarioHomeButton">🏠 回主選單</button><button type="button" id="scenarioReplayButton">🔁 重播情境</button><button type="button" id="scenarioPauseButton">⏸ 暫停</button><button type="button" id="scenarioResumeButton">▶ 繼續</button></nav>
+      <div class="scenario-layout">
+        <div class="scene-3d" id="scenarioStage"><div class="scene-3d-frame"><img id="scenarioImage" src="" alt=""><div class="sequence-frame-status" id="scenarioFrameStatus" role="status" aria-live="polite"></div></div><span class="stage-chip">第 2 步｜人物動作情境</span></div>
+        <div class="scenario-panel"><p class="level-name" id="scenarioLevelName"></p><h2 id="scenarioPrompt"></h2><p class="choice-prompt" id="scenarioChoicePrompt">先看圖，再選一個安全的行動</p><button class="listen-options-button" id="playScenarioOptionsButton" type="button">🔊 依序聽兩個選項</button><div class="scenario-choices" id="scenarioChoices"></div><p class="scenario-feedback" id="scenarioFeedback" aria-live="polite"></p><button class="next-step-button" id="scenarioNextButton" type="button" disabled>進入 OX 練習 →</button></div>
+      </div>
+    </section>
+
+    <section class="view quiz-view" id="quizView" hidden aria-labelledby="questionText">
+      <nav class="flow-nav quiz-flow-nav" aria-label="OX 題目導覽"><button type="button" id="quizPreviousButton">← 上一題</button><span class="flow-stage-label">第 3 步｜OX 練習</span><button type="button" id="quizHomeButton">🏠 回主選單</button></nav>
+      <section class="question-stage">
+        <div class="scene-card" id="sceneCard"><div class="scene-label"><span id="categoryLabel"></span></div><img id="sceneImage" src="" alt="" decoding="async"><div class="scene-loading" id="sceneLoading" role="status">情境圖片載入中…</div><div class="sequence-frame-status quiz-frame-status" id="quizFrameStatus" aria-live="polite" hidden></div></div>
+        <div class="question-card">
+          <p class="question-number" id="questionNumber"></p><h2 id="questionText"></h2>
+          <div class="audio-controls" aria-label="語音與情境控制"><button class="control-button replay" id="replayQuestionButton" type="button"><span aria-hidden="true">🔊</span><span>重聽題目／重播情境</span></button><button class="control-button" id="pauseButton" type="button"><span aria-hidden="true">⏸</span><span>暫停</span></button><button class="control-button" id="resumeButton" type="button"><span aria-hidden="true">▶</span><span>繼續</span></button></div>
+        </div>
+        <div class="answer-zone" id="answerZone"><p class="answer-prompt">這樣對嗎？請選圈或叉</p><div class="answer-buttons" id="answerButtons" role="group" aria-label="選擇圈或叉"><div class="answer-option-card" id="answerCardO" data-answer="O"><button class="answer-button answer-o" id="answerO" type="button" data-answer="O" aria-label="圈，這樣對"><span class="answer-symbol" aria-hidden="true">○</span><small>這樣對</small></button><button class="answer-speech-button" id="answerSpeechO" type="button" data-answer="O" aria-label="朗讀圈選項">🔊 聽圈選項</button></div><div class="answer-option-card" id="answerCardX" data-answer="X"><button class="answer-button answer-x" id="answerX" type="button" data-answer="X" aria-label="叉，這樣不對"><span class="answer-symbol" aria-hidden="true">×</span><small>這樣不對</small></button><button class="answer-speech-button" id="answerSpeechX" type="button" data-answer="X" aria-label="朗讀叉選項">🔊 聽叉選項</button></div></div></div>
+        <section class="feedback-card" id="feedbackCard" hidden aria-live="polite" aria-atomic="true"><div class="feedback-icon" id="feedbackIcon" aria-hidden="true"></div><div class="feedback-copy"><h2 id="feedbackTitle"></h2><p id="feedbackReason"></p></div><div class="feedback-actions"><button type="button" id="replayFeedbackButton">🔊 重聽說明</button><button class="next-button" type="button" id="nextButton">下一題 →</button></div></section>
+      </section>
+      <footer class="safety-tip" id="safetyTip"><span aria-hidden="true">💡</span><strong>安全小提醒：</strong><span id="tipText"></span></footer>
+    </section>
+
+    <section class="view medal-view" id="medalView" hidden aria-labelledby="medalTitle">
+      <div class="medal-sparkles" aria-hidden="true">✨　⭐　✨　⭐　✨</div><div class="big-medal" aria-hidden="true"><span>★</span></div><p class="stage-chip medal-chip">第 4 步｜關卡完成</p><h1 id="medalTitle">恭喜完成！</h1><h2 id="medalLevelName"></h2><div class="medal-slogan"><span>本關安全口訣</span><strong id="medalSlogan"></strong></div><div class="medal-actions"><button type="button" id="medalHomeButton">🏠 回主選單</button><button class="primary-nav" type="button" id="medalNextButton">下一關 →</button></div>
+    </section>
+
+    <section class="view grand-completion-view" id="finalView" hidden aria-labelledby="finalTitle">
+      <nav class="final-top-nav" aria-label="通關頁導覽"><button type="button" id="finalHomeButton">🏠 回主選單</button><button type="button" id="replayCongratulationsButton">🔊 重聽恭喜語音</button></nav>
+      <div class="final-shield" aria-hidden="true"><span>★</span></div>
+      <p class="final-kicker">七關全部完成</p>
+      <h1 id="finalTitle">安全守護隊小高手</h1>
+      <p class="final-message">太棒了！你完成了全部校園安全學習任務。</p>
+      <div class="all-medals" id="allMedals" aria-label="已取得的七枚安全勳章"></div>
+      <p class="privacy-note"><span aria-hidden="true">🔒</span><strong>無個資獎狀：</strong>不輸入姓名、班級或座號，列印後再由老師手寫。</p>
+      <div class="certificate-actions"><button class="download-certificate-button" type="button" id="downloadCertificateButton">📄 產生通關獎狀 PDF</button><button class="print-certificate-button" type="button" id="printCertificateButton">🖨 列印獎狀</button></div>
+    </section>
+  </main>
+
+  <div class="celebration-layer" id="celebrationLayer" hidden aria-hidden="true"><div class="celebration-burst" id="confettiBurst"></div><div class="celebration-face" id="celebrationFace">😊</div><strong id="celebrationText">太棒了！</strong></div>
+
+  <dialog class="confirm-dialog" id="homeConfirmDialog"><div class="dialog-icon" aria-hidden="true">🏠</div><h2>要回到安全守護隊選單嗎？</h2><p>這一題的進度會保留。</p><div class="dialog-actions"><button type="button" id="confirmHomeButton">回選單</button><button class="primary-nav" type="button" id="stayQuestionButton">繼續這一題</button></div></dialog>
+  <dialog class="confirm-dialog" id="resumeDialog"><div class="dialog-icon" aria-hidden="true">🛡️</div><h2 id="resumeTitle">繼續上次進度嗎？</h2><p id="resumeText"></p><div class="dialog-actions"><button type="button" id="restartLevelButton">從頭開始</button><button class="primary-nav" type="button" id="continueLevelButton">繼續上次進度</button></div></dialog>
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+  <audio id="backgroundMusic" src="./assets/bgm-promise-public-domain.ogg" preload="metadata" loop></audio>
+
+  <script src="./js/levels.js"></script><script src="./js/questions.js"></script><script src="./js/certificate.js"></script><script src="./js/app.js"></script>
+</body>
+</html>
