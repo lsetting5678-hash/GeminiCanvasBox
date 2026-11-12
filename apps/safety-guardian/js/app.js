@@ -35,7 +35,7 @@
     progressText: $("#progressText"), progressBar: $("#progressBar"), teacherToggle: $("#teacherToggle"),
     menuView: $("#menuView"), lessonView: $("#lessonView"), scenarioView: $("#scenarioView"), quizView: $("#quizView"), medalView: $("#medalView"), finalView: $("#finalView"),
     levelGrid: $("#levelGrid"), medalCount: $("#medalCount"), completionEntry: $("#completionEntry"), openFinalButton: $("#openFinalButton"),
-    lessonImage: $("#lessonImage"), lessonLevelName: $("#lessonLevelName"), lessonTitle: $("#lessonTitle"), lessonText: $("#lessonText"), lessonSlogan: $("#lessonSlogan"), lessonSpeakButton: $("#lessonSpeakButton"), lessonScenarioButton: $("#lessonScenarioButton"), lessonBackButton: $("#lessonBackButton"), lessonHomeButton: $("#lessonHomeButton"), lessonNextButton: $("#lessonNextButton"),
+    lessonImage: $("#lessonImage"), lessonLevelName: $("#lessonLevelName"), lessonTitle: $("#lessonTitle"), lessonText: $("#lessonText"), lessonSlogan: $("#lessonSlogan"), lessonSpeakButton: $("#lessonSpeakButton"), lessonScenarioButton: $("#lessonScenarioButton"), lessonBackButton: $("#lessonBackButton"), lessonHomeButton: $("#lessonHomeButton"),
     scenarioStage: $("#scenarioStage"), scenarioImage: $("#scenarioImage"), scenarioFrameStatus: $("#scenarioFrameStatus"), scenarioLevelName: $("#scenarioLevelName"), scenarioPrompt: $("#scenarioPrompt"), scenarioChoicePrompt: $("#scenarioChoicePrompt"), scenarioChoices: $("#scenarioChoices"), scenarioFeedback: $("#scenarioFeedback"), playScenarioOptionsButton: $("#playScenarioOptionsButton"), scenarioNextButton: $("#scenarioNextButton"), scenarioBackButton: $("#scenarioBackButton"), scenarioHomeButton: $("#scenarioHomeButton"), scenarioReplayButton: $("#scenarioReplayButton"), scenarioPauseButton: $("#scenarioPauseButton"), scenarioResumeButton: $("#scenarioResumeButton"),
     quizPreviousButton: $("#quizPreviousButton"), quizHomeButton: $("#quizHomeButton"),
     categoryLabel: $("#categoryLabel"), sceneCard: $("#sceneCard"), sceneImage: $("#sceneImage"), sceneLoading: $("#sceneLoading"), quizFrameStatus: $("#quizFrameStatus"), questionNumber: $("#questionNumber"), questionText: $("#questionText"), tipText: $("#tipText"),
@@ -884,7 +884,6 @@
   els.brandHomeButton.addEventListener("click", requestHome);
   els.lessonBackButton.addEventListener("click", showMenu);
   els.lessonHomeButton.addEventListener("click", showMenu);
-  els.lessonNextButton.addEventListener("click", showScenario);
   els.lessonScenarioButton.addEventListener("click", showScenario);
   els.lessonSpeakButton.addEventListener("click", () => speak(`${state.level.lessonTitle}。${state.level.lessonText}。安全口訣：${state.level.slogan}。`));
   els.scenarioBackButton.addEventListener("click", showLesson);

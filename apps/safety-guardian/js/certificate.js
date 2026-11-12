@@ -189,7 +189,7 @@
     ctx.font = `700 30px ${FONT_FAMILY}`;
     ctx.fillStyle = "#698086";
     ctx.textAlign = "center";
-    ctx.fillText("中原國小校園安全學習任務", CANVAS_WIDTH / 2, 2290);
+    ctx.fillText("校園安全學習任務", CANVAS_WIDTH / 2, 2290);
     return canvas;
   }
 
