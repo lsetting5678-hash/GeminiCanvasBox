@@ -27,11 +27,12 @@ node tools/serve-safety-guardian.mjs
 - `📄 產生通關獎狀 PDF`
 - `🖨 列印獎狀`
 
-獎狀為 A4 橫式，姓名、完成日期及教師簽名均保留空白供列印後手寫。PDF 固定命名為 `安全守護隊_通關獎狀.pdf`，不要求或儲存任何學生個資。
+獎狀為 A4 橫式，以一面大型盾牌為中心，七枚關卡徽章環繞呈現，並使用芫荽體。姓名、完成日期及教師簽名均保留空白供列印後手寫。PDF 固定命名為 `安全守護隊_通關獎狀.pdf`，不要求或儲存任何學生個資。
 
 ## 外部內容與授權
 
 - 背景配樂：Promise，Keith Adler；Wikimedia Commons 標示為公有領域。網站內使用本機檔案 `assets/bgm-promise-public-domain.ogg`。
+- 獎狀字型：芫荽 Iansui，ButTaiwan；依 SIL Open Font License 1.1 授權。網站內使用本機檔案 `assets/fonts/Iansui-Regular.ttf`，授權文件為 `assets/fonts/OFL-Iansui.txt`。
 
 ## 主要功能
 

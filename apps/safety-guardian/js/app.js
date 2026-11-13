@@ -823,30 +823,34 @@
     setTimeout(() => speak(state.lastSpeechText), 260);
   }
 
-  function downloadCertificate() {
+  async function downloadCertificate() {
     if (!window.SAFETY_CERTIFICATE) return showToast("獎狀功能載入失敗，請重新整理頁面。");
     const original = els.downloadCertificateButton.textContent;
     els.downloadCertificateButton.disabled = true;
     els.downloadCertificateButton.textContent = "正在產生 PDF…";
-    requestAnimationFrame(() => {
-      try {
-        window.SAFETY_CERTIFICATE.downloadPdf();
-        showToast(`已產生 ${window.SAFETY_CERTIFICATE.FILE_NAME}`);
-      } catch {
-        showToast("PDF 產生失敗，請重新整理後再試一次。");
-      } finally {
-        els.downloadCertificateButton.disabled = false;
-        els.downloadCertificateButton.textContent = original;
-      }
-    });
+    try {
+      await window.SAFETY_CERTIFICATE.downloadPdf();
+      showToast(`已產生 ${window.SAFETY_CERTIFICATE.FILE_NAME}`);
+    } catch {
+      showToast("PDF 產生失敗，請重新整理後再試一次。");
+    } finally {
+      els.downloadCertificateButton.disabled = false;
+      els.downloadCertificateButton.textContent = original;
+    }
   }
 
-  function printCertificate() {
+  async function printCertificate() {
     if (!window.SAFETY_CERTIFICATE) return showToast("獎狀功能載入失敗，請重新整理頁面。");
+    const original = els.printCertificateButton.textContent;
+    els.printCertificateButton.disabled = true;
+    els.printCertificateButton.textContent = "正在準備列印…";
     try {
-      window.SAFETY_CERTIFICATE.printCertificate();
+      await window.SAFETY_CERTIFICATE.printCertificate();
     } catch {
       showToast("瀏覽器阻擋了列印視窗，請允許開啟新視窗後再試一次。");
+    } finally {
+      els.printCertificateButton.disabled = false;
+      els.printCertificateButton.textContent = original;
     }
   }
 
